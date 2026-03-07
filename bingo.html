@@ -896,7 +896,9 @@
       <div class="participant-cards-grid" id="participant-cards"></div>
     </section>
 
-    <script>
+    <script type="module">
+      import { getOrdinal, getRankedPlayers, getRankingPhrase } from "./ranking.js";
+
       const STORAGE_KEY = "bingo-manager-state";
       const drawBtn = document.getElementById("draw-btn");
       const prevBtn = document.getElementById("prev-btn");
@@ -938,6 +940,7 @@
       const MC_PITCH_SPREAD = 0.08;
       const MC_PAUSE_MS = 500;
       const MC_POINTS_PAUSE_MS = 400;
+      const MC_RANKING_PAUSE_MS = 600;
 
       let drawnSequence = [];
       let numParticipants = 1;
@@ -1283,7 +1286,17 @@
         const displayText = parts.display;
         const scorers = getPlayersWhoScoredOnLatestDraw();
         const pointsPhrase = getPointsAnnouncementPhrase(scorers);
-        if (mcAnnouncementEl) mcAnnouncementEl.textContent = displayText + (pointsPhrase ? " " + pointsPhrase : "");
+
+        const seqBefore = drawnSequence.slice(0, -1);
+        const drawnSetBefore = new Set(seqBefore);
+        const prevRankedFull = getRankedPlayersForDraw(drawnSetBefore, seqBefore);
+        const currRankedFull = getRankedPlayersForDraw(new Set(drawnSequence), drawnSequence);
+        const prevRanked = prevRankedFull.filter((p) => p.points > 0).map((p) => ({ name: p.name, rank: p.rank }));
+        const currRanked = currRankedFull.filter((p) => p.points > 0).map((p) => ({ name: p.name, rank: p.rank }));
+        const rankingPhrase = !mcSimple ? getRankingPhrase(prevRanked, currRanked, { random: Math.random }) : "";
+
+        const fullDisplay = displayText + (pointsPhrase ? " " + pointsPhrase : "") + (rankingPhrase ? " " + rankingPhrase : "");
+        if (mcAnnouncementEl) mcAnnouncementEl.textContent = fullDisplay;
         if (!mcEnabled || typeof speechSynthesis === "undefined") return;
 
         const voice = getMcVoice();
@@ -1302,8 +1315,16 @@
           speechSynthesis.speak(u);
         }
 
+        function speakRankingAfterPause() {
+          if (rankingPhrase) setTimeout(() => speak(rankingPhrase), MC_RANKING_PAUSE_MS);
+        }
+
         function speakPointsAfterPause() {
-          if (pointsPhrase) setTimeout(() => speak(pointsPhrase), MC_POINTS_PAUSE_MS);
+          if (pointsPhrase) {
+            setTimeout(() => speak(pointsPhrase, speakRankingAfterPause), MC_POINTS_PAUSE_MS);
+          } else {
+            speakRankingAfterPause();
+          }
         }
 
         if (parts.intro != null && parts.intro !== "") {
@@ -1512,13 +1533,8 @@
         return "Points for " + first + ", and " + rest + " other" + (rest === 1 ? "" : "s") + "!";
       }
 
-      function buildLeaderboard() {
-        leaderboardList.innerHTML = "";
-        winnerDeclaration.textContent = "";
-        if (participantCards.length === 0) return;
-        const drawnSet = new Set(drawnSequence);
-        const lastNum = drawnSequence[drawnSequence.length - 1];
-
+      function getRankedPlayersForDraw(drawnSet, drawnSequence) {
+        if (participantCards.length === 0) return [];
         const players = participantCards.map((card, index) => {
           const lines = getBingoLines(card, drawnSet);
           const points = lines.length * POINTS_PER_LINE;
@@ -1526,28 +1542,23 @@
           const name = (participantNames[index] && participantNames[index].trim()) || `Player ${index + 1}`;
           return { index, name, points, firstBingoAt };
         });
+        return getRankedPlayers(players);
+      }
 
-        players.sort((a, b) => {
-          if (b.points !== a.points) return b.points - a.points;
-          return a.firstBingoAt - b.firstBingoAt;
-        });
+      function buildLeaderboard() {
+        leaderboardList.innerHTML = "";
+        winnerDeclaration.textContent = "";
+        if (participantCards.length === 0) return;
+        const drawnSet = new Set(drawnSequence);
+        const lastNum = drawnSequence[drawnSequence.length - 1];
 
-        const places = ["1st", "2nd", "3rd"];
-        function getOrdinal(n) {
-          if (n >= 1 && n <= 3) return places[n - 1];
-          const mod10 = n % 10;
-          const mod100 = n % 100;
-          if (mod10 === 1 && mod100 !== 11) return n + "st";
-          if (mod10 === 2 && mod100 !== 12) return n + "nd";
-          if (mod10 === 3 && mod100 !== 13) return n + "rd";
-          return n + "th";
-        }
-        players.forEach((p, rank) => {
+        const ranked = getRankedPlayersForDraw(drawnSet, drawnSequence);
+        ranked.forEach((p) => {
           const li = document.createElement("li");
-          li.className = "leaderboard-item" + (rank < 3 ? " place-" + (rank + 1) : "");
+          li.className = "leaderboard-item" + (p.rank <= 3 ? " place-" + p.rank : "");
           const badge = document.createElement("span");
           badge.className = "place-badge";
-          badge.textContent = getOrdinal(rank + 1);
+          badge.textContent = getOrdinal(p.rank);
           const name = document.createElement("span");
           name.className = "player-name";
           name.textContent = p.name;
@@ -1560,7 +1571,7 @@
           leaderboardList.appendChild(li);
         });
 
-        const withBingo = players.filter((p) => p.points > 0);
+        const withBingo = ranked.filter((p) => p.points > 0);
         if (withBingo.length > 0) {
           const parts = [];
           if (withBingo[0]) parts.push("1st: " + withBingo[0].name);

@@ -12,3 +12,13 @@ Thumbs.db
 # Logs / temp
 *.log
 .cursor/
+
+# Node / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vitest
+coverage/
+.vitest/
