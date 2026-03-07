@@ -243,6 +243,33 @@
         accent-color: var(--secondary);
       }
 
+      .mc-announcement {
+        font-size: 1rem;
+        color: var(--text);
+        min-height: 1.5em;
+        margin-bottom: 8px;
+        font-style: italic;
+        text-align: center;
+      }
+      .mc-setting {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .mc-setting label {
+        font-size: 0.9rem;
+        color: var(--text);
+        cursor: pointer;
+      }
+      .mc-setting input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: var(--secondary);
+      }
+
       /* Participant cards section */
       .participant-cards-section.hidden {
         display: none;
@@ -517,6 +544,7 @@
     <div class="controls-band">
     <div class="controls">
       <div id="current-number">--</div>
+      <div class="mc-announcement" id="mc-announcement" aria-live="polite"></div>
       <div class="btn-group">
         <div class="main-btns">
           <button id="prev-btn" title="Left Arrow">◀</button>
@@ -533,6 +561,14 @@
         <div class="hide-cards-setting">
           <input type="checkbox" id="hide-cards" />
           <label for="hide-cards">Hide cards (use your own)</label>
+        </div>
+        <div class="mc-setting">
+          <input type="checkbox" id="mc-announces" checked />
+          <label for="mc-announces">MC announces numbers</label>
+        </div>
+        <div class="mc-setting">
+          <input type="checkbox" id="mc-simple" />
+          <label for="mc-simple">Simple MC (numbers only)</label>
         </div>
         <button id="reset-btn">Reset Board</button>
         <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
@@ -588,12 +624,17 @@
       const hideCardsCheckbox = document.getElementById("hide-cards");
       const leaderboardList = document.getElementById("leaderboard-list");
       const winnerDeclaration = document.getElementById("winner-declaration");
+      const mcAnnouncementEl = document.getElementById("mc-announcement");
+      const mcAnnouncesCheckbox = document.getElementById("mc-announces");
+      const mcSimpleCheckbox = document.getElementById("mc-simple");
 
       const POINTS_PER_LINE = 10;
       let drawnSequence = [];
       let numParticipants = 1;
       let participantCards = [];
       let hideCards = false;
+      let mcEnabled = true;
+      let mcSimple = false;
 
       function saveState() {
         try {
@@ -604,6 +645,8 @@
               numParticipants,
               participantCards,
               hideCards,
+              mcEnabled,
+              mcSimple,
             })
           );
         } catch (_) {}
@@ -639,6 +682,14 @@
             hideCards = data.hideCards;
             hideCardsCheckbox.checked = hideCards;
             participantCardsSection.classList.toggle("hidden", hideCards);
+          }
+          if (typeof data.mcEnabled === "boolean") {
+            mcEnabled = data.mcEnabled;
+            mcAnnouncesCheckbox.checked = mcEnabled;
+          }
+          if (typeof data.mcSimple === "boolean") {
+            mcSimple = data.mcSimple;
+            mcSimpleCheckbox.checked = mcSimple;
           }
           if (participantCards.length === 0 && drawnSequence.length > 0) {
             numParticipants = 1;
@@ -697,6 +748,7 @@
         availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
         drawnSequence = [];
         participantCards = [];
+        if (mcAnnouncementEl) mcAnnouncementEl.textContent = "";
         for (let i = 0; i < numParticipants; i++) {
           participantCards.push(generateOneCard());
         }
@@ -711,6 +763,34 @@
         if (num <= 45) return "N";
         if (num <= 60) return "G";
         return "O";
+      }
+
+      function announceNumber(letter, num) {
+        const drawIndex = drawnSequence.length - 1;
+        const phrase = getMcPhrase(letter, num, drawIndex);
+        if (mcAnnouncementEl) mcAnnouncementEl.textContent = phrase;
+        if (mcEnabled && typeof speechSynthesis !== "undefined") {
+          const utterance = new SpeechSynthesisUtterance(phrase);
+          utterance.rate = 1.0;
+          speechSynthesis.speak(utterance);
+        }
+      }
+
+      const MC_PHRASES = [
+        (l, n) => "And the next number is... " + l + " " + n + "!",
+        (l, n) => "Drumroll please... " + l + " " + n + "!",
+        (l, n) => l + " " + n + "! You know what to do!",
+        (l, n) => "Ooh, good one — " + l + " " + n + "!",
+        (l, n) => "Calling " + l + " " + n + ". " + l + " " + n + "!",
+        (l, n) => "Next up: " + l + " " + n + "!",
+        (l, n) => "Eyes down for " + l + " " + n + "!",
+        (l, n) => "Lucky " + l + " " + n + "!",
+        (l, n) => "It's " + l + " " + n + ". You're welcome.",
+        (l, n) => "Bingo! I mean — " + l + " " + n + "!",
+      ];
+      function getMcPhrase(letter, num, drawIndex) {
+        if (mcSimple) return letter + " " + num;
+        return MC_PHRASES[drawIndex % MC_PHRASES.length](letter, num);
       }
 
       function getColumnClass(col) {
@@ -858,8 +938,10 @@
         // Update Big Display
         if (lastNum) {
           display.innerText = `${getLetter(lastNum)}-${lastNum}`;
+          if (mcAnnouncementEl) mcAnnouncementEl.textContent = getMcPhrase(getLetter(lastNum), lastNum, drawnSequence.length - 1);
         } else {
           display.innerText = "--";
+          if (mcAnnouncementEl) mcAnnouncementEl.textContent = "";
         }
 
         // Update Board Marks (main caller board only)
@@ -907,6 +989,7 @@
         const randomIndex = Math.floor(Math.random() * availableNumbers.length);
         const picked = availableNumbers.splice(randomIndex, 1)[0];
         drawnSequence.push(picked);
+        announceNumber(getLetter(picked), picked);
         saveState();
         updateUI();
       }
@@ -958,6 +1041,17 @@
         hideCards = hideCardsCheckbox.checked;
         participantCardsSection.classList.toggle("hidden", hideCards);
         saveState();
+      });
+
+      mcAnnouncesCheckbox.addEventListener("change", () => {
+        mcEnabled = mcAnnouncesCheckbox.checked;
+        saveState();
+      });
+
+      mcSimpleCheckbox.addEventListener("change", () => {
+        mcSimple = mcSimpleCheckbox.checked;
+        saveState();
+        if (drawnSequence.length > 0) updateUI();
       });
 
       buildBoard();
