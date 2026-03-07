@@ -180,10 +180,21 @@
       }
 
       #reset-btn {
-        background-color: transparent;
-        color: #b2bec3;
-        font-size: 0.8rem;
-        text-decoration: underline;
+        background-color: var(--secondary);
+        color: white;
+        font-size: 0.95rem;
+        padding: 10px 20px;
+        border-radius: 50px;
+        box-shadow: 0 4px 0 #39b5ae;
+      }
+
+      #reset-btn:hover {
+        filter: brightness(1.05);
+      }
+
+      #reset-btn:active {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 #39b5ae;
       }
 
       .print-cards-link {
@@ -664,7 +675,7 @@
             </div>
           </div>
         </div>
-        <button id="reset-btn">Reset Board</button>
+        <button id="reset-btn">New Game</button>
         <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
       </div>
     </div>
@@ -1196,12 +1207,12 @@
       drawBtn.addEventListener("click", drawNumber);
       prevBtn.addEventListener("click", prevNumber);
       resetBtn.addEventListener("click", () => {
-        if (confirm("New game?")) {
-          try {
-            localStorage.removeItem(STORAGE_KEY);
-          } catch (_) {}
-          initGame();
-        }
+        const inMidGame = drawnSequence.length > 0;
+        if (inMidGame && !confirm("Start a new game? Current game will be lost.")) return;
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (_) {}
+        initGame();
       });
 
       numParticipantsInput.addEventListener("input", () => {
