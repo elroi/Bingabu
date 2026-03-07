@@ -335,6 +335,7 @@
     </div>
 
     <script>
+      const STORAGE_KEY = "bingo-manager-state";
       const drawBtn = document.getElementById("draw-btn");
       const prevBtn = document.getElementById("prev-btn");
       const resetBtn = document.getElementById("reset-btn");
@@ -345,11 +346,29 @@
       let availableNumbers = [];
       let drawnSequence = [];
 
-      function initGame() {
-        availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
-        drawnSequence = [];
-        updateUI();
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ drawnSequence }));
+        } catch (_) {}
+      }
 
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return false;
+          const { drawnSequence: saved } = JSON.parse(raw);
+          if (!Array.isArray(saved) || saved.some((n) => typeof n !== "number" || n < 1 || n > 75)) return false;
+          const set = new Set(saved);
+          if (set.size !== saved.length) return false;
+          drawnSequence = saved;
+          availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1).filter((n) => !set.has(n));
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      function buildBoard() {
         const letters = ["B", "I", "N", "G", "O"];
         letters.forEach((letter, index) => {
           const grid = document.getElementById(`grid-${letter}`);
@@ -363,6 +382,14 @@
             grid.appendChild(cell);
           }
         });
+      }
+
+      function initGame() {
+        availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
+        drawnSequence = [];
+        saveState();
+        buildBoard();
+        updateUI();
       }
 
       function getLetter(num) {
@@ -417,6 +444,7 @@
         const randomIndex = Math.floor(Math.random() * availableNumbers.length);
         const picked = availableNumbers.splice(randomIndex, 1)[0];
         drawnSequence.push(picked);
+        saveState();
         updateUI();
       }
 
@@ -424,6 +452,7 @@
         if (drawnSequence.length === 0) return;
         const removed = drawnSequence.pop();
         availableNumbers.push(removed);
+        saveState();
         updateUI();
       }
 
@@ -441,10 +470,17 @@
       drawBtn.addEventListener("click", drawNumber);
       prevBtn.addEventListener("click", prevNumber);
       resetBtn.addEventListener("click", () => {
-        if (confirm("New game?")) initGame();
+        if (confirm("New game?")) {
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+          } catch (_) {}
+          initGame();
+        }
       });
 
-      initGame();
+      buildBoard();
+      if (!loadState()) initGame();
+      else updateUI();
     </script>
   </body>
 </html>
