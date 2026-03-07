@@ -270,7 +270,57 @@
         accent-color: var(--secondary);
       }
 
-      /* Participant cards section */
+      .mc-advanced {
+        margin-top: 12px;
+        text-align: left;
+      }
+      .mc-advanced-toggle {
+        background: none;
+        border: none;
+        font-family: "Quicksand", sans-serif;
+        font-size: 0.9rem;
+        color: var(--secondary);
+        cursor: pointer;
+        padding: 4px 0;
+        text-decoration: underline;
+      }
+      .mc-advanced-toggle:hover { color: var(--primary); }
+      .mc-advanced-content {
+        display: none;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed rgba(0,0,0,0.1);
+      }
+      .mc-advanced-content.open { display: block; }
+      .mc-advanced-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .mc-advanced-row label {
+        min-width: 70px;
+        font-size: 0.85rem;
+        color: var(--text);
+      }
+      .mc-advanced-row input[type="range"] {
+        flex: 1;
+        min-width: 80px;
+        accent-color: var(--secondary);
+      }
+      .mc-advanced-row .mc-advanced-value {
+        font-size: 0.85rem;
+        color: var(--text);
+        min-width: 36px;
+      }
+      .mc-advanced-row select {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.85rem;
+        padding: 4px 6px;
+        border-radius: 6px;
+        border: 1px solid rgba(0,0,0,0.15);
+      }
       .participant-cards-section.hidden {
         display: none;
       }
@@ -286,6 +336,25 @@
         color: var(--primary);
         font-size: 1.4rem;
         margin: 0 0 15px 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .participant-cards-section h2:hover {
+        color: var(--secondary);
+      }
+      .participant-cards-section .section-chevron {
+        font-size: 1rem;
+        transition: transform 0.2s ease;
+      }
+      .participant-cards-section.cards-collapsed .section-chevron {
+        transform: rotate(-90deg);
+      }
+      .participant-cards-section.cards-collapsed .participant-cards-grid {
+        display: none;
       }
       .participant-cards-grid {
         display: grid;
@@ -570,6 +639,31 @@
           <input type="checkbox" id="mc-simple" />
           <label for="mc-simple">Simple MC (numbers only)</label>
         </div>
+        <div class="mc-advanced">
+          <button type="button" class="mc-advanced-toggle" id="mc-advanced-toggle" aria-expanded="false" aria-controls="mc-advanced-content">Advanced voice settings</button>
+          <div class="mc-advanced-content" id="mc-advanced-content" role="region" aria-label="Advanced voice settings">
+            <div class="mc-advanced-row">
+              <label for="mc-voice-select">Voice</label>
+              <select id="mc-voice-select" aria-label="MC voice">
+                <option value="">Default (auto)</option>
+              </select>
+            </div>
+            <div class="mc-advanced-row">
+              <label for="mc-rate">Speed</label>
+              <input type="range" id="mc-rate" min="0.5" max="2" step="0.05" value="0.93" aria-label="Speech speed" />
+              <span class="mc-advanced-value" id="mc-rate-value" aria-live="polite">0.93</span>
+            </div>
+            <div class="mc-advanced-row">
+              <label for="mc-pitch">Pitch</label>
+              <input type="range" id="mc-pitch" min="0.5" max="2" step="0.05" value="1" aria-label="Speech pitch" />
+              <span class="mc-advanced-value" id="mc-pitch-value" aria-live="polite">1</span>
+            </div>
+            <div class="mc-advanced-row">
+              <input type="checkbox" id="mc-variation" checked aria-label="Natural variation in speed and pitch" />
+              <label for="mc-variation">Natural variation</label>
+            </div>
+          </div>
+        </div>
         <button id="reset-btn">Reset Board</button>
         <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
       </div>
@@ -606,7 +700,7 @@
     </div>
 
     <section class="participant-cards-section" id="participant-cards-section">
-      <h2>Participant cards</h2>
+      <h2 id="participant-cards-header" role="button" tabindex="0" aria-expanded="true" aria-controls="participant-cards">Participant cards <span class="section-chevron" aria-hidden="true">▼</span></h2>
       <div class="participant-cards-grid" id="participant-cards"></div>
     </section>
 
@@ -621,20 +715,62 @@
       const numParticipantsInput = document.getElementById("num-participants");
       const participantCardsEl = document.getElementById("participant-cards");
       const participantCardsSection = document.getElementById("participant-cards-section");
+      const participantCardsHeader = document.getElementById("participant-cards-header");
       const hideCardsCheckbox = document.getElementById("hide-cards");
       const leaderboardList = document.getElementById("leaderboard-list");
       const winnerDeclaration = document.getElementById("winner-declaration");
       const mcAnnouncementEl = document.getElementById("mc-announcement");
       const mcAnnouncesCheckbox = document.getElementById("mc-announces");
       const mcSimpleCheckbox = document.getElementById("mc-simple");
+      const mcAdvancedToggle = document.getElementById("mc-advanced-toggle");
+      const mcAdvancedContent = document.getElementById("mc-advanced-content");
+      const mcVoiceSelect = document.getElementById("mc-voice-select");
+      const mcRateSlider = document.getElementById("mc-rate");
+      const mcRateValue = document.getElementById("mc-rate-value");
+      const mcPitchSlider = document.getElementById("mc-pitch");
+      const mcPitchValue = document.getElementById("mc-pitch-value");
+      const mcVariationCheckbox = document.getElementById("mc-variation");
 
       const POINTS_PER_LINE = 10;
+      // MC voice: defaults and optional random variation (advanced panel can override)
+      const MC_RATE_BASE = 0.93;
+      const MC_RATE_SPREAD = 0.14;
+      const MC_PITCH_BASE = 0.99;
+      const MC_PITCH_SPREAD = 0.08;
+      const MC_PAUSE_MS = 500;
+
       let drawnSequence = [];
       let numParticipants = 1;
       let participantCards = [];
       let hideCards = false;
       let mcEnabled = true;
       let mcSimple = false;
+      let mcVoice = null;
+      let mcVoiceName = "";
+      let mcRate = MC_RATE_BASE;
+      let mcPitch = MC_PITCH_BASE;
+      let mcVariation = true;
+
+      function pickBestVoice() {
+        const voices = typeof speechSynthesis !== "undefined" ? speechSynthesis.getVoices() : [];
+        const local = voices.filter((v) => v.localService);
+        const pool = local.length ? local : voices;
+        const prefer = ["Samantha", "Daniel", "Google", "Microsoft", "Alex"];
+        for (const name of prefer) {
+          const v = pool.find((x) => x.name.includes(name));
+          if (v) return v;
+        }
+        return pool[0] || null;
+      }
+
+      function getMcVoice() {
+        if (mcVoiceName && typeof speechSynthesis !== "undefined") {
+          const voices = speechSynthesis.getVoices();
+          const byName = voices.find((v) => v.name === mcVoiceName);
+          if (byName) return byName;
+        }
+        return mcVoice;
+      }
 
       function saveState() {
         try {
@@ -647,6 +783,10 @@
               hideCards,
               mcEnabled,
               mcSimple,
+              mcVoiceName,
+              mcRate,
+              mcPitch,
+              mcVariation,
             })
           );
         } catch (_) {}
@@ -690,6 +830,14 @@
           if (typeof data.mcSimple === "boolean") {
             mcSimple = data.mcSimple;
             mcSimpleCheckbox.checked = mcSimple;
+          }
+          if (data.mcVoiceName != null && typeof data.mcVoiceName === "string") mcVoiceName = data.mcVoiceName;
+          if (typeof data.mcRate === "number" && data.mcRate >= 0.5 && data.mcRate <= 2) mcRate = data.mcRate;
+          if (typeof data.mcPitch === "number" && data.mcPitch >= 0.5 && data.mcPitch <= 2) mcPitch = data.mcPitch;
+          if (typeof data.mcVariation === "boolean") mcVariation = data.mcVariation;
+          if (typeof speechSynthesis !== "undefined" && mcVoiceName) {
+            const voices = speechSynthesis.getVoices();
+            if (voices.length && !voices.some((v) => v.name === mcVoiceName)) mcVoiceName = "";
           }
           if (participantCards.length === 0 && drawnSequence.length > 0) {
             numParticipants = 1;
@@ -767,30 +915,62 @@
 
       function announceNumber(letter, num) {
         const drawIndex = drawnSequence.length - 1;
-        const phrase = getMcPhrase(letter, num, drawIndex);
-        if (mcAnnouncementEl) mcAnnouncementEl.textContent = phrase;
-        if (mcEnabled && typeof speechSynthesis !== "undefined") {
-          const utterance = new SpeechSynthesisUtterance(phrase);
-          utterance.rate = 1.0;
-          speechSynthesis.speak(utterance);
+        const parts = getMcPhraseParts(letter, num, drawIndex);
+        const displayText = parts.display;
+        if (mcAnnouncementEl) mcAnnouncementEl.textContent = displayText;
+        if (!mcEnabled || typeof speechSynthesis === "undefined") return;
+
+        const voice = getMcVoice();
+        const useVariation = mcVariation;
+        const baseRate = mcRate;
+        const basePitch = mcPitch;
+        const rate = useVariation ? baseRate + Math.random() * MC_RATE_SPREAD : baseRate;
+        const pitch = useVariation ? basePitch + Math.random() * MC_PITCH_SPREAD : basePitch;
+
+        function speak(text, onEnd) {
+          const u = new SpeechSynthesisUtterance(text);
+          if (voice) u.voice = voice;
+          u.rate = rate;
+          u.pitch = pitch;
+          if (onEnd) u.onend = onEnd;
+          speechSynthesis.speak(u);
+        }
+
+        if (parts.intro != null && parts.intro !== "") {
+          speak(parts.intro, () => {
+            setTimeout(() => speak(parts.number), MC_PAUSE_MS);
+          });
+        } else {
+          speak(displayText);
         }
       }
 
       const MC_PHRASES = [
-        (l, n) => "And the next number is... " + l + " " + n + "!",
-        (l, n) => "Drumroll please... " + l + " " + n + "!",
-        (l, n) => l + " " + n + "! You know what to do!",
-        (l, n) => "Ooh, good one — " + l + " " + n + "!",
-        (l, n) => "Calling " + l + " " + n + ". " + l + " " + n + "!",
-        (l, n) => "Next up: " + l + " " + n + "!",
-        (l, n) => "Eyes down for " + l + " " + n + "!",
-        (l, n) => "Lucky " + l + " " + n + "!",
-        (l, n) => "It's " + l + " " + n + ". You're welcome.",
-        (l, n) => "Bingo! I mean — " + l + " " + n + "!",
+        (l, n) => ({ display: "And the next number is... " + l + " " + n + "!", intro: "And the next number is..." }),
+        (l, n) => ({ display: "Drumroll please... " + l + " " + n + "!", intro: "Drumroll please..." }),
+        (l, n) => ({ display: l + " " + n + "! You know what to do!", intro: undefined }),
+        (l, n) => ({ display: "Ooh, good one — " + l + " " + n + "!", intro: "Ooh, good one —" }),
+        (l, n) => ({ display: "Calling " + l + " " + n + ". " + l + " " + n + "!", intro: "Calling" }),
+        (l, n) => ({ display: "Next up: " + l + " " + n + "!", intro: "Next up:" }),
+        (l, n) => ({ display: "Eyes down for " + l + " " + n + "!", intro: "Eyes down for" }),
+        (l, n) => ({ display: "Lucky " + l + " " + n + "!", intro: "Lucky" }),
+        (l, n) => ({ display: "It's " + l + " " + n + ". You're welcome.", intro: undefined }),
+        (l, n) => ({ display: "Bingo! I mean — " + l + " " + n + "!", intro: "Bingo! I mean —" }),
       ];
+
+      function getMcPhraseParts(letter, num, drawIndex) {
+        const numberPart = letter + " " + num + "!";
+        if (mcSimple) return { display: letter + " " + num, intro: undefined, number: numberPart };
+        const phrase = MC_PHRASES[drawIndex % MC_PHRASES.length](letter, num);
+        return {
+          display: phrase.display,
+          intro: phrase.intro,
+          number: numberPart,
+        };
+      }
+
       function getMcPhrase(letter, num, drawIndex) {
-        if (mcSimple) return letter + " " + num;
-        return MC_PHRASES[drawIndex % MC_PHRASES.length](letter, num);
+        return getMcPhraseParts(letter, num, drawIndex).display;
       }
 
       function getColumnClass(col) {
@@ -1054,9 +1234,100 @@
         if (drawnSequence.length > 0) updateUI();
       });
 
+      function populateMcVoiceSelect() {
+        if (!mcVoiceSelect) return;
+        const voices = typeof speechSynthesis !== "undefined" ? speechSynthesis.getVoices() : [];
+        const current = mcVoiceSelect.value;
+        mcVoiceSelect.innerHTML = "";
+        const defaultOpt = document.createElement("option");
+        defaultOpt.value = "";
+        defaultOpt.textContent = "Default (auto)";
+        mcVoiceSelect.appendChild(defaultOpt);
+        voices.forEach((v) => {
+          const opt = document.createElement("option");
+          opt.value = v.name;
+          opt.textContent = v.name;
+          mcVoiceSelect.appendChild(opt);
+        });
+        if (mcVoiceName && voices.some((v) => v.name === mcVoiceName)) mcVoiceSelect.value = mcVoiceName;
+        else if (current && voices.some((v) => v.name === current)) mcVoiceSelect.value = current;
+      }
+
+      function applyMcAdvancedToDom() {
+        if (mcRateSlider) { mcRateSlider.value = String(mcRate); }
+        if (mcRateValue) mcRateValue.textContent = String(mcRate);
+        if (mcPitchSlider) { mcPitchSlider.value = String(mcPitch); }
+        if (mcPitchValue) mcPitchValue.textContent = String(mcPitch);
+        if (mcVoiceSelect) mcVoiceSelect.value = mcVoiceName || "";
+        if (mcVariationCheckbox) mcVariationCheckbox.checked = mcVariation;
+      }
+
+      if (mcAdvancedToggle && mcAdvancedContent) {
+        mcAdvancedToggle.addEventListener("click", () => {
+          const open = mcAdvancedContent.classList.toggle("open");
+          mcAdvancedToggle.setAttribute("aria-expanded", String(open));
+        });
+      }
+      if (mcVoiceSelect) {
+        mcVoiceSelect.addEventListener("change", () => {
+          mcVoiceName = mcVoiceSelect.value || "";
+          saveState();
+        });
+      }
+      if (mcRateSlider) {
+        const updateRate = () => {
+          mcRate = parseFloat(mcRateSlider.value, 10);
+          if (mcRateValue) mcRateValue.textContent = String(mcRate);
+          saveState();
+        };
+        mcRateSlider.addEventListener("input", updateRate);
+        mcRateSlider.addEventListener("change", updateRate);
+      }
+      if (mcPitchSlider) {
+        const updatePitch = () => {
+          mcPitch = parseFloat(mcPitchSlider.value, 10);
+          if (mcPitchValue) mcPitchValue.textContent = String(mcPitch);
+          saveState();
+        };
+        mcPitchSlider.addEventListener("input", updatePitch);
+        mcPitchSlider.addEventListener("change", updatePitch);
+      }
+      if (mcVariationCheckbox) {
+        mcVariationCheckbox.addEventListener("change", () => {
+          mcVariation = mcVariationCheckbox.checked;
+          saveState();
+        });
+      }
+
+      if (typeof speechSynthesis !== "undefined") {
+        const initVoices = () => {
+          mcVoice = pickBestVoice();
+          populateMcVoiceSelect();
+        };
+        speechSynthesis.onvoiceschanged = initVoices;
+        initVoices();
+        setTimeout(initVoices, 500);
+      }
+
+      function toggleParticipantCardsExpand() {
+        if (participantCardsSection.classList.contains("hidden")) return;
+        const collapsed = participantCardsSection.classList.toggle("cards-collapsed");
+        if (participantCardsHeader) participantCardsHeader.setAttribute("aria-expanded", String(!collapsed));
+      }
+      if (participantCardsHeader) {
+        participantCardsHeader.addEventListener("click", toggleParticipantCardsExpand);
+        participantCardsHeader.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleParticipantCardsExpand();
+          }
+        });
+      }
+
       buildBoard();
       if (!loadState()) initGame();
       else updateUI();
+      applyMcAdvancedToDom();
     </script>
   </body>
 </html>
