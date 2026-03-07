@@ -943,6 +943,7 @@
       const MC_RANKING_PAUSE_MS = 600;
 
       let drawnSequence = [];
+      let availableNumbers = [];
       let numParticipants = 1;
       let participantNames = [];
       let participantQuirks = []; // { excludeStr: string, preferStr: string } per player
@@ -1062,6 +1063,8 @@
           if (participantCards.length === 0 && drawnSequence.length > 0) {
             numParticipants = 1;
             numParticipantsInput.value = "1";
+            participantNames = participantNames.slice(0, 1);
+            while (participantNames.length < 1) participantNames.push("");
             participantQuirks = participantQuirks.slice(0, 1);
             while (participantQuirks.length < 1) participantQuirks.push({ excludeStr: "", preferStr: "" });
             participantCards = [generateOneCard(parseQuirk(participantQuirks[0]))];
