@@ -33,6 +33,7 @@
         padding: 20px;
         overflow-x: hidden;
         user-select: none;
+        -webkit-user-select: none;
       }
 
       h1 {
@@ -180,6 +181,124 @@
         gap: 15px;
       }
 
+      .participant-setting {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .participant-setting label {
+        font-size: 0.9rem;
+        color: var(--text);
+      }
+      .participant-setting input {
+        width: 3.5em;
+        padding: 6px 8px;
+        border: 2px solid #eee;
+        border-radius: 8px;
+        font-size: 1rem;
+        text-align: center;
+      }
+      .participant-setting input:disabled {
+        background: #f1f3f4;
+        color: #636e72;
+        cursor: not-allowed;
+      }
+
+      /* Participant cards section */
+      .participant-cards-section {
+        width: 100%;
+        max-width: 900px;
+        margin-top: 35px;
+        padding-top: 25px;
+        border-top: 2px dashed var(--secondary);
+      }
+      .participant-cards-section h2 {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1.4rem;
+        margin: 0 0 15px 0;
+      }
+      .participant-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 20px;
+      }
+      .participant-card-wrap {
+        background: white;
+        border-radius: 12px;
+        padding: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        border: 2px solid #eee;
+      }
+      .participant-card-wrap.has-bingo {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px var(--accent);
+      }
+      .participant-card-title {
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+        color: var(--text);
+      }
+      .participant-card-progress {
+        font-size: 0.75rem;
+        color: #636e72;
+        margin-bottom: 6px;
+      }
+      .participant-card-bingo {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1rem;
+        margin-top: 4px;
+      }
+      .participant-card {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 2px;
+        font-size: 0.7rem;
+      }
+      .participant-card .card-header-cell {
+        font-family: "Fredoka One", cursive;
+        font-weight: 700;
+        padding: 2px 0;
+        text-align: center;
+      }
+      .participant-card .card-header-cell.b { color: var(--b-col); }
+      .participant-card .card-header-cell.i { color: var(--i-col); }
+      .participant-card .card-header-cell.n { color: var(--n-col); }
+      .participant-card .card-header-cell.g { color: var(--g-col); }
+      .participant-card .card-header-cell.o { color: var(--o-col); }
+      .participant-card .card-cell {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        font-weight: 700;
+        background: #f1f3f4;
+        color: #636e72;
+        transition: all 0.2s ease;
+      }
+      .participant-card .card-cell.free {
+        background: var(--n-col);
+        color: white;
+        font-size: 0.55rem;
+      }
+      .participant-card .card-cell.marked {
+        color: white;
+      }
+      .participant-card .card-cell.col-b.marked { background: var(--b-col); }
+      .participant-card .card-cell.col-i.marked { background: var(--i-col); }
+      .participant-card .card-cell.col-n.marked { background: var(--n-col); }
+      .participant-card .card-cell.col-g.marked { background: var(--g-col); }
+      .participant-card .card-cell.col-o.marked { background: var(--o-col); }
+      .participant-card .card-cell.latest-draw {
+        border: 2px solid #333;
+        animation: pulse 0.5s infinite alternate;
+      }
+
       /* Board Styling */
       .board {
         display: grid;
@@ -307,6 +426,10 @@
           <span>◀ Previous</span>
           <span>Space / Next ▶</span>
         </div>
+        <div class="participant-setting">
+          <label for="num-participants">Participants</label>
+          <input type="number" id="num-participants" min="1" max="12" value="1" title="" />
+        </div>
         <button id="reset-btn">Reset Board</button>
       </div>
     </div>
@@ -334,6 +457,11 @@
       </div>
     </div>
 
+    <section class="participant-cards-section" id="participant-cards-section">
+      <h2>Participant cards</h2>
+      <div class="participant-cards-grid" id="participant-cards"></div>
+    </section>
+
     <script>
       const STORAGE_KEY = "bingo-manager-state";
       const drawBtn = document.getElementById("draw-btn");
@@ -342,13 +470,24 @@
       const display = document.getElementById("current-number");
       const historyList = document.getElementById("history-list");
       const historyContainer = document.querySelector(".history-container");
+      const numParticipantsInput = document.getElementById("num-participants");
+      const participantCardsEl = document.getElementById("participant-cards");
 
       let availableNumbers = [];
       let drawnSequence = [];
+      let numParticipants = 1;
+      let participantCards = [];
 
       function saveState() {
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ drawnSequence }));
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+              drawnSequence,
+              numParticipants,
+              participantCards,
+            })
+          );
         } catch (_) {}
       }
 
@@ -356,16 +495,61 @@
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (!raw) return false;
-          const { drawnSequence: saved } = JSON.parse(raw);
+          const data = JSON.parse(raw);
+          const { drawnSequence: saved } = data;
           if (!Array.isArray(saved) || saved.some((n) => typeof n !== "number" || n < 1 || n > 75)) return false;
           const set = new Set(saved);
           if (set.size !== saved.length) return false;
           drawnSequence = saved;
           availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1).filter((n) => !set.has(n));
+          const np = data.numParticipants;
+          const cards = data.participantCards;
+          if (typeof np === "number" && np >= 0 && np <= 12 && Array.isArray(cards) && cards.length === np) {
+            const valid = cards.every(
+              (card) =>
+                Array.isArray(card) &&
+                card.length === 5 &&
+                card.every((row) => Array.isArray(row) && row.length === 5)
+            );
+            if (valid) {
+              numParticipants = np;
+              participantCards = cards;
+              numParticipantsInput.value = String(np);
+            }
+          }
+          if (participantCards.length === 0 && drawnSequence.length > 0) {
+            numParticipants = 1;
+            numParticipantsInput.value = "1";
+            participantCards = [generateOneCard()];
+          }
           return true;
         } catch (_) {
           return false;
         }
+      }
+
+      function shuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+
+      function generateOneCard() {
+        const card = [];
+        for (let col = 0; col < 5; col++) {
+          const start = col * 15 + 1;
+          const count = col === 2 ? 4 : 5;
+          const nums = shuffle(Array.from({ length: 15 }, (_, i) => start + i)).slice(0, count);
+          let idx = 0;
+          for (let row = 0; row < 5; row++) {
+            if (!card[row]) card[row] = [];
+            card[row][col] = row === 2 && col === 2 ? "FREE" : nums[idx++];
+          }
+        }
+        return card;
       }
 
       function buildBoard() {
@@ -385,8 +569,14 @@
       }
 
       function initGame() {
+        numParticipants = Math.min(12, Math.max(1, parseInt(numParticipantsInput.value, 10) || 1));
+        numParticipantsInput.value = String(numParticipants);
         availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
         drawnSequence = [];
+        participantCards = [];
+        for (let i = 0; i < numParticipants; i++) {
+          participantCards.push(generateOneCard());
+        }
         saveState();
         buildBoard();
         updateUI();
@@ -400,6 +590,89 @@
         return "O";
       }
 
+      function getColumnClass(col) {
+        return ["col-b", "col-i", "col-n", "col-g", "col-o"][col];
+      }
+
+      function isLineComplete(lineCells, drawnSet) {
+        return lineCells.every((cell) => cell === "FREE" || drawnSet.has(cell));
+      }
+
+      function getBingoLines(card, drawnSet) {
+        const lines = [];
+        for (let row = 0; row < 5; row++) {
+          const cells = [card[row][0], card[row][1], card[row][2], card[row][3], card[row][4]];
+          if (isLineComplete(cells, drawnSet)) lines.push(`Row ${row + 1}`);
+        }
+        for (let col = 0; col < 5; col++) {
+          const cells = [card[0][col], card[1][col], card[2][col], card[3][col], card[4][col]];
+          if (isLineComplete(cells, drawnSet)) lines.push(`Col ${["B", "I", "N", "G", "O"][col]}`);
+        }
+        const diag1 = [card[0][0], card[1][1], card[2][2], card[3][3], card[4][4]];
+        if (isLineComplete(diag1, drawnSet)) lines.push("Diagonal \\");
+        const diag2 = [card[0][4], card[1][3], card[2][2], card[3][1], card[4][0]];
+        if (isLineComplete(diag2, drawnSet)) lines.push("Diagonal /");
+        return lines;
+      }
+
+      function renderParticipantCards(lastNum) {
+        participantCardsEl.innerHTML = "";
+        if (participantCards.length === 0) return;
+        const drawnSet = new Set(drawnSequence);
+        participantCards.forEach((card, index) => {
+          const wrap = document.createElement("div");
+          wrap.className = "participant-card-wrap";
+          const title = document.createElement("div");
+          title.className = "participant-card-title";
+          title.textContent = `Player ${index + 1}`;
+          wrap.appendChild(title);
+          let markedCount = 0;
+          const grid = document.createElement("div");
+          grid.className = "participant-card";
+          for (let c = 0; c < 5; c++) {
+            const h = document.createElement("div");
+            h.className = `card-header-cell ${["b", "i", "n", "g", "o"][c]}`;
+            h.textContent = ["B", "I", "N", "G", "O"][c];
+            grid.appendChild(h);
+          }
+          for (let row = 0; row < 5; row++) {
+            for (let col = 0; col < 5; col++) {
+              const val = card[row][col];
+              const cell = document.createElement("div");
+              cell.className = "card-cell " + getColumnClass(col);
+              if (val === "FREE") {
+                cell.textContent = "FREE";
+                cell.classList.add("free", "marked");
+                markedCount++;
+              } else {
+                cell.textContent = val;
+                const marked = drawnSet.has(val);
+                if (marked) {
+                  cell.classList.add("marked");
+                  markedCount++;
+                }
+                if (val === lastNum) cell.classList.add("latest-draw");
+              }
+              grid.appendChild(cell);
+            }
+          }
+          wrap.appendChild(grid);
+          const progress = document.createElement("div");
+          progress.className = "participant-card-progress";
+          progress.textContent = `${markedCount}/24`;
+          wrap.appendChild(progress);
+          const bingoLines = getBingoLines(card, drawnSet);
+          if (bingoLines.length > 0) {
+            wrap.classList.add("has-bingo");
+            const bingoEl = document.createElement("div");
+            bingoEl.className = "participant-card-bingo";
+            bingoEl.textContent = "BINGO! " + bingoLines.join(", ");
+            wrap.appendChild(bingoEl);
+          }
+          participantCardsEl.appendChild(wrap);
+        });
+      }
+
       function updateUI() {
         const lastNum = drawnSequence[drawnSequence.length - 1];
 
@@ -410,12 +683,15 @@
           display.innerText = "--";
         }
 
-        // Update Board Marks
-        document.querySelectorAll(".number-cell").forEach((cell) => {
+        // Update Board Marks (main caller board only)
+        document.querySelectorAll("#bingo-board .number-cell").forEach((cell) => {
           const val = parseInt(cell.innerText);
           cell.classList.toggle("marked", drawnSequence.includes(val));
           cell.classList.toggle("latest-draw", val === lastNum);
         });
+
+        // Update participant cards
+        renderParticipantCards(lastNum);
 
         // Update History Timeline
         historyList.innerHTML = "";
@@ -437,6 +713,11 @@
           drawBtn.innerText = "DRAW";
           drawBtn.style.backgroundColor = "var(--secondary)";
         }
+
+        // Participants input: disabled mid-game with tooltip
+        const isMidGame = drawnSequence.length > 0;
+        numParticipantsInput.disabled = isMidGame;
+        numParticipantsInput.title = isMidGame ? "Changing participants mid-game is disabled" : "";
       }
 
       function drawNumber() {
@@ -476,6 +757,19 @@
           } catch (_) {}
           initGame();
         }
+      });
+
+      numParticipantsInput.addEventListener("input", () => {
+        if (drawnSequence.length > 0) return;
+        const n = Math.min(12, Math.max(1, parseInt(numParticipantsInput.value, 10) || 1));
+        numParticipantsInput.value = String(n);
+        numParticipants = n;
+        participantCards = [];
+        for (let i = 0; i < numParticipants; i++) {
+          participantCards.push(generateOneCard());
+        }
+        saveState();
+        renderParticipantCards(null);
       });
 
       buildBoard();
