@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Print cards – Bingabu</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #ff6b6b;
+        --secondary: #4ecdc4;
+        --accent: #ffe66d;
+        --bg: #f7f9fc;
+        --text: #2d3436;
+        --b-col: #ff6b6b;
+        --i-col: #feca57;
+        --n-col: #48dbfb;
+        --g-col: #1dd1a1;
+        --o-col: #ff9ff3;
+      }
+
+      body {
+        font-family: "Quicksand", sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .no-print {
+        width: 100%;
+        max-width: 900px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 2rem;
+        margin: 0 0 8px 0;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      button, .link-btn {
+        font-family: "Fredoka One", cursive;
+        cursor: pointer;
+        padding: 10px 20px;
+        border-radius: 50px;
+        border: none;
+        font-size: 1rem;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      #print-btn {
+        background-color: var(--secondary);
+        color: white;
+        box-shadow: 0 4px 0 #39b5ae;
+      }
+      #print-btn:active {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 #39b5ae;
+      }
+
+      #refresh-btn {
+        background-color: #dfe6e9;
+        color: var(--text);
+      }
+      #refresh-btn:hover {
+        background-color: #b2bec3;
+        color: white;
+      }
+
+      .link-btn {
+        background-color: transparent;
+        color: var(--primary);
+        border: 2px solid var(--primary);
+      }
+      .link-btn:hover {
+        background-color: var(--primary);
+        color: white;
+      }
+
+      .ink-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+      }
+      .ink-option input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--secondary);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        max-width: 400px;
+      }
+      .empty-state p {
+        margin: 0 0 16px 0;
+        line-height: 1.5;
+      }
+      .empty-state a {
+        color: var(--primary);
+        font-weight: 700;
+      }
+
+      .empty-state.hidden {
+        display: none;
+      }
+
+      .cards-container.hidden {
+        display: none;
+      }
+
+      .cards-container {
+        width: 100%;
+        max-width: 900px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+      }
+
+      .participant-card-wrap {
+        background: white;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        border: 2px solid #eee;
+      }
+
+      .participant-card-title {
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 8px;
+        color: var(--text);
+      }
+
+      .participant-card {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 3px;
+        font-size: 0.85rem;
+      }
+
+      .participant-card .card-header-cell {
+        font-family: "Fredoka One", cursive;
+        font-weight: 700;
+        padding: 4px 0;
+        text-align: center;
+      }
+      .participant-card .card-header-cell.b { color: var(--b-col); }
+      .participant-card .card-header-cell.i { color: var(--i-col); }
+      .participant-card .card-header-cell.n { color: var(--n-col); }
+      .participant-card .card-header-cell.g { color: var(--g-col); }
+      .participant-card .card-header-cell.o { color: var(--o-col); }
+
+      .participant-card .card-cell {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        font-weight: 700;
+        background: #f1f3f4;
+        color: #636e72;
+      }
+      .participant-card .card-cell.free {
+        background: var(--n-col);
+        color: white;
+        font-size: 0.6rem;
+      }
+
+      /* Ink-friendly: for print, lighter backgrounds */
+      body.ink-friendly .participant-card .card-header-cell.b { color: #333; }
+      body.ink-friendly .participant-card .card-header-cell.i { color: #333; }
+      body.ink-friendly .participant-card .card-header-cell.n { color: #333; }
+      body.ink-friendly .participant-card .card-header-cell.g { color: #333; }
+      body.ink-friendly .participant-card .card-header-cell.o { color: #333; }
+      body.ink-friendly .participant-card .card-cell {
+        background: #fff;
+        border: 1px solid #ccc;
+      }
+      body.ink-friendly .participant-card .card-cell.free {
+        background: #e8e8e8;
+        color: #333;
+        border: 1px solid #999;
+      }
+
+      @media print {
+        @page {
+          size: A4;
+          margin: 12mm;
+        }
+        body {
+          background: white;
+          padding: 0;
+        }
+        .no-print {
+          display: none !important;
+        }
+        .cards-container {
+          max-width: none;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10mm;
+          padding: 0;
+        }
+        .participant-card-wrap {
+          box-shadow: none;
+          border: 1px solid #333;
+          page-break-inside: avoid;
+        }
+        /* Grid lines and larger type for visibility */
+        .participant-card .card-header-cell {
+          border: 1px solid #333;
+          border-bottom: 2px solid #333;
+        }
+        .participant-card .card-cell {
+          border: 1px solid #333;
+        }
+        .participant-card {
+          font-size: 0.95rem;
+        }
+        .participant-card .card-cell.free {
+          font-size: 0.65rem;
+        }
+        .participant-card-title {
+          font-size: 1.05rem;
+        }
+        /* 4 cards per A4 page: break after every 4th card */
+        .participant-card-wrap:nth-of-type(4n) {
+          page-break-after: always;
+        }
+        /* Ink-friendly print */
+        body.ink-friendly .participant-card .card-cell {
+          background: #fff !important;
+          border: 1px solid #333 !important;
+        }
+        body.ink-friendly .participant-card .card-cell.free {
+          background: #eee !important;
+          border: 1px solid #333 !important;
+          color: #333 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="no-print">
+      <h1>Print cards</h1>
+      <p id="subtitle">Same cards as your current game</p>
+      <div class="actions" id="actions">
+        <button id="print-btn">Print</button>
+        <button id="refresh-btn">Refresh</button>
+        <a href="bingo.html" class="link-btn">Back to game</a>
+      </div>
+      <div class="ink-option">
+        <input type="checkbox" id="ink-friendly" />
+        <label for="ink-friendly">Ink-friendly print (lighter, borders only)</label>
+      </div>
+    </div>
+
+    <div id="empty-state" class="empty-state hidden">
+      <p>No game in progress. Open the <a href="bingo.html">Bingabu game</a> and start or load a game, then return here to print the same cards.</p>
+    </div>
+
+    <div class="cards-container" id="cards-container"></div>
+
+    <script>
+      const STORAGE_KEY = "bingo-manager-state";
+      const cardsContainer = document.getElementById("cards-container");
+      const emptyState = document.getElementById("empty-state");
+      const actionsEl = document.getElementById("actions");
+      const printBtn = document.getElementById("print-btn");
+      const refreshBtn = document.getElementById("refresh-btn");
+      const inkFriendlyCheckbox = document.getElementById("ink-friendly");
+
+      function getColumnClass(col) {
+        return ["col-b", "col-i", "col-n", "col-g", "col-o"][col];
+      }
+
+      function getState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return null;
+          const data = JSON.parse(raw);
+          const cards = data.participantCards;
+          if (!Array.isArray(cards) || cards.length === 0) return null;
+          const valid = cards.every(
+            (card) =>
+              Array.isArray(card) &&
+              card.length === 5 &&
+              card.every((row) => Array.isArray(row) && row.length === 5)
+          );
+          return valid ? data : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function renderCards() {
+        const state = getState();
+        cardsContainer.innerHTML = "";
+
+        if (!state || !state.participantCards.length) {
+          emptyState.classList.remove("hidden");
+          cardsContainer.classList.add("hidden");
+          printBtn.disabled = true;
+          return;
+        }
+
+        emptyState.classList.add("hidden");
+        cardsContainer.classList.remove("hidden");
+        printBtn.disabled = false;
+
+        state.participantCards.forEach((card, index) => {
+          const wrap = document.createElement("div");
+          wrap.className = "participant-card-wrap";
+          const title = document.createElement("div");
+          title.className = "participant-card-title";
+          title.textContent = `Player ${index + 1}`;
+          wrap.appendChild(title);
+
+          const grid = document.createElement("div");
+          grid.className = "participant-card";
+          for (let c = 0; c < 5; c++) {
+            const h = document.createElement("div");
+            h.className = `card-header-cell ${["b", "i", "n", "g", "o"][c]}`;
+            h.textContent = ["B", "I", "N", "G", "O"][c];
+            grid.appendChild(h);
+          }
+          for (let row = 0; row < 5; row++) {
+            for (let col = 0; col < 5; col++) {
+              const val = card[row][col];
+              const cell = document.createElement("div");
+              cell.className = "card-cell " + getColumnClass(col);
+              if (val === "FREE") {
+                cell.textContent = "FREE";
+                cell.classList.add("free");
+              } else {
+                cell.textContent = val;
+              }
+              grid.appendChild(cell);
+            }
+          }
+          wrap.appendChild(grid);
+          cardsContainer.appendChild(wrap);
+        });
+      }
+
+      refreshBtn.addEventListener("click", () => {
+        renderCards();
+      });
+
+      printBtn.addEventListener("click", () => {
+        window.print();
+      });
+
+      inkFriendlyCheckbox.addEventListener("change", () => {
+        document.body.classList.toggle("ink-friendly", inkFriendlyCheckbox.checked);
+      });
+
+      renderCards();
+    </script>
+  </body>
+</html>
