@@ -213,17 +213,6 @@
       .controls-actions .print-cards-link {
         margin-top: 0;
       }
-      #setup-players-btn {
-        background-color: #dfe6e9;
-        color: var(--text);
-        font-size: 0.85rem;
-        padding: 8px 16px;
-        border-radius: 50px;
-      }
-      #setup-players-btn:hover {
-        background-color: #b2bec3;
-        color: white;
-      }
 
       .setup-players-section {
         margin-top: 12px;
@@ -259,6 +248,57 @@
       }
       .setup-players-section.setup-players-collapsed .setup-players-content {
         display: none;
+      }
+
+      .advanced-controls-card {
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto 25px;
+        padding: 20px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        border: 2px solid #eee;
+      }
+      .advanced-controls-card-title {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1.3rem;
+        margin: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .advanced-controls-card-title:hover {
+        color: var(--secondary);
+      }
+      .advanced-controls-card .section-chevron {
+        font-size: 1rem;
+        transition: transform 0.2s ease;
+      }
+      .advanced-controls-card.advanced-controls-collapsed .section-chevron {
+        transform: rotate(-90deg);
+      }
+      .advanced-controls-card.advanced-controls-collapsed .advanced-controls-content {
+        display: none;
+      }
+      .advanced-controls-content {
+        margin-top: 16px;
+      }
+      .advanced-controls-card .hide-cards-setting,
+      .advanced-controls-card .mc-setting {
+        justify-content: flex-start;
+      }
+      .advanced-controls-card .mc-advanced {
+        margin-top: 12px;
+      }
+      .advanced-controls-card .setup-players-section {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px dashed rgba(0,0,0,0.1);
       }
 
       .shortcuts {
@@ -323,6 +363,43 @@
       .participant-names input::placeholder {
         color: #b2bec3;
       }
+      .participant-quirks-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 4px;
+        margin-left: 4px;
+      }
+      .participant-quirks-row input {
+        flex: 1;
+        min-width: 80px;
+        font-size: 0.8rem;
+        padding: 4px 8px;
+      }
+      .participant-quirks-row label {
+        font-size: 0.75rem;
+        color: #636e72;
+        white-space: nowrap;
+      }
+      .participant-quirks-row .quirk-preset-btn {
+        font-family: "Quicksand", sans-serif;
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--secondary);
+        background: transparent;
+        color: var(--secondary);
+        cursor: pointer;
+      }
+      .participant-quirks-row .quirk-preset-btn:hover {
+        background: var(--secondary);
+        color: white;
+      }
+      .participant-player-block {
+        margin-bottom: 10px;
+      }
+      .hide-cards-setting {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -721,19 +798,23 @@
           <span>◀ Previous</span>
           <span>Space / Next ▶</span>
         </div>
-        <section class="setup-players-section" id="setup-players-section" aria-label="Participants and player names">
-          <h3 id="setup-players-header" role="button" tabindex="0" aria-expanded="true" aria-controls="setup-players-content">Participants & names <span class="section-chevron" aria-hidden="true">▼</span></h3>
-          <div class="setup-players-content" id="setup-players-content">
-            <div class="participant-setting">
-              <label for="num-participants">Participants</label>
-              <input type="number" id="num-participants" min="1" max="12" value="1" title="" />
-            </div>
-            <div class="participant-names-wrap" id="participant-names-wrap">
-              <label id="participant-names-label">Player names</label>
-              <div class="participant-names" id="participant-names"></div>
-            </div>
-          </div>
-        </section>
+        <button id="reset-btn">New Game</button>
+        <div class="controls-actions">
+          <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
+        </div>
+      </div>
+    </div>
+
+    <section class="leaderboard-section" id="leaderboard-section">
+      <h2>Leaderboard</h2>
+      <ul class="leaderboard-list" id="leaderboard-list"></ul>
+      <div class="winner-declaration" id="winner-declaration"></div>
+    </section>
+    </div>
+
+    <section class="advanced-controls-card" id="advanced-controls-card">
+      <h2 id="advanced-controls-header" class="advanced-controls-card-title" role="button" tabindex="0" aria-expanded="true" aria-controls="advanced-controls-content">Advanced Controls <span class="section-chevron" aria-hidden="true">▼</span></h2>
+      <div class="advanced-controls-content" id="advanced-controls-content">
         <div class="hide-cards-setting">
           <input type="checkbox" id="hide-cards" />
           <label for="hide-cards">Hide cards (use your own)</label>
@@ -771,20 +852,21 @@
             </div>
           </div>
         </div>
-        <button id="reset-btn">New Game</button>
-        <div class="controls-actions">
-          <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
-          <button type="button" id="setup-players-btn">Player names</button>
-        </div>
+        <section class="setup-players-section" id="setup-players-section" aria-label="Participants and player names">
+          <h3 id="setup-players-header" role="button" tabindex="0" aria-expanded="true" aria-controls="setup-players-content">Participants & names <span class="section-chevron" aria-hidden="true">▼</span></h3>
+          <div class="setup-players-content" id="setup-players-content">
+            <div class="participant-setting">
+              <label for="num-participants">Participants</label>
+              <input type="number" id="num-participants" min="1" max="12" value="1" title="" />
+            </div>
+            <div class="participant-names-wrap" id="participant-names-wrap">
+              <label id="participant-names-label">Player names (you can change these anytime)</label>
+              <div class="participant-names" id="participant-names"></div>
+            </div>
+          </div>
+        </section>
       </div>
-    </div>
-
-    <section class="leaderboard-section" id="leaderboard-section">
-      <h2>Leaderboard</h2>
-      <ul class="leaderboard-list" id="leaderboard-list"></ul>
-      <div class="winner-declaration" id="winner-declaration"></div>
     </section>
-    </div>
 
     <div class="board" id="bingo-board">
       <div class="column-group b-group">
@@ -845,7 +927,8 @@
       const setupPlayersSection = document.getElementById("setup-players-section");
       const setupPlayersHeader = document.getElementById("setup-players-header");
       const setupPlayersContent = document.getElementById("setup-players-content");
-      const setupPlayersBtn = document.getElementById("setup-players-btn");
+      const advancedControlsCard = document.getElementById("advanced-controls-card");
+      const advancedControlsHeader = document.getElementById("advanced-controls-header");
 
       const POINTS_PER_LINE = 10;
       // MC voice: defaults and optional random variation (advanced panel can override)
@@ -858,6 +941,7 @@
       let drawnSequence = [];
       let numParticipants = 1;
       let participantNames = [];
+      let participantQuirks = []; // { excludeStr: string, preferStr: string } per player
       let participantCards = [];
       let hideCards = false;
       let mcEnabled = true;
@@ -897,6 +981,7 @@
               drawnSequence,
               numParticipants,
               participantNames: participantNames.slice(0, numParticipants),
+              participantQuirks: participantQuirks.slice(0, numParticipants),
               participantCards,
               hideCards,
               mcEnabled,
@@ -940,6 +1025,13 @@
               } else {
                 participantNames = Array(np).fill("");
               }
+              if (Array.isArray(data.participantQuirks)) {
+                participantQuirks = data.participantQuirks.slice(0, np).map((q) => {
+                  if (q && typeof q === "object") return { excludeStr: String(q.excludeStr || ""), preferStr: String(q.preferStr || "") };
+                  return { excludeStr: "", preferStr: "" };
+                });
+              }
+              while (participantQuirks.length < np) participantQuirks.push({ excludeStr: "", preferStr: "" });
             }
           }
           if (typeof data.hideCards === "boolean") {
@@ -966,7 +1058,9 @@
           if (participantCards.length === 0 && drawnSequence.length > 0) {
             numParticipants = 1;
             numParticipantsInput.value = "1";
-            participantCards = [generateOneCard()];
+            participantQuirks = participantQuirks.slice(0, 1);
+            while (participantQuirks.length < 1) participantQuirks.push({ excludeStr: "", preferStr: "" });
+            participantCards = [generateOneCard(parseQuirk(participantQuirks[0]))];
           }
           return true;
         } catch (_) {
@@ -983,12 +1077,50 @@
         return a;
       }
 
-      function generateOneCard() {
+      function parseQuirkNumbers(str) {
+        if (!str || typeof str !== "string") return [];
+        const trimmed = str.trim().toLowerCase();
+        const multiplesMatch = trimmed.match(/multiples?\s+of\s+(\d+)/);
+        if (multiplesMatch) {
+          const base = parseInt(multiplesMatch[1], 10);
+          if (base >= 1 && base <= 75) {
+            return Array.from({ length: Math.floor(75 / base) }, (_, i) => (i + 1) * base).filter((n) => n >= 1 && n <= 75);
+          }
+        }
+        return str
+          .split(/[\s,]+/)
+          .map((s) => parseInt(s.trim(), 10))
+          .filter((n) => Number.isInteger(n) && n >= 1 && n <= 75);
+      }
+
+      function parseQuirk(quirk) {
+        if (!quirk) return { exclude: [], prefer: [] };
+        return {
+          exclude: parseQuirkNumbers(quirk.excludeStr),
+          prefer: parseQuirkNumbers(quirk.preferStr),
+        };
+      }
+
+      function generateOneCard(quirk) {
+        const { exclude = [], prefer = [] } = quirk || {};
+        const excludeSet = new Set(exclude);
         const card = [];
         for (let col = 0; col < 5; col++) {
           const start = col * 15 + 1;
           const count = col === 2 ? 4 : 5;
-          const nums = shuffle(Array.from({ length: 15 }, (_, i) => start + i)).slice(0, count);
+          let pool = Array.from({ length: 15 }, (_, i) => start + i).filter((n) => !excludeSet.has(n));
+          const preferredInCol = prefer.filter((n) => n >= start && n < start + 15);
+          const chosen = [];
+          const preferredShuffled = shuffle(preferredInCol).slice(0, count);
+          for (const n of preferredShuffled) {
+            if (pool.includes(n)) {
+              chosen.push(n);
+              pool = pool.filter((x) => x !== n);
+            }
+          }
+          const need = count - chosen.length;
+          const rest = shuffle(pool).slice(0, need);
+          const nums = shuffle([...chosen, ...rest]);
           let idx = 0;
           for (let row = 0; row < 5; row++) {
             if (!card[row]) card[row] = [];
@@ -1003,25 +1135,100 @@
         while (participantNames.length < numParticipants) participantNames.push("");
       }
 
+      function ensureParticipantQuirksLength() {
+        participantQuirks = participantQuirks.slice(0, numParticipants);
+        while (participantQuirks.length < numParticipants) participantQuirks.push({ excludeStr: "", preferStr: "" });
+      }
+
       function renderParticipantNameInputs() {
         if (!participantNamesEl) return;
         participantNamesEl.innerHTML = "";
         for (let i = 0; i < numParticipants; i++) {
-          const inp = document.createElement("input");
-          inp.type = "text";
-          inp.placeholder = `Player ${i + 1}`;
-          inp.value = participantNames[i] || "";
-          inp.setAttribute("aria-label", `Name for player ${i + 1}`);
-          const idx = i;
-          inp.addEventListener("input", () => {
-            participantNames[idx] = inp.value;
+          const block = document.createElement("div");
+          block.className = "participant-player-block";
+          const nameInp = document.createElement("input");
+          nameInp.type = "text";
+          nameInp.placeholder = `Player ${i + 1}`;
+          nameInp.value = participantNames[i] || "";
+          nameInp.setAttribute("aria-label", `Name for player ${i + 1}`);
+          const nameIdx = i;
+          nameInp.addEventListener("input", () => {
+            participantNames[nameIdx] = nameInp.value;
             saveState();
           });
-          inp.addEventListener("change", () => {
-            participantNames[idx] = inp.value;
+          nameInp.addEventListener("change", () => {
+            participantNames[nameIdx] = nameInp.value;
             saveState();
           });
-          participantNamesEl.appendChild(inp);
+          block.appendChild(nameInp);
+
+          const quirk = participantQuirks[i] || { excludeStr: "", preferStr: "" };
+          const quirksRow = document.createElement("div");
+          quirksRow.className = "participant-quirks-row";
+          const excludeLabel = document.createElement("label");
+          excludeLabel.textContent = "Exclude:";
+          const excludeInp = document.createElement("input");
+          excludeInp.type = "text";
+          excludeInp.placeholder = "e.g. 7, 13";
+          excludeInp.value = quirk.excludeStr || "";
+          excludeInp.setAttribute("aria-label", `Exclude numbers for player ${i + 1}`);
+          const preferLabel = document.createElement("label");
+          preferLabel.textContent = "Prefer:";
+          const preferInp = document.createElement("input");
+          preferInp.type = "text";
+          preferInp.placeholder = "e.g. 11, 22, 33 or multiples of 11";
+          preferInp.value = quirk.preferStr || "";
+          preferInp.setAttribute("aria-label", `Prefer numbers for player ${i + 1}`);
+          const value = "multiples of 11";
+          const presetPreferBtn = document.createElement("button");
+          presetPreferBtn.type = "button";
+          presetPreferBtn.className = "quirk-preset-btn";
+          presetPreferBtn.textContent = "Prefer ×11";
+          presetPreferBtn.title = "Set Prefer to multiples of 11 (11, 22, 33, 44, 55, 66)";
+          const presetExcludeBtn = document.createElement("button");
+          presetExcludeBtn.type = "button";
+          presetExcludeBtn.className = "quirk-preset-btn";
+          presetExcludeBtn.textContent = "Exclude ×11";
+          presetExcludeBtn.title = "Set Exclude to multiples of 11";
+          const quirkIdx = i;
+          const saveQuirks = () => {
+            participantQuirks[quirkIdx] = { excludeStr: excludeInp.value.trim(), preferStr: preferInp.value.trim() };
+            saveState();
+          };
+          excludeInp.addEventListener("input", saveQuirks);
+          excludeInp.addEventListener("change", saveQuirks);
+          preferInp.addEventListener("input", saveQuirks);
+          preferInp.addEventListener("change", saveQuirks);
+          presetPreferBtn.addEventListener("click", () => {
+            preferInp.value = value;
+            participantQuirks[quirkIdx] = { excludeStr: excludeInp.value.trim(), preferStr: value };
+            saveState();
+          });
+          presetExcludeBtn.addEventListener("click", () => {
+            excludeInp.value = value;
+            participantQuirks[quirkIdx] = { excludeStr: value, preferStr: preferInp.value.trim() };
+            saveState();
+          });
+          const clearQuirksBtn = document.createElement("button");
+          clearQuirksBtn.type = "button";
+          clearQuirksBtn.className = "quirk-preset-btn";
+          clearQuirksBtn.textContent = "Clear quirks";
+          clearQuirksBtn.title = "Clear Exclude and Prefer for this player";
+          clearQuirksBtn.addEventListener("click", () => {
+            excludeInp.value = "";
+            preferInp.value = "";
+            participantQuirks[quirkIdx] = { excludeStr: "", preferStr: "" };
+            saveState();
+          });
+          quirksRow.appendChild(excludeLabel);
+          quirksRow.appendChild(excludeInp);
+          quirksRow.appendChild(preferLabel);
+          quirksRow.appendChild(preferInp);
+          quirksRow.appendChild(presetPreferBtn);
+          quirksRow.appendChild(presetExcludeBtn);
+          quirksRow.appendChild(clearQuirksBtn);
+          block.appendChild(quirksRow);
+          participantNamesEl.appendChild(block);
         }
       }
 
@@ -1049,9 +1256,11 @@
         participantCards = [];
         participantNames = participantNames.slice(0, numParticipants);
         while (participantNames.length < numParticipants) participantNames.push("");
+        participantQuirks = participantQuirks.slice(0, numParticipants);
+        while (participantQuirks.length < numParticipants) participantQuirks.push({ excludeStr: "", preferStr: "" });
         if (mcAnnouncementEl) mcAnnouncementEl.textContent = "";
         for (let i = 0; i < numParticipants; i++) {
-          participantCards.push(generateOneCard());
+          participantCards.push(generateOneCard(parseQuirk(participantQuirks[i])));
         }
         saveState();
         buildBoard();
@@ -1181,12 +1390,21 @@
         });
 
         const places = ["1st", "2nd", "3rd"];
+        function getOrdinal(n) {
+          if (n >= 1 && n <= 3) return places[n - 1];
+          const mod10 = n % 10;
+          const mod100 = n % 100;
+          if (mod10 === 1 && mod100 !== 11) return n + "st";
+          if (mod10 === 2 && mod100 !== 12) return n + "nd";
+          if (mod10 === 3 && mod100 !== 13) return n + "rd";
+          return n + "th";
+        }
         players.forEach((p, rank) => {
           const li = document.createElement("li");
           li.className = "leaderboard-item" + (rank < 3 ? " place-" + (rank + 1) : "");
           const badge = document.createElement("span");
           badge.className = "place-badge";
-          badge.textContent = rank < 3 ? places[rank] : rank + 1 + ".";
+          badge.textContent = getOrdinal(rank + 1);
           const name = document.createElement("span");
           name.className = "player-name";
           name.textContent = p.name;
@@ -1317,9 +1535,10 @@
         const isMidGame = drawnSequence.length > 0;
         numParticipantsInput.disabled = isMidGame;
         numParticipantsInput.title = isMidGame ? "Changing participants mid-game is disabled" : "";
+        // Name inputs stay editable during the game so players can correct or change names
         if (participantNamesWrap) {
           participantNamesWrap.querySelectorAll("input").forEach((inp) => {
-            inp.disabled = isMidGame;
+            inp.disabled = false;
           });
         }
         // Fold names setup during game, expand during setup
@@ -1388,12 +1607,17 @@
           }
         });
       }
-      if (setupPlayersBtn) {
-        setupPlayersBtn.addEventListener("click", () => {
-          if (setupPlayersSection) {
-            setupPlayersSection.classList.remove("setup-players-collapsed");
-            if (setupPlayersHeader) setupPlayersHeader.setAttribute("aria-expanded", "true");
-            setupPlayersSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      function toggleAdvancedControlsCard() {
+        if (!advancedControlsCard || !advancedControlsHeader) return;
+        const collapsed = advancedControlsCard.classList.toggle("advanced-controls-collapsed");
+        advancedControlsHeader.setAttribute("aria-expanded", String(!collapsed));
+      }
+      if (advancedControlsHeader) {
+        advancedControlsHeader.addEventListener("click", toggleAdvancedControlsCard);
+        advancedControlsHeader.addEventListener("keydown", (e) => {
+          if (e.code === "Enter" || e.code === "Space") {
+            e.preventDefault();
+            toggleAdvancedControlsCard();
           }
         });
       }
@@ -1406,8 +1630,10 @@
         participantCards = [];
         participantNames = participantNames.slice(0, n);
         while (participantNames.length < n) participantNames.push("");
+        participantQuirks = participantQuirks.slice(0, n);
+        while (participantQuirks.length < n) participantQuirks.push({ excludeStr: "", preferStr: "" });
         for (let i = 0; i < numParticipants; i++) {
-          participantCards.push(generateOneCard());
+          participantCards.push(generateOneCard(parseQuirk(participantQuirks[i])));
         }
         saveState();
         if (participantNamesEl) renderParticipantNameInputs();
@@ -1525,6 +1751,7 @@
       if (!loadState()) initGame();
       else {
         ensureParticipantNamesLength();
+        ensureParticipantQuirksLength();
         if (participantNamesEl) renderParticipantNameInputs();
         updateUI();
       }
