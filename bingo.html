@@ -937,6 +937,7 @@
       const MC_PITCH_BASE = 0.99;
       const MC_PITCH_SPREAD = 0.08;
       const MC_PAUSE_MS = 500;
+      const MC_POINTS_PAUSE_MS = 400;
 
       let drawnSequence = [];
       let numParticipants = 1;
@@ -1280,7 +1281,9 @@
         const drawIndex = drawnSequence.length - 1;
         const parts = getMcPhraseParts(letter, num, drawIndex);
         const displayText = parts.display;
-        if (mcAnnouncementEl) mcAnnouncementEl.textContent = displayText;
+        const scorers = getPlayersWhoScoredOnLatestDraw();
+        const pointsPhrase = getPointsAnnouncementPhrase(scorers);
+        if (mcAnnouncementEl) mcAnnouncementEl.textContent = displayText + (pointsPhrase ? " " + pointsPhrase : "");
         if (!mcEnabled || typeof speechSynthesis === "undefined") return;
 
         const voice = getMcVoice();
@@ -1299,12 +1302,16 @@
           speechSynthesis.speak(u);
         }
 
+        function speakPointsAfterPause() {
+          if (pointsPhrase) setTimeout(() => speak(pointsPhrase), MC_POINTS_PAUSE_MS);
+        }
+
         if (parts.intro != null && parts.intro !== "") {
           speak(parts.intro, () => {
-            setTimeout(() => speak(parts.number), MC_PAUSE_MS);
+            setTimeout(() => speak(parts.number, speakPointsAfterPause), MC_PAUSE_MS);
           });
         } else {
-          speak(displayText);
+          speak(displayText, speakPointsAfterPause);
         }
       }
 
@@ -1479,6 +1486,32 @@
         return Infinity;
       }
 
+      function getPlayersWhoScoredOnLatestDraw() {
+        if (drawnSequence.length < 2 || participantCards.length === 0) return [];
+        const drawnSetBefore = new Set(drawnSequence.slice(0, -1));
+        const drawnSetAfter = new Set(drawnSequence);
+        const names = [];
+        for (let i = 0; i < participantCards.length; i++) {
+          const linesBefore = getBingoLines(participantCards[i], drawnSetBefore).length;
+          const linesAfter = getBingoLines(participantCards[i], drawnSetAfter).length;
+          if (linesAfter > linesBefore) {
+            const name = (participantNames[i] && participantNames[i].trim()) || "Player " + (i + 1);
+            names.push(name);
+          }
+        }
+        return names;
+      }
+
+      function getPointsAnnouncementPhrase(scorerNames) {
+        if (!scorerNames || scorerNames.length === 0) return "";
+        if (scorerNames.length === 1) return "Points for " + scorerNames[0] + "!";
+        if (scorerNames.length === 2) return "Points for " + scorerNames[0] + " and " + scorerNames[1] + "!";
+        const showCount = 2;
+        const first = scorerNames.slice(0, showCount).join(", ");
+        const rest = scorerNames.length - showCount;
+        return "Points for " + first + ", and " + rest + " other" + (rest === 1 ? "" : "s") + "!";
+      }
+
       function buildLeaderboard() {
         leaderboardList.innerHTML = "";
         winnerDeclaration.textContent = "";
@@ -1601,7 +1634,11 @@
         // Update Big Display
         if (lastNum) {
           display.innerText = `${getLetter(lastNum)}-${lastNum}`;
-          if (mcAnnouncementEl) mcAnnouncementEl.textContent = getMcPhrase(getLetter(lastNum), lastNum, drawnSequence.length - 1);
+          if (mcAnnouncementEl) {
+            const phrase = getMcPhrase(getLetter(lastNum), lastNum, drawnSequence.length - 1);
+            const pointsPhrase = getPointsAnnouncementPhrase(getPlayersWhoScoredOnLatestDraw());
+            mcAnnouncementEl.textContent = phrase + (pointsPhrase ? " " + pointsPhrase : "");
+          }
         } else {
           display.innerText = "--";
           if (mcAnnouncementEl) mcAnnouncementEl.textContent = "";
