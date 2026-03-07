@@ -89,13 +89,25 @@
       }
 
       /* Main Display */
+      .controls-band {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: stretch;
+        gap: 20px;
+        flex-wrap: wrap;
+        width: 100%;
+        max-width: 900px;
+        margin-bottom: 25px;
+      }
+
       .controls {
         background: white;
         padding: 20px;
         border-radius: 20px;
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
         text-align: center;
-        margin-bottom: 25px;
+        margin-bottom: 0;
         width: 100%;
         max-width: 400px;
       }
@@ -281,6 +293,61 @@
         font-size: 1rem;
         margin-top: 4px;
       }
+
+      /* Leaderboard */
+      .leaderboard-section {
+        width: 100%;
+        max-width: 400px;
+        margin-top: 0;
+        margin-top: 20px;
+        padding: 16px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        border: 2px solid #eee;
+      }
+      .leaderboard-section h2 {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1.2rem;
+        margin: 0 0 12px 0;
+      }
+      .leaderboard-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .leaderboard-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+        font-weight: 600;
+      }
+      .leaderboard-item .place-badge {
+        font-family: "Fredoka One", cursive;
+        min-width: 2.2em;
+        font-size: 0.9rem;
+      }
+      .leaderboard-item.place-1 .place-badge { color: #d4af37; }
+      .leaderboard-item.place-2 .place-badge { color: #c0c0c0; }
+      .leaderboard-item.place-3 .place-badge { color: #cd7f32; }
+      .leaderboard-item .player-name { flex: 1; }
+      .leaderboard-item .player-points {
+        color: var(--secondary);
+        font-size: 1rem;
+      }
+      .winner-declaration {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1rem;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed var(--secondary);
+      }
+
       .participant-card {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
@@ -431,6 +498,10 @@
         .num-grid {
           grid-template-columns: repeat(5, 1fr);
         }
+        .controls-band {
+          flex-direction: column;
+          align-items: center;
+        }
       }
     </style>
   </head>
@@ -443,6 +514,7 @@
       </div>
     </div>
 
+    <div class="controls-band">
     <div class="controls">
       <div id="current-number">--</div>
       <div class="btn-group">
@@ -465,6 +537,13 @@
         <button id="reset-btn">Reset Board</button>
         <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
       </div>
+    </div>
+
+    <section class="leaderboard-section" id="leaderboard-section">
+      <h2>Leaderboard</h2>
+      <ul class="leaderboard-list" id="leaderboard-list"></ul>
+      <div class="winner-declaration" id="winner-declaration"></div>
+    </section>
     </div>
 
     <div class="board" id="bingo-board">
@@ -507,8 +586,10 @@
       const participantCardsEl = document.getElementById("participant-cards");
       const participantCardsSection = document.getElementById("participant-cards-section");
       const hideCardsCheckbox = document.getElementById("hide-cards");
+      const leaderboardList = document.getElementById("leaderboard-list");
+      const winnerDeclaration = document.getElementById("winner-declaration");
 
-      let availableNumbers = [];
+      const POINTS_PER_LINE = 10;
       let drawnSequence = [];
       let numParticipants = 1;
       let participantCards = [];
@@ -657,6 +738,62 @@
         return lines;
       }
 
+      function getFirstBingoDrawIndex(card, drawnSequence) {
+        for (let n = 1; n <= drawnSequence.length; n++) {
+          const set = new Set(drawnSequence.slice(0, n));
+          if (getBingoLines(card, set).length >= 1) return n;
+        }
+        return Infinity;
+      }
+
+      function buildLeaderboard() {
+        leaderboardList.innerHTML = "";
+        winnerDeclaration.textContent = "";
+        if (participantCards.length === 0) return;
+        const drawnSet = new Set(drawnSequence);
+        const lastNum = drawnSequence[drawnSequence.length - 1];
+
+        const players = participantCards.map((card, index) => {
+          const lines = getBingoLines(card, drawnSet);
+          const points = lines.length * POINTS_PER_LINE;
+          const firstBingoAt = getFirstBingoDrawIndex(card, drawnSequence);
+          return { index, name: `Player ${index + 1}`, points, firstBingoAt };
+        });
+
+        players.sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          return a.firstBingoAt - b.firstBingoAt;
+        });
+
+        const places = ["1st", "2nd", "3rd"];
+        players.forEach((p, rank) => {
+          const li = document.createElement("li");
+          li.className = "leaderboard-item" + (rank < 3 ? " place-" + (rank + 1) : "");
+          const badge = document.createElement("span");
+          badge.className = "place-badge";
+          badge.textContent = rank < 3 ? places[rank] : rank + 1 + ".";
+          const name = document.createElement("span");
+          name.className = "player-name";
+          name.textContent = p.name;
+          const pts = document.createElement("span");
+          pts.className = "player-points";
+          pts.textContent = p.points + " pts";
+          li.appendChild(badge);
+          li.appendChild(name);
+          li.appendChild(pts);
+          leaderboardList.appendChild(li);
+        });
+
+        const withBingo = players.filter((p) => p.points > 0);
+        if (withBingo.length > 0) {
+          const parts = [];
+          if (withBingo[0]) parts.push("1st: " + withBingo[0].name);
+          if (withBingo[1]) parts.push("2nd: " + withBingo[1].name);
+          if (withBingo[2]) parts.push("3rd: " + withBingo[2].name);
+          winnerDeclaration.textContent = parts.join("  ·  ");
+        }
+      }
+
       function renderParticipantCards(lastNum) {
         participantCardsEl.innerHTML = "";
         if (participantCards.length === 0) return;
@@ -734,6 +871,9 @@
 
         // Update participant cards
         renderParticipantCards(lastNum);
+
+        // Update leaderboard and winner declaration
+        buildLeaderboard();
 
         // Update History Timeline
         historyList.innerHTML = "";
