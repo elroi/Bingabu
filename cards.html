@@ -335,7 +335,8 @@
           wrap.className = "participant-card-wrap";
           const title = document.createElement("div");
           title.className = "participant-card-title";
-          title.textContent = `Player ${index + 1}`;
+          const name = (state.participantNames && state.participantNames[index] && state.participantNames[index].trim()) || `Player ${index + 1}`;
+          title.textContent = name;
           wrap.appendChild(title);
 
           const grid = document.createElement("div");

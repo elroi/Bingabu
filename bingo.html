@@ -203,6 +203,64 @@
         margin-top: 4px;
       }
 
+      .controls-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .controls-actions .print-cards-link {
+        margin-top: 0;
+      }
+      #setup-players-btn {
+        background-color: #dfe6e9;
+        color: var(--text);
+        font-size: 0.85rem;
+        padding: 8px 16px;
+        border-radius: 50px;
+      }
+      #setup-players-btn:hover {
+        background-color: #b2bec3;
+        color: white;
+      }
+
+      .setup-players-section {
+        margin-top: 12px;
+        border: 1px dashed rgba(0,0,0,0.1);
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: rgba(0,0,0,0.02);
+      }
+      .setup-players-section h3 {
+        font-family: "Fredoka One", cursive;
+        font-size: 1rem;
+        color: var(--text);
+        margin: 0 0 0 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .setup-players-section h3:hover {
+        color: var(--secondary);
+      }
+      .setup-players-section .section-chevron {
+        font-size: 0.9rem;
+        transition: transform 0.2s ease;
+      }
+      .setup-players-section.setup-players-collapsed .section-chevron {
+        transform: rotate(-90deg);
+      }
+      .setup-players-section .setup-players-content {
+        margin-top: 10px;
+      }
+      .setup-players-section.setup-players-collapsed .setup-players-content {
+        display: none;
+      }
+
       .shortcuts {
         font-size: 0.75rem;
         color: #b2bec3;
@@ -235,7 +293,36 @@
         cursor: not-allowed;
       }
 
-      .hide-cards-setting {
+      .participant-names-wrap {
+        margin-top: 8px;
+        width: 100%;
+      }
+      .participant-names-wrap label {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .participant-names {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .participant-names input {
+        padding: 6px 10px;
+        border: 2px solid #eee;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-family: "Quicksand", sans-serif;
+      }
+      .participant-names input:disabled {
+        background: #f1f3f4;
+        color: #636e72;
+        cursor: not-allowed;
+      }
+      .participant-names input::placeholder {
+        color: #b2bec3;
+      }
         display: flex;
         align-items: center;
         justify-content: center;
@@ -634,10 +721,19 @@
           <span>◀ Previous</span>
           <span>Space / Next ▶</span>
         </div>
-        <div class="participant-setting">
-          <label for="num-participants">Participants</label>
-          <input type="number" id="num-participants" min="1" max="12" value="1" title="" />
-        </div>
+        <section class="setup-players-section" id="setup-players-section" aria-label="Participants and player names">
+          <h3 id="setup-players-header" role="button" tabindex="0" aria-expanded="true" aria-controls="setup-players-content">Participants & names <span class="section-chevron" aria-hidden="true">▼</span></h3>
+          <div class="setup-players-content" id="setup-players-content">
+            <div class="participant-setting">
+              <label for="num-participants">Participants</label>
+              <input type="number" id="num-participants" min="1" max="12" value="1" title="" />
+            </div>
+            <div class="participant-names-wrap" id="participant-names-wrap">
+              <label id="participant-names-label">Player names</label>
+              <div class="participant-names" id="participant-names"></div>
+            </div>
+          </div>
+        </section>
         <div class="hide-cards-setting">
           <input type="checkbox" id="hide-cards" />
           <label for="hide-cards">Hide cards (use your own)</label>
@@ -676,7 +772,10 @@
           </div>
         </div>
         <button id="reset-btn">New Game</button>
-        <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
+        <div class="controls-actions">
+          <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
+          <button type="button" id="setup-players-btn">Player names</button>
+        </div>
       </div>
     </div>
 
@@ -724,6 +823,8 @@
       const historyList = document.getElementById("history-list");
       const historyContainer = document.querySelector(".history-container");
       const numParticipantsInput = document.getElementById("num-participants");
+      const participantNamesEl = document.getElementById("participant-names");
+      const participantNamesWrap = document.getElementById("participant-names-wrap");
       const participantCardsEl = document.getElementById("participant-cards");
       const participantCardsSection = document.getElementById("participant-cards-section");
       const participantCardsHeader = document.getElementById("participant-cards-header");
@@ -741,6 +842,10 @@
       const mcPitchSlider = document.getElementById("mc-pitch");
       const mcPitchValue = document.getElementById("mc-pitch-value");
       const mcVariationCheckbox = document.getElementById("mc-variation");
+      const setupPlayersSection = document.getElementById("setup-players-section");
+      const setupPlayersHeader = document.getElementById("setup-players-header");
+      const setupPlayersContent = document.getElementById("setup-players-content");
+      const setupPlayersBtn = document.getElementById("setup-players-btn");
 
       const POINTS_PER_LINE = 10;
       // MC voice: defaults and optional random variation (advanced panel can override)
@@ -752,6 +857,7 @@
 
       let drawnSequence = [];
       let numParticipants = 1;
+      let participantNames = [];
       let participantCards = [];
       let hideCards = false;
       let mcEnabled = true;
@@ -790,6 +896,7 @@
             JSON.stringify({
               drawnSequence,
               numParticipants,
+              participantNames: participantNames.slice(0, numParticipants),
               participantCards,
               hideCards,
               mcEnabled,
@@ -827,6 +934,12 @@
               numParticipants = np;
               participantCards = cards;
               numParticipantsInput.value = String(np);
+              if (Array.isArray(data.participantNames)) {
+                participantNames = data.participantNames.slice(0, np).map((s) => (typeof s === "string" ? s : ""));
+                while (participantNames.length < np) participantNames.push("");
+              } else {
+                participantNames = Array(np).fill("");
+              }
             }
           }
           if (typeof data.hideCards === "boolean") {
@@ -885,6 +998,33 @@
         return card;
       }
 
+      function ensureParticipantNamesLength() {
+        participantNames = participantNames.slice(0, numParticipants);
+        while (participantNames.length < numParticipants) participantNames.push("");
+      }
+
+      function renderParticipantNameInputs() {
+        if (!participantNamesEl) return;
+        participantNamesEl.innerHTML = "";
+        for (let i = 0; i < numParticipants; i++) {
+          const inp = document.createElement("input");
+          inp.type = "text";
+          inp.placeholder = `Player ${i + 1}`;
+          inp.value = participantNames[i] || "";
+          inp.setAttribute("aria-label", `Name for player ${i + 1}`);
+          const idx = i;
+          inp.addEventListener("input", () => {
+            participantNames[idx] = inp.value;
+            saveState();
+          });
+          inp.addEventListener("change", () => {
+            participantNames[idx] = inp.value;
+            saveState();
+          });
+          participantNamesEl.appendChild(inp);
+        }
+      }
+
       function buildBoard() {
         const letters = ["B", "I", "N", "G", "O"];
         letters.forEach((letter, index) => {
@@ -907,12 +1047,15 @@
         availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
         drawnSequence = [];
         participantCards = [];
+        participantNames = participantNames.slice(0, numParticipants);
+        while (participantNames.length < numParticipants) participantNames.push("");
         if (mcAnnouncementEl) mcAnnouncementEl.textContent = "";
         for (let i = 0; i < numParticipants; i++) {
           participantCards.push(generateOneCard());
         }
         saveState();
         buildBoard();
+        if (participantNamesEl) renderParticipantNameInputs();
         updateUI();
       }
 
@@ -1028,7 +1171,8 @@
           const lines = getBingoLines(card, drawnSet);
           const points = lines.length * POINTS_PER_LINE;
           const firstBingoAt = getFirstBingoDrawIndex(card, drawnSequence);
-          return { index, name: `Player ${index + 1}`, points, firstBingoAt };
+          const name = (participantNames[index] && participantNames[index].trim()) || `Player ${index + 1}`;
+          return { index, name, points, firstBingoAt };
         });
 
         players.sort((a, b) => {
@@ -1074,7 +1218,7 @@
           wrap.className = "participant-card-wrap";
           const title = document.createElement("div");
           title.className = "participant-card-title";
-          title.textContent = `Player ${index + 1}`;
+          title.textContent = (participantNames[index] && participantNames[index].trim()) || `Player ${index + 1}`;
           wrap.appendChild(title);
           let markedCount = 0;
           const grid = document.createElement("div");
@@ -1173,6 +1317,21 @@
         const isMidGame = drawnSequence.length > 0;
         numParticipantsInput.disabled = isMidGame;
         numParticipantsInput.title = isMidGame ? "Changing participants mid-game is disabled" : "";
+        if (participantNamesWrap) {
+          participantNamesWrap.querySelectorAll("input").forEach((inp) => {
+            inp.disabled = isMidGame;
+          });
+        }
+        // Fold names setup during game, expand during setup
+        if (setupPlayersSection && setupPlayersHeader) {
+          if (isMidGame) {
+            setupPlayersSection.classList.add("setup-players-collapsed");
+            setupPlayersHeader.setAttribute("aria-expanded", "false");
+          } else {
+            setupPlayersSection.classList.remove("setup-players-collapsed");
+            setupPlayersHeader.setAttribute("aria-expanded", "true");
+          }
+        }
       }
 
       function drawNumber() {
@@ -1215,16 +1374,43 @@
         initGame();
       });
 
+      function toggleSetupPlayersExpand() {
+        if (!setupPlayersSection || !setupPlayersHeader) return;
+        const collapsed = setupPlayersSection.classList.toggle("setup-players-collapsed");
+        setupPlayersHeader.setAttribute("aria-expanded", String(!collapsed));
+      }
+      if (setupPlayersHeader) {
+        setupPlayersHeader.addEventListener("click", toggleSetupPlayersExpand);
+        setupPlayersHeader.addEventListener("keydown", (e) => {
+          if (e.code === "Enter" || e.code === "Space") {
+            e.preventDefault();
+            toggleSetupPlayersExpand();
+          }
+        });
+      }
+      if (setupPlayersBtn) {
+        setupPlayersBtn.addEventListener("click", () => {
+          if (setupPlayersSection) {
+            setupPlayersSection.classList.remove("setup-players-collapsed");
+            if (setupPlayersHeader) setupPlayersHeader.setAttribute("aria-expanded", "true");
+            setupPlayersSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        });
+      }
+
       numParticipantsInput.addEventListener("input", () => {
         if (drawnSequence.length > 0) return;
         const n = Math.min(12, Math.max(1, parseInt(numParticipantsInput.value, 10) || 1));
         numParticipantsInput.value = String(n);
         numParticipants = n;
         participantCards = [];
+        participantNames = participantNames.slice(0, n);
+        while (participantNames.length < n) participantNames.push("");
         for (let i = 0; i < numParticipants; i++) {
           participantCards.push(generateOneCard());
         }
         saveState();
+        if (participantNamesEl) renderParticipantNameInputs();
         renderParticipantCards(null);
       });
 
@@ -1337,7 +1523,11 @@
 
       buildBoard();
       if (!loadState()) initGame();
-      else updateUI();
+      else {
+        ensureParticipantNamesLength();
+        if (participantNamesEl) renderParticipantNameInputs();
+        updateUI();
+      }
       applyMcAdvancedToDom();
     </script>
   </body>
