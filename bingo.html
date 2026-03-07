@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bingo Pro - Time Traveler</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #ff6b6b;
+        --secondary: #4ecdc4;
+        --accent: #ffe66d;
+        --bg: #f7f9fc;
+        --text: #2d3436;
+        --b-col: #ff6b6b;
+        --i-col: #feca57;
+        --n-col: #48dbfb;
+        --g-col: #1dd1a1;
+        --o-col: #ff9ff3;
+      }
+
+      body {
+        font-family: "Quicksand", sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        padding: 20px;
+        overflow-x: hidden;
+        user-select: none;
+      }
+
+      h1 {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 2.5rem;
+        margin: 10px 0;
+        text-shadow: 2px 2px 0px var(--accent);
+      }
+
+      /* Timeline / History Ruler */
+      .history-outer {
+        width: 100%;
+        max-width: 900px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .history-container {
+        flex-grow: 1;
+        background: white;
+        padding: 15px;
+        border-radius: 15px;
+        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        overflow-x: auto;
+        border: 2px dashed var(--secondary);
+        min-height: 40px;
+        scroll-behavior: smooth;
+      }
+
+      #history-list {
+        display: flex;
+        gap: 8px;
+      }
+
+      .history-ball {
+        min-width: 35px;
+        height: 35px;
+        background: var(--accent);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9rem;
+        border: 2px solid #333;
+        animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      /* Main Display */
+      .controls {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        text-align: center;
+        margin-bottom: 25px;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      #current-number {
+        font-family: "Fredoka One", cursive;
+        font-size: 6rem;
+        margin: 10px 0;
+        color: var(--text);
+        height: 110px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .main-btns {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+      }
+
+      button {
+        font-family: "Fredoka One", cursive;
+        cursor: pointer;
+        transition: all 0.1s;
+        border: none;
+      }
+
+      #draw-btn {
+        flex: 2;
+        font-size: 1.2rem;
+        padding: 15px;
+        border-radius: 50px;
+        background-color: var(--secondary);
+        color: white;
+        box-shadow: 0 6px 0 #39b5ae;
+      }
+
+      #draw-btn:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #39b5ae;
+      }
+
+      #prev-btn {
+        flex: 1;
+        font-size: 1.2rem;
+        padding: 15px;
+        border-radius: 50px;
+        background-color: #fab1a0;
+        color: white;
+        box-shadow: 0 6px 0 #e17055;
+      }
+
+      #prev-btn:active:not(:disabled) {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #e17055;
+      }
+      #prev-btn:disabled {
+        background: #dfe6e9;
+        box-shadow: none;
+        cursor: not-allowed;
+        color: #b2bec3;
+      }
+
+      #reset-btn {
+        background-color: transparent;
+        color: #b2bec3;
+        font-size: 0.8rem;
+        text-decoration: underline;
+      }
+
+      .shortcuts {
+        font-size: 0.75rem;
+        color: #b2bec3;
+        display: flex;
+        gap: 15px;
+      }
+
+      /* Board Styling */
+      .board {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+        width: 100%;
+        max-width: 900px;
+      }
+
+      .column-group {
+        text-align: center;
+      }
+      .column-header {
+        font-family: "Fredoka One", cursive;
+        font-size: 2rem;
+        padding-bottom: 10px;
+        border-bottom: 4px solid #eee;
+      }
+
+      .num-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding-top: 10px;
+      }
+
+      .number-cell {
+        background: white;
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        color: #bdc3c7;
+        transition: all 0.2s ease;
+      }
+
+      .b-group .column-header {
+        color: var(--b-col);
+      }
+      .i-group .column-header {
+        color: var(--i-col);
+      }
+      .n-group .column-header {
+        color: var(--n-col);
+      }
+      .g-group .column-header {
+        color: var(--g-col);
+      }
+      .o-group .column-header {
+        color: var(--o-col);
+      }
+
+      .number-cell.marked {
+        color: white;
+        transform: scale(1.05);
+      }
+      .b-group .marked {
+        background-color: var(--b-col);
+      }
+      .i-group .marked {
+        background-color: var(--i-col);
+      }
+      .n-group .marked {
+        background-color: var(--n-col);
+      }
+      .g-group .marked {
+        background-color: var(--g-col);
+      }
+      .o-group .marked {
+        background-color: var(--o-col);
+      }
+
+      .latest-draw {
+        border: 3px solid #333 !important;
+        animation: pulse 0.5s infinite alternate;
+      }
+
+      @keyframes pulse {
+        from {
+          transform: scale(1.05);
+        }
+        to {
+          transform: scale(1.15);
+        }
+      }
+      @keyframes popIn {
+        from {
+          transform: scale(0);
+        }
+        to {
+          transform: scale(1);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .board {
+          grid-template-columns: 1fr;
+        }
+        .num-grid {
+          grid-template-columns: repeat(5, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>BINGO MANAGER</h1>
+
+    <div class="history-outer">
+      <div class="history-container">
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div id="current-number">--</div>
+      <div class="btn-group">
+        <div class="main-btns">
+          <button id="prev-btn" title="Left Arrow">◀</button>
+          <button id="draw-btn" title="Space or Right Arrow">DRAW</button>
+        </div>
+        <div class="shortcuts">
+          <span>◀ Previous</span>
+          <span>Space / Next ▶</span>
+        </div>
+        <button id="reset-btn">Reset Board</button>
+      </div>
+    </div>
+
+    <div class="board" id="bingo-board">
+      <div class="column-group b-group">
+        <div class="column-header">B</div>
+        <div class="num-grid" id="grid-B"></div>
+      </div>
+      <div class="column-group i-group">
+        <div class="column-header">I</div>
+        <div class="num-grid" id="grid-I"></div>
+      </div>
+      <div class="column-group n-group">
+        <div class="column-header">N</div>
+        <div class="num-grid" id="grid-N"></div>
+      </div>
+      <div class="column-group g-group">
+        <div class="column-header">G</div>
+        <div class="num-grid" id="grid-G"></div>
+      </div>
+      <div class="column-group o-group">
+        <div class="column-header">O</div>
+        <div class="num-grid" id="grid-O"></div>
+      </div>
+    </div>
+
+    <script>
+      const drawBtn = document.getElementById("draw-btn");
+      const prevBtn = document.getElementById("prev-btn");
+      const resetBtn = document.getElementById("reset-btn");
+      const display = document.getElementById("current-number");
+      const historyList = document.getElementById("history-list");
+      const historyContainer = document.querySelector(".history-container");
+
+      let availableNumbers = [];
+      let drawnSequence = [];
+
+      function initGame() {
+        availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
+        drawnSequence = [];
+        updateUI();
+
+        const letters = ["B", "I", "N", "G", "O"];
+        letters.forEach((letter, index) => {
+          const grid = document.getElementById(`grid-${letter}`);
+          grid.innerHTML = "";
+          const start = index * 15 + 1;
+          for (let i = start; i < start + 15; i++) {
+            const cell = document.createElement("div");
+            cell.className = "number-cell";
+            cell.id = `num-${i}`;
+            cell.innerText = i;
+            grid.appendChild(cell);
+          }
+        });
+      }
+
+      function getLetter(num) {
+        if (num <= 15) return "B";
+        if (num <= 30) return "I";
+        if (num <= 45) return "N";
+        if (num <= 60) return "G";
+        return "O";
+      }
+
+      function updateUI() {
+        const lastNum = drawnSequence[drawnSequence.length - 1];
+
+        // Update Big Display
+        if (lastNum) {
+          display.innerText = `${getLetter(lastNum)}-${lastNum}`;
+        } else {
+          display.innerText = "--";
+        }
+
+        // Update Board Marks
+        document.querySelectorAll(".number-cell").forEach((cell) => {
+          const val = parseInt(cell.innerText);
+          cell.classList.toggle("marked", drawnSequence.includes(val));
+          cell.classList.toggle("latest-draw", val === lastNum);
+        });
+
+        // Update History Timeline
+        historyList.innerHTML = "";
+        drawnSequence.forEach((num) => {
+          const ball = document.createElement("div");
+          ball.className = "history-ball";
+          ball.innerText = num;
+          historyList.appendChild(ball);
+        });
+        historyContainer.scrollLeft = historyContainer.scrollWidth;
+
+        // Button States
+        prevBtn.disabled = drawnSequence.length === 0;
+
+        if (drawnSequence.length === 75) {
+          drawBtn.innerText = "FINISH!";
+          drawBtn.style.backgroundColor = "#636e72";
+        } else {
+          drawBtn.innerText = "DRAW";
+          drawBtn.style.backgroundColor = "var(--secondary)";
+        }
+      }
+
+      function drawNumber() {
+        if (availableNumbers.length === 0) return;
+        const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+        const picked = availableNumbers.splice(randomIndex, 1)[0];
+        drawnSequence.push(picked);
+        updateUI();
+      }
+
+      function prevNumber() {
+        if (drawnSequence.length === 0) return;
+        const removed = drawnSequence.pop();
+        availableNumbers.push(removed);
+        updateUI();
+      }
+
+      // Keyboard Logic
+      window.addEventListener("keydown", (e) => {
+        if (e.code === "Space" || e.code === "ArrowRight") {
+          e.preventDefault();
+          drawNumber();
+        } else if (e.code === "ArrowLeft") {
+          e.preventDefault();
+          prevNumber();
+        }
+      });
+
+      drawBtn.addEventListener("click", drawNumber);
+      prevBtn.addEventListener("click", prevNumber);
+      resetBtn.addEventListener("click", () => {
+        if (confirm("New game?")) initGame();
+      });
+
+      initGame();
+    </script>
+  </body>
+</html>
