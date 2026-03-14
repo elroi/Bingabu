@@ -67,6 +67,7 @@ export default async function handler(req, res) {
 
   room.claims = room.claims || {};
   room.claims[String(slotIndex)] = deviceId;
+  room.updatedAt = Date.now();
   store.set(roomId, room);
 
   return res.status(200).json({

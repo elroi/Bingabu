@@ -1914,7 +1914,7 @@
         if (drawnSequence.length === 0) return;
         const removed = drawnSequence.pop();
         availableNumbers.push(removed);
-        saveState();
+        saveState(); // syncs to room so players see undo (pushRoomStateIfHost)
         updateUI();
       }
 

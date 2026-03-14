@@ -117,6 +117,12 @@
       .participant-card .card-cell.latest-draw {
         box-shadow: 0 0 0 3px var(--primary);
       }
+      .participant-card .card-cell:not(.free) {
+        cursor: pointer;
+      }
+      .participant-card .card-cell:not(.free):active {
+        opacity: 0.9;
+      }
       .card-bingo {
         font-family: "Fredoka One", cursive;
         color: var(--primary);
@@ -197,6 +203,33 @@
       const joinToken = sessionStorage.getItem(JOIN_STORAGE.joinToken);
       const deviceId = sessionStorage.getItem(JOIN_STORAGE.deviceId);
 
+      const DAUBS_KEY = "bingabu-daubs";
+      function getDaubsKey() {
+        return roomId && slotIndex >= 0 ? `${DAUBS_KEY}-${roomId}-${slotIndex}` : null;
+      }
+      function loadLocalDaubs() {
+        const key = getDaubsKey();
+        if (!key) return new Set();
+        try {
+          const raw = sessionStorage.getItem(key);
+          if (!raw) return new Set();
+          const arr = JSON.parse(raw);
+          return new Set(Array.isArray(arr) ? arr : []);
+        } catch (_) {
+          return new Set();
+        }
+      }
+      function saveLocalDaubs(set) {
+        const key = getDaubsKey();
+        if (!key) return;
+        try {
+          sessionStorage.setItem(key, JSON.stringify([...set]));
+        } catch (_) {}
+      }
+      let localDaubs = loadLocalDaubs();
+      let lastDrawnSet = new Set();
+      let lastCard = null;
+
       if (!roomId || (typeof slotIndex !== "number" || slotIndex < 0)) {
         document.getElementById("game-wrap").innerHTML = "<p>Missing room or player. <a href='join.html'>Join a game</a>.</p>";
       } else {
@@ -243,6 +276,8 @@
           const card = state.participantCards[slotIndex];
           const drawnSequence = state.drawnSequence || [];
           const drawnSet = new Set(drawnSequence);
+          lastDrawnSet = drawnSet;
+          lastCard = card;
           const lastNum = drawnSequence[drawnSequence.length - 1];
           const names = state.participantNames || [];
           const name = (names[slotIndex] && names[slotIndex].trim()) || `Player ${slotIndex + 1}`;
@@ -267,16 +302,35 @@
               const val = card[row][col];
               const colClass = getColumnClass(col);
               const isFree = val === "FREE";
-              const marked = isFree || drawnSet.has(val);
+              const marked = isFree || drawnSet.has(val) || localDaubs.has(`${row},${col}`);
               const latest = val === lastNum;
               let cls = "card-cell " + colClass;
               if (isFree) cls += " free marked";
               else if (marked) cls += " marked";
               if (latest) cls += " latest-draw";
-              grid += `<div class="${cls}">${val}</div>`;
+              const dataAttrs = isFree ? "" : ` data-row="${row}" data-col="${col}" data-value="${val}"`;
+              grid += `<div class="${cls}"${dataAttrs}>${val}</div>`;
             }
           }
-          wrap.innerHTML = `<div class="participant-card">${grid}</div>`;
+          wrap.innerHTML = `<div class="participant-card" id="player-card">${grid}</div>`;
+
+          const playerCard = document.getElementById("player-card");
+          if (playerCard) {
+            playerCard.addEventListener("click", (e) => {
+              const cell = e.target.closest(".card-cell");
+              if (!cell || cell.classList.contains("free")) return;
+              const r = cell.getAttribute("data-row");
+              const c = cell.getAttribute("data-col");
+              if (r == null || c == null) return;
+              const key = `${r},${c}`;
+              if (localDaubs.has(key)) localDaubs.delete(key);
+              else localDaubs.add(key);
+              saveLocalDaubs(localDaubs);
+              const val = Number(cell.getAttribute("data-value"));
+              const marked = lastDrawnSet.has(val) || localDaubs.has(key);
+              cell.classList.toggle("marked", marked);
+            });
+          }
 
           const bingoLines = getBingoLines(card, drawnSet);
           if (bingoEl) {
@@ -302,7 +356,9 @@
         }
 
         let pollInterval;
+        let eventSource = null;
         let failCount = 0;
+
         async function fetchRoom() {
           const headers = {};
           if (joinToken) headers["Authorization"] = "Bearer " + joinToken;
@@ -332,10 +388,40 @@
           }
         }
 
-        fetchRoom();
-        pollInterval = setInterval(fetchRoom, 2000);
+        function connectStream() {
+          if (eventSource) {
+            try {
+              eventSource.close();
+            } catch (_) {}
+          }
+          const qs = joinToken ? "?joinToken=" + encodeURIComponent(joinToken) : "";
+          const url = getApiBase() + "/api/rooms/" + roomId + "/stream" + qs;
+          try {
+            eventSource = new EventSource(url);
+            eventSource.onmessage = () => fetchRoom();
+            eventSource.onerror = () => {
+              try {
+                eventSource.close();
+              } catch (_) {}
+              eventSource = null;
+              setTimeout(connectStream, 1000);
+            };
+          } catch (_) {
+            eventSource = null;
+          }
+        }
 
-        window.addEventListener("beforeunload", () => clearInterval(pollInterval));
+        fetchRoom();
+        if (typeof EventSource !== "undefined") {
+          connectStream();
+        } else {
+          pollInterval = setInterval(fetchRoom, 2000);
+        }
+
+        window.addEventListener("beforeunload", () => {
+          if (pollInterval) clearInterval(pollInterval);
+          if (eventSource) try { eventSource.close(); } catch (_) {}
+        });
       }
     </script>
   </body>

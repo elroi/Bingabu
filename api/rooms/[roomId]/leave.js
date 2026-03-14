@@ -46,6 +46,7 @@ export default async function handler(req, res) {
   if (room.claims[String(slotIndex)] === deviceId) {
     delete room.claims[String(slotIndex)];
   }
+  room.updatedAt = Date.now();
   store.set(roomId, room);
 
   return res.status(200).json({

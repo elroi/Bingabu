@@ -48,6 +48,7 @@ export default async function handler(req, res) {
 
   room.claims = room.claims || {};
   delete room.claims[String(slotIndex)];
+  room.updatedAt = Date.now();
   store.set(roomId, room);
 
   return res.status(200).json({
