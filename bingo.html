@@ -214,6 +214,137 @@
         margin-top: 0;
       }
 
+      .hidden {
+        display: none !important;
+      }
+
+      .remote-play-section {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px dashed var(--secondary);
+        width: 100%;
+      }
+      .remote-play-title {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1.1rem;
+        margin: 0 0 4px 0;
+      }
+      .remote-play-api-unavailable {
+        font-size: 0.85rem;
+        color: var(--primary);
+        margin: 0 0 8px 0;
+      }
+      .remote-play-api-unavailable code {
+        background: #eee;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .remote-play-hint {
+        font-size: 0.85rem;
+        color: #636e72;
+        margin: 0 0 12px 0;
+      }
+      .remote-play-create,
+      .remote-play-active {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .remote-play-password-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .remote-play-password-wrap label {
+        font-size: 0.95rem;
+      }
+      .remote-play-password-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        max-width: 220px;
+      }
+      .remote-play-password-fields input {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 2px solid var(--secondary);
+        font-family: inherit;
+      }
+      .remote-play-btn {
+        font-family: "Fredoka One", cursive;
+        cursor: pointer;
+        padding: 10px 20px;
+        border-radius: 50px;
+        border: none;
+        background: var(--secondary);
+        color: white;
+        font-size: 0.95rem;
+      }
+      .remote-play-btn.secondary {
+        background: var(--bg);
+        color: var(--text);
+        border: 2px solid var(--secondary);
+      }
+      .remote-play-btn.end {
+        background: #636e72;
+        color: white;
+        margin-top: 8px;
+      }
+      .remote-play-code-label,
+      .remote-play-joined-label {
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        font-size: 0.9rem;
+      }
+      .remote-play-code {
+        font-family: "Fredoka One", cursive;
+        font-size: 1.8rem;
+        letter-spacing: 0.2em;
+        margin: 0 0 8px 0;
+        color: var(--text);
+      }
+      .remote-play-copy-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .remote-play-password-reminder {
+        font-size: 0.85rem;
+        color: var(--primary);
+        margin: 0 0 8px 0;
+      }
+      .remote-play-joined-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 12px 0;
+        min-height: 24px;
+      }
+      .remote-play-joined-list li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 6px 0;
+        font-size: 0.95rem;
+      }
+      .remote-play-joined-list .boot-btn {
+        font-family: "Quicksand", sans-serif;
+        font-size: 0.8rem;
+        padding: 4px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--primary);
+        background: transparent;
+        color: var(--primary);
+        cursor: pointer;
+      }
+      .remote-play-joined-list .boot-btn:hover {
+        background: var(--primary);
+        color: white;
+      }
+
       .setup-players-section {
         margin-top: 12px;
         border: 1px dashed rgba(0,0,0,0.1);
@@ -802,6 +933,34 @@
         <div class="controls-actions">
           <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
         </div>
+        <section class="remote-play-section" id="remote-play-section" aria-label="Play with friends">
+          <h3 class="remote-play-title">Play with friends</h3>
+          <p id="remote-play-api-unavailable" class="remote-play-api-unavailable hidden">Remote play needs the API. Run <code>npm run dev:api</code> to enable it.</p>
+          <p class="remote-play-hint">Set players and start a new game above, then create a room and share the link.</p>
+          <div id="remote-play-create" class="remote-play-create">
+            <div class="remote-play-password-wrap">
+              <input type="checkbox" id="remote-play-password-check" aria-label="Protect room with password" />
+              <label for="remote-play-password-check">Protect room with password</label>
+            </div>
+            <form id="remote-play-password-fields" class="remote-play-password-fields hidden" role="group" aria-label="Room password" onsubmit="return false;">
+              <input type="password" id="remote-play-password" placeholder="Room password" autocomplete="off" aria-label="Room password" />
+              <input type="password" id="remote-play-password-confirm" placeholder="Confirm password" autocomplete="off" aria-label="Confirm password" />
+            </form>
+            <button type="button" id="remote-play-create-btn" class="remote-play-btn">Create room</button>
+          </div>
+          <div id="remote-play-active" class="remote-play-active hidden">
+            <p class="remote-play-code-label">Room code</p>
+            <p id="remote-play-code" class="remote-play-code" aria-live="polite"></p>
+            <div class="remote-play-copy-row">
+              <button type="button" id="remote-play-copy-code" class="remote-play-btn secondary">Copy code</button>
+              <button type="button" id="remote-play-copy-link" class="remote-play-btn secondary">Copy link</button>
+            </div>
+            <p id="remote-play-password-reminder" class="remote-play-password-reminder hidden">Room is protected — share the password with players.</p>
+            <p class="remote-play-joined-label">Players joined</p>
+            <ul id="remote-play-joined-list" class="remote-play-joined-list" aria-live="polite"></ul>
+            <button type="button" id="remote-play-end-btn" class="remote-play-btn end">End room</button>
+          </div>
+        </section>
       </div>
     </div>
 
@@ -931,6 +1090,13 @@
       const setupPlayersContent = document.getElementById("setup-players-content");
       const advancedControlsCard = document.getElementById("advanced-controls-card");
       const advancedControlsHeader = document.getElementById("advanced-controls-header");
+      const remotePlayCreateEl = document.getElementById("remote-play-create");
+      const remotePlayActiveEl = document.getElementById("remote-play-active");
+      const remotePlayCodeEl = document.getElementById("remote-play-code");
+      const remotePlayPasswordCheck = document.getElementById("remote-play-password-check");
+      const remotePlayPasswordFields = document.getElementById("remote-play-password-fields");
+      const remotePlayPasswordReminder = document.getElementById("remote-play-password-reminder");
+      const remotePlayJoinedList = document.getElementById("remote-play-joined-list");
 
       const POINTS_PER_LINE = 10;
       // MC voice: defaults and optional random variation (advanced panel can override)
@@ -978,25 +1144,45 @@
         return mcVoice;
       }
 
+      function getStateForApi() {
+        return {
+          drawnSequence,
+          numParticipants,
+          participantNames: participantNames.slice(0, numParticipants),
+          participantQuirks: participantQuirks.slice(0, numParticipants),
+          participantCards,
+          hideCards,
+          mcEnabled,
+          mcSimple,
+          mcVoiceName,
+          mcRate,
+          mcPitch,
+          mcVariation,
+        };
+      }
+
       function saveState() {
         try {
-          localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({
-              drawnSequence,
-              numParticipants,
-              participantNames: participantNames.slice(0, numParticipants),
-              participantQuirks: participantQuirks.slice(0, numParticipants),
-              participantCards,
-              hideCards,
-              mcEnabled,
-              mcSimple,
-              mcVoiceName,
-              mcRate,
-              mcPitch,
-              mcVariation,
-            })
-          );
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(getStateForApi()));
+        } catch (_) {}
+        pushRoomStateIfHost();
+      }
+
+      const REMOTE_ROOM_ID_KEY = "bingabu-remote-roomId";
+      const REMOTE_HOST_ID_KEY = "bingabu-remote-hostId";
+
+      async function pushRoomStateIfHost() {
+        try {
+          const roomId = sessionStorage.getItem(REMOTE_ROOM_ID_KEY);
+          const hostId = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+          if (!roomId || !hostId) return;
+          const base = typeof window !== "undefined" && window.location && window.location.origin ? window.location.origin : "";
+          const res = await fetch(`${base}/api/rooms/${roomId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", "X-Host-Id": hostId },
+            body: JSON.stringify({ state: getStateForApi() }),
+          });
+          if (!res.ok) return;
         } catch (_) {}
       }
 
@@ -1779,6 +1965,174 @@
           if (e.code === "Enter" || e.code === "Space") {
             e.preventDefault();
             toggleAdvancedControlsCard();
+          }
+        });
+      }
+
+      function getApiBase() {
+        return typeof window !== "undefined" && window.location && window.location.origin ? window.location.origin : "";
+      }
+
+      function showRemotePlayCreate() {
+        if (remotePlayCreateEl) remotePlayCreateEl.classList.remove("hidden");
+        if (remotePlayActiveEl) remotePlayActiveEl.classList.add("hidden");
+      }
+      function showRemotePlayActive(roomId, shareUrl, hasPassword) {
+        if (remotePlayCreateEl) remotePlayCreateEl.classList.add("hidden");
+        if (remotePlayActiveEl) remotePlayActiveEl.classList.remove("hidden");
+        if (remotePlayCodeEl) remotePlayCodeEl.textContent = roomId || "";
+        if (remotePlayPasswordReminder) remotePlayPasswordReminder.classList.toggle("hidden", !hasPassword);
+        window._bingabuShareUrl = shareUrl || "";
+      }
+
+      async function refreshJoinedList() {
+        const roomId = sessionStorage.getItem(REMOTE_ROOM_ID_KEY);
+        const hostId = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+        if (!roomId || !hostId || !remotePlayJoinedList) return;
+        try {
+          const res = await fetch(`${getApiBase()}/api/rooms/${roomId}`, {
+            headers: { "X-Host-Id": hostId },
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+          const claims = data.claims || {};
+          const names = (data.state && data.state.participantNames) || [];
+          const np = (data.state && data.state.numParticipants) || 0;
+          remotePlayJoinedList.innerHTML = "";
+          for (let i = 0; i < np; i++) {
+            const li = document.createElement("li");
+            const name = (names[i] && names[i].trim()) || `Player ${i + 1}`;
+            const claimed = Object.prototype.hasOwnProperty.call(claims, String(i));
+            li.textContent = claimed ? `${name} ✓` : `${name} – waiting…`;
+            if (claimed) {
+              const bootBtn = document.createElement("button");
+              bootBtn.type = "button";
+              bootBtn.className = "boot-btn";
+              bootBtn.textContent = "Remove";
+              bootBtn.addEventListener("click", () => bootPlayer(i));
+              li.appendChild(bootBtn);
+            }
+            remotePlayJoinedList.appendChild(li);
+          }
+        } catch (_) {}
+      }
+
+      async function bootPlayer(slotIndex) {
+        const roomId = sessionStorage.getItem(REMOTE_ROOM_ID_KEY);
+        const hostId = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+        if (!roomId || !hostId) return;
+        if (!confirm("Remove this player from the room?")) return;
+        try {
+          const res = await fetch(`${getApiBase()}/api/rooms/${roomId}/boot`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Host-Id": hostId },
+            body: JSON.stringify({ slotIndex }),
+          });
+          if (res.ok) refreshJoinedList();
+        } catch (_) {}
+      }
+
+      const createRoomBtn = document.getElementById("remote-play-create-btn");
+      const copyCodeBtn = document.getElementById("remote-play-copy-code");
+      const copyLinkBtn = document.getElementById("remote-play-copy-link");
+      const endRoomBtn = document.getElementById("remote-play-end-btn");
+
+      if (remotePlayPasswordCheck && remotePlayPasswordFields) {
+        remotePlayPasswordCheck.addEventListener("change", () => {
+          remotePlayPasswordFields.classList.toggle("hidden", !remotePlayPasswordCheck.checked);
+        });
+      }
+
+      if (createRoomBtn) {
+        createRoomBtn.addEventListener("click", async () => {
+          if (participantCards.length === 0 && drawnSequence.length === 0) {
+            if (!confirm("Set participants and start a new game first. Create room anyway with current setup?")) return;
+          }
+          const password = remotePlayPasswordCheck && remotePlayPasswordCheck.checked ? document.getElementById("remote-play-password").value : undefined;
+          const confirmVal = remotePlayPasswordCheck && remotePlayPasswordCheck.checked ? document.getElementById("remote-play-password-confirm").value : undefined;
+          if (password !== undefined && password !== confirmVal) {
+            alert("Passwords do not match.");
+            return;
+          }
+          createRoomBtn.disabled = true;
+          try {
+            const body = { state: getStateForApi() };
+            if (password !== undefined && String(password).trim()) body.password = String(password).trim();
+            const res = await fetch(`${getApiBase()}/api/rooms`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+              alert(data.error || "Failed to create room");
+              return;
+            }
+            sessionStorage.setItem(REMOTE_ROOM_ID_KEY, data.roomId);
+            sessionStorage.setItem(REMOTE_HOST_ID_KEY, data.hostId);
+            showRemotePlayActive(data.roomId, data.shareUrl, !!body.password);
+            refreshJoinedList();
+            let pollInterval = setInterval(refreshJoinedList, 2000);
+            window._bingabuRoomPoll = pollInterval;
+          } finally {
+            createRoomBtn.disabled = false;
+          }
+        });
+      }
+
+      if (copyCodeBtn && remotePlayCodeEl) {
+        copyCodeBtn.addEventListener("click", () => {
+          const code = remotePlayCodeEl.textContent;
+          if (code && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(code).then(() => { copyCodeBtn.textContent = "Copied!"; setTimeout(() => { copyCodeBtn.textContent = "Copy code"; }, 1500); });
+          }
+        });
+      }
+      if (copyLinkBtn) {
+        copyLinkBtn.addEventListener("click", () => {
+          const url = window._bingabuShareUrl || (getApiBase() + "/bingo.html?join=" + sessionStorage.getItem(REMOTE_ROOM_ID_KEY));
+          if (url && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(() => { copyLinkBtn.textContent = "Copied!"; setTimeout(() => { copyLinkBtn.textContent = "Copy link"; }, 1500); });
+          }
+        });
+      }
+      if (endRoomBtn) {
+        endRoomBtn.addEventListener("click", () => {
+          sessionStorage.removeItem(REMOTE_ROOM_ID_KEY);
+          sessionStorage.removeItem(REMOTE_HOST_ID_KEY);
+          if (window._bingabuRoomPoll) clearInterval(window._bingabuRoomPoll);
+          showRemotePlayCreate();
+        });
+      }
+
+      async function checkRemotePlayApiAvailable() {
+        try {
+          const res = await fetch(`${getApiBase()}/api/health`);
+          return res.ok;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      if (remotePlayCreateEl && remotePlayActiveEl) {
+        const apiUnavailableEl = document.getElementById("remote-play-api-unavailable");
+        const hintEl = remotePlayCreateEl.previousElementSibling;
+        checkRemotePlayApiAvailable().then((available) => {
+          if (!available && apiUnavailableEl) {
+            apiUnavailableEl.classList.remove("hidden");
+            remotePlayCreateEl.classList.add("hidden");
+            if (hintEl && hintEl.classList.contains("remote-play-hint")) hintEl.classList.add("hidden");
+          } else {
+            if (apiUnavailableEl) apiUnavailableEl.classList.add("hidden");
+            const roomId = sessionStorage.getItem(REMOTE_ROOM_ID_KEY);
+            const hostId = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+            if (roomId && hostId) {
+              showRemotePlayActive(roomId, getApiBase() + "/join.html?join=" + roomId, false);
+              refreshJoinedList();
+              window._bingabuRoomPoll = setInterval(refreshJoinedList, 2000);
+            } else {
+              showRemotePlayCreate();
+            }
           }
         });
       }

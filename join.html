@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Join game – Bingabu</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #ff6b6b;
+        --secondary: #4ecdc4;
+        --accent: #ffe66d;
+        --bg: #f7f9fc;
+        --text: #2d3436;
+      }
+      body {
+        font-family: "Quicksand", sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+      }
+      h1 {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1.8rem;
+        margin: 0 0 24px 0;
+      }
+      .join-step {
+        width: 100%;
+        max-width: 400px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .join-step.hidden {
+        display: none !important;
+      }
+      label {
+        font-weight: 700;
+        display: block;
+        margin-bottom: 4px;
+      }
+      input[type="text"],
+      input[type="password"] {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        border: 2px solid var(--secondary);
+        font-family: inherit;
+        font-size: 1rem;
+        box-sizing: border-box;
+      }
+      button {
+        font-family: "Fredoka One", cursive;
+        cursor: pointer;
+        padding: 12px 24px;
+        border-radius: 50px;
+        border: none;
+        background: var(--secondary);
+        color: white;
+        font-size: 1rem;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .error {
+        color: var(--primary);
+        font-size: 0.9rem;
+      }
+      .slot-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .slot-list li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        border-radius: 12px;
+        border: 2px solid var(--secondary);
+        background: white;
+      }
+      .slot-list li.taken {
+        border-color: #b2bec3;
+        background: #dfe6e9;
+        color: #636e72;
+      }
+      .slot-list li button {
+        flex-shrink: 0;
+      }
+      .slot-list li.taken button {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Join a Bingabu game</h1>
+    <div id="step-code" class="join-step">
+      <label for="room-code">Room code</label>
+      <input type="text" id="room-code" placeholder="e.g. ABC123" autocomplete="off" />
+      <p id="code-error" class="error hidden"></p>
+      <button type="button" id="btn-code">Continue</button>
+    </div>
+    <div id="step-password" class="join-step hidden">
+      <label for="room-password">Room password</label>
+      <input type="password" id="room-password" placeholder="Enter password" autocomplete="off" />
+      <p id="password-error" class="error hidden"></p>
+      <button type="button" id="btn-password">Enter room</button>
+    </div>
+    <div id="step-pick" class="join-step hidden">
+      <p class="slot-label">Choose your player</p>
+      <ul id="slot-list" class="slot-list" role="listbox"></ul>
+      <p id="pick-error" class="error hidden"></p>
+    </div>
+
+    <script type="module">
+      const JOIN_STORAGE = { roomId: "bingabu-join-roomId", joinToken: "bingabu-join-token", deviceId: "bingabu-device-id", slotIndex: "bingabu-slot-index" };
+
+      function getApiBase() {
+        return typeof window !== "undefined" && window.location && window.location.origin ? window.location.origin : "";
+      }
+
+      function getDeviceId() {
+        let id = sessionStorage.getItem(JOIN_STORAGE.deviceId);
+        if (!id) {
+          id = "d-" + Math.random().toString(36).slice(2) + "-" + Date.now().toString(36);
+          sessionStorage.setItem(JOIN_STORAGE.deviceId, id);
+        }
+        return id;
+      }
+
+      function showStep(id) {
+        document.querySelectorAll(".join-step").forEach((el) => el.classList.add("hidden"));
+        const step = document.getElementById(id);
+        if (step) step.classList.remove("hidden");
+      }
+
+      function showError(id, msg) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = msg || "";
+        el.classList.toggle("hidden", !msg);
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const joinFromUrl = params.get("join") || params.get("room") || params.get("code");
+
+      if (joinFromUrl) {
+        document.getElementById("room-code").value = joinFromUrl;
+      }
+
+      document.getElementById("btn-code").addEventListener("click", async () => {
+        const codeInput = document.getElementById("room-code");
+        const code = (codeInput && codeInput.value || "").trim().toUpperCase();
+        showError("code-error", "");
+        if (!code) {
+          showError("code-error", "Enter a room code.");
+          return;
+        }
+        const btn = document.getElementById("btn-code");
+        btn.disabled = true;
+        try {
+          const res = await fetch(`${getApiBase()}/api/rooms/${code}`);
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            showError("code-error", data.error || "Room not found.");
+            return;
+          }
+          if (data.passwordRequired) {
+            sessionStorage.setItem(JOIN_STORAGE.roomId, code);
+            showStep("step-password");
+            document.getElementById("room-password").value = "";
+            document.getElementById("room-password").focus();
+            return;
+          }
+          sessionStorage.setItem(JOIN_STORAGE.roomId, code);
+          const state = data.state != null ? data.state : data;
+          window._joinRoomState = state;
+          window._joinRoomClaims = data.claims || {};
+          renderSlotList(state, data.claims || {});
+          showStep("step-pick");
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      document.getElementById("btn-password").addEventListener("click", async () => {
+        const roomId = sessionStorage.getItem(JOIN_STORAGE.roomId);
+        const password = document.getElementById("room-password").value;
+        showError("password-error", "");
+        const btn = document.getElementById("btn-password");
+        btn.disabled = true;
+        try {
+          const res = await fetch(`${getApiBase()}/api/rooms/${roomId}/join`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            showError("password-error", data.error || "Wrong password.");
+            return;
+          }
+          sessionStorage.setItem(JOIN_STORAGE.joinToken, data.joinToken || "");
+          window._joinRoomState = data.state;
+          window._joinRoomClaims = data.claims || {};
+          renderSlotList(data.state, data.claims || {});
+          showStep("step-pick");
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      function renderSlotList(state, claims) {
+        const list = document.getElementById("slot-list");
+        if (!list) return;
+        const names = (state && state.participantNames) || [];
+        const np = (state && state.numParticipants) || 0;
+        list.innerHTML = "";
+        for (let i = 0; i < np; i++) {
+          const li = document.createElement("li");
+          li.setAttribute("role", "option");
+          const name = (names[i] && names[i].trim()) || `Player ${i + 1}`;
+          const taken = Object.prototype.hasOwnProperty.call(claims, String(i));
+          if (taken) li.classList.add("taken");
+          li.innerHTML = `<span>${name}${taken ? " (taken)" : ""}</span>`;
+          if (!taken) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = "Join as this player";
+            btn.addEventListener("click", () => claimSlot(i));
+            li.appendChild(btn);
+          }
+          list.appendChild(li);
+        }
+      }
+
+      async function claimSlot(slotIndex) {
+        const roomId = sessionStorage.getItem(JOIN_STORAGE.roomId);
+        const joinToken = sessionStorage.getItem(JOIN_STORAGE.joinToken);
+        const deviceId = getDeviceId();
+        showError("pick-error", "");
+        try {
+          const headers = { "Content-Type": "application/json" };
+          if (joinToken) headers["Authorization"] = "Bearer " + joinToken;
+          const res = await fetch(`${getApiBase()}/api/rooms/${roomId}/claim`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ slotIndex, deviceId }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            showError("pick-error", data.error || "Could not join.");
+            return;
+          }
+          if (data.joinToken) sessionStorage.setItem(JOIN_STORAGE.joinToken, data.joinToken);
+          sessionStorage.setItem(JOIN_STORAGE.slotIndex, String(slotIndex));
+          window.location.href = `player.html?room=${encodeURIComponent(roomId)}&slot=${slotIndex}`;
+        } catch (e) {
+          showError("pick-error", "Network error. Try again.");
+        }
+      }
+    </script>
+  </body>
+</html>

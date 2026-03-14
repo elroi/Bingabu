@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your card – Bingabu</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #ff6b6b;
+        --secondary: #4ecdc4;
+        --accent: #ffe66d;
+        --bg: #f7f9fc;
+        --text: #2d3436;
+        --b-col: #ff6b6b;
+        --i-col: #feca57;
+        --n-col: #48dbfb;
+        --g-col: #1dd1a1;
+        --o-col: #ff9ff3;
+      }
+      body {
+        font-family: "Quicksand", sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        box-sizing: border-box;
+      }
+      h1 {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1.4rem;
+        margin: 0 0 8px 0;
+      }
+      .current-wrap {
+        text-align: center;
+        margin-bottom: 16px;
+      }
+      .current-number {
+        font-family: "Fredoka One", cursive;
+        font-size: 3rem;
+        color: var(--text);
+      }
+      .history-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+        margin-bottom: 20px;
+        min-height: 32px;
+      }
+      .history-ball {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: 2px solid #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.8rem;
+      }
+      .participant-card {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 4px;
+        max-width: 320px;
+        width: 100%;
+        background: white;
+        padding: 12px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border: 2px solid #eee;
+      }
+      .participant-card .card-header-cell {
+        font-family: "Fredoka One", cursive;
+        font-size: 1.2rem;
+        text-align: center;
+        padding: 4px 0;
+      }
+      .participant-card .card-header-cell.b { color: var(--b-col); }
+      .participant-card .card-header-cell.i { color: var(--i-col); }
+      .participant-card .card-header-cell.n { color: var(--n-col); }
+      .participant-card .card-header-cell.g { color: var(--g-col); }
+      .participant-card .card-header-cell.o { color: var(--o-col); }
+      .participant-card .card-cell {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: clamp(0.75rem, 4vw, 1rem);
+        border-radius: 8px;
+        background: #f1f3f5;
+        min-height: 44px;
+      }
+      .participant-card .card-cell.free {
+        background: var(--accent);
+        color: #333;
+      }
+      .participant-card .card-cell.marked {
+        color: white;
+      }
+      .participant-card .card-cell.col-b.marked { background: var(--b-col); }
+      .participant-card .card-cell.col-i.marked { background: var(--i-col); }
+      .participant-card .card-cell.col-n.marked { background: var(--n-col); }
+      .participant-card .card-cell.col-g.marked { background: var(--g-col); }
+      .participant-card .card-cell.col-o.marked { background: var(--o-col); }
+      .participant-card .card-cell.latest-draw {
+        box-shadow: 0 0 0 3px var(--primary);
+      }
+      .card-bingo {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1.1rem;
+        margin-top: 12px;
+        text-align: center;
+      }
+      .status {
+        margin-top: 12px;
+        font-size: 0.9rem;
+        color: #636e72;
+      }
+      .booted-wrap {
+        text-align: center;
+        padding: 24px;
+      }
+      .booted-wrap h2 {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        margin-bottom: 12px;
+      }
+      .booted-wrap a, .booted-wrap button {
+        font-family: "Fredoka One", cursive;
+        display: inline-block;
+        margin-top: 12px;
+        padding: 12px 24px;
+        border-radius: 50px;
+        background: var(--secondary);
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        text-decoration: none;
+      }
+      .reconnect-msg {
+        font-size: 0.85rem;
+        color: #636e72;
+        margin-top: 8px;
+      }
+      .leave-link {
+        font-size: 0.9rem;
+        color: var(--secondary);
+        margin-top: 12px;
+        display: inline-block;
+      }
+      .hidden { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <div id="game-wrap">
+      <h1 id="player-title">Your card</h1>
+      <div class="current-wrap">
+        <div id="current-number" class="current-number" aria-live="polite">--</div>
+      </div>
+      <div id="history-wrap" class="history-wrap"></div>
+      <div id="card-wrap"></div>
+      <p id="bingo-msg" class="card-bingo hidden"></p>
+      <p id="status" class="status" aria-live="polite"></p>
+      <p><a href="join.html" class="leave-link">Leave game</a></p>
+    </div>
+    <div id="booted-wrap" class="booted-wrap hidden">
+      <h2>You were removed from the game</h2>
+      <p>The host removed you from the room.</p>
+      <a href="join.html">Rejoin</a>
+    </div>
+
+    <script type="module">
+      const JOIN_STORAGE = { roomId: "bingabu-join-roomId", joinToken: "bingabu-join-token", deviceId: "bingabu-device-id", slotIndex: "bingabu-slot-index" };
+
+      function getApiBase() {
+        return typeof window !== "undefined" && window.location && window.location.origin ? window.location.origin : "";
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      let roomId = params.get("room") || sessionStorage.getItem(JOIN_STORAGE.roomId);
+      let slotIndex = parseInt(params.get("slot"), 10);
+      if (Number.isNaN(slotIndex)) slotIndex = parseInt(sessionStorage.getItem(JOIN_STORAGE.slotIndex), 10);
+      const joinToken = sessionStorage.getItem(JOIN_STORAGE.joinToken);
+      const deviceId = sessionStorage.getItem(JOIN_STORAGE.deviceId);
+
+      if (!roomId || (typeof slotIndex !== "number" || slotIndex < 0)) {
+        document.getElementById("game-wrap").innerHTML = "<p>Missing room or player. <a href='join.html'>Join a game</a>.</p>";
+      } else {
+        function getColumnClass(col) {
+          return ["col-b", "col-i", "col-n", "col-g", "col-o"][col];
+        }
+        function isLineComplete(lineCells, drawnSet) {
+          return lineCells.every((c) => c === "FREE" || drawnSet.has(c));
+        }
+        function getBingoLines(card, drawnSet) {
+          const lines = [];
+          for (let row = 0; row < 5; row++) {
+            const cells = [card[row][0], card[row][1], card[row][2], card[row][3], card[row][4]];
+            if (isLineComplete(cells, drawnSet)) lines.push(`Row ${row + 1}`);
+          }
+          for (let col = 0; col < 5; col++) {
+            const cells = [card[0][col], card[1][col], card[2][col], card[3][col], card[4][col]];
+            if (isLineComplete(cells, drawnSet)) lines.push(`Col ${["B", "I", "N", "G", "O"][col]}`);
+          }
+          const d1 = [card[0][0], card[1][1], card[2][2], card[3][3], card[4][4]];
+          if (isLineComplete(d1, drawnSet)) lines.push("Diagonal \\");
+          const d2 = [card[0][4], card[1][3], card[2][2], card[3][1], card[4][0]];
+          if (isLineComplete(d2, drawnSet)) lines.push("Diagonal /");
+          return lines;
+        }
+
+        function getLetter(num) {
+          if (num <= 15) return "B";
+          if (num <= 30) return "I";
+          if (num <= 45) return "N";
+          if (num <= 60) return "G";
+          return "O";
+        }
+
+        function render(state) {
+          const wrap = document.getElementById("card-wrap");
+          const currentEl = document.getElementById("current-number");
+          const historyWrap = document.getElementById("history-wrap");
+          const bingoEl = document.getElementById("bingo-msg");
+          const statusEl = document.getElementById("status");
+          const titleEl = document.getElementById("player-title");
+          if (!state || !state.participantCards || !state.participantCards[slotIndex]) return;
+
+          const card = state.participantCards[slotIndex];
+          const drawnSequence = state.drawnSequence || [];
+          const drawnSet = new Set(drawnSequence);
+          const lastNum = drawnSequence[drawnSequence.length - 1];
+          const names = state.participantNames || [];
+          const name = (names[slotIndex] && names[slotIndex].trim()) || `Player ${slotIndex + 1}`;
+
+          if (titleEl) titleEl.textContent = name + " – Your card";
+          if (currentEl) currentEl.textContent = lastNum ? `${getLetter(lastNum)}-${lastNum}` : "--";
+
+          historyWrap.innerHTML = "";
+          drawnSequence.slice(-15).forEach((n) => {
+            const ball = document.createElement("div");
+            ball.className = "history-ball";
+            ball.textContent = n;
+            historyWrap.appendChild(ball);
+          });
+
+          let grid = "";
+          for (let c = 0; c < 5; c++) {
+            grid += `<div class="card-header-cell ${["b", "i", "n", "g", "o"][c]}">${["B", "I", "N", "G", "O"][c]}</div>`;
+          }
+          for (let row = 0; row < 5; row++) {
+            for (let col = 0; col < 5; col++) {
+              const val = card[row][col];
+              const colClass = getColumnClass(col);
+              const isFree = val === "FREE";
+              const marked = isFree || drawnSet.has(val);
+              const latest = val === lastNum;
+              let cls = "card-cell " + colClass;
+              if (isFree) cls += " free marked";
+              else if (marked) cls += " marked";
+              if (latest) cls += " latest-draw";
+              grid += `<div class="${cls}">${val}</div>`;
+            }
+          }
+          wrap.innerHTML = `<div class="participant-card">${grid}</div>`;
+
+          const bingoLines = getBingoLines(card, drawnSet);
+          if (bingoEl) {
+            if (bingoLines.length > 0) {
+              bingoEl.textContent = "BINGABU! " + bingoLines.join(", ");
+              bingoEl.classList.remove("hidden");
+            } else {
+              bingoEl.classList.add("hidden");
+            }
+          }
+
+          const markedCount = drawnSet.size + (drawnSet.has(undefined) ? 0 : 0);
+          let marked = 0;
+          for (let r = 0; r < 5; r++)
+            for (let c = 0; c < 5; c++)
+              if (card[r][c] === "FREE" || drawnSet.has(card[r][c])) marked++;
+          if (statusEl) statusEl.textContent = `${marked}/24 marked`;
+        }
+
+        function showBooted() {
+          document.getElementById("game-wrap").classList.add("hidden");
+          document.getElementById("booted-wrap").classList.remove("hidden");
+        }
+
+        let pollInterval;
+        let failCount = 0;
+        async function fetchRoom() {
+          const headers = {};
+          if (joinToken) headers["Authorization"] = "Bearer " + joinToken;
+          const statusEl = document.getElementById("status");
+          try {
+            const res = await fetch(`${getApiBase()}/api/rooms/${roomId}`, { headers });
+            const data = await res.json().catch(() => ({}));
+            failCount = 0;
+            if (res.status === 404) {
+              if (statusEl) statusEl.textContent = "Room not found or expired.";
+              return;
+            }
+            if (data.passwordRequired) {
+              showBooted();
+              return;
+            }
+            const claims = data.claims || {};
+            const myClaim = claims[String(slotIndex)];
+            if (deviceId && myClaim !== deviceId) {
+              showBooted();
+              return;
+            }
+            if (data.state) render(data.state);
+          } catch (_) {
+            failCount++;
+            if (statusEl) statusEl.textContent = failCount >= 2 ? "Reconnecting…" : "";
+          }
+        }
+
+        fetchRoom();
+        pollInterval = setInterval(fetchRoom, 2000);
+
+        window.addEventListener("beforeunload", () => clearInterval(pollInterval));
+      }
+    </script>
+  </body>
+</html>

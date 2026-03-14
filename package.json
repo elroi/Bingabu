@@ -3,10 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "serve .",
+    "dev:api": "vercel dev",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "serve": "^14.2.4",
+    "vercel": "^39.0.0",
     "vitest": "^2.1.0"
   }
 }

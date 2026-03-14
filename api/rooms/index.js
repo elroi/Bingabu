@@ -1,0 +1,94 @@
+import crypto from "crypto";
+import * as store from "../lib/store.js";
+import { generateSalt, hashPassword } from "../lib/password.js";
+
+const ROOM_ID_LENGTH = 6;
+const ROOM_ID_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous 0/O, 1/I
+
+function generateRoomId() {
+  let id = "";
+  const bytes = crypto.randomBytes(ROOM_ID_LENGTH);
+  for (let i = 0; i < ROOM_ID_LENGTH; i++) {
+    id += ROOM_ID_CHARS[bytes[i] % ROOM_ID_CHARS.length];
+  }
+  return id;
+}
+
+function isStateValid(state) {
+  if (!state || typeof state !== "object") return false;
+  if (!Array.isArray(state.drawnSequence)) return false;
+  const seq = state.drawnSequence;
+  if (seq.some((n) => typeof n !== "number" || n < 1 || n > 75)) return false;
+  if (new Set(seq).size !== seq.length) return false;
+  const np = state.numParticipants;
+  if (typeof np !== "number" || np < 0 || np > 12) return false;
+  const cards = state.participantCards;
+  if (!Array.isArray(cards) || cards.length !== np) return false;
+  if (
+    !cards.every(
+      (card) =>
+        Array.isArray(card) &&
+        card.length === 5 &&
+        card.every((row) => Array.isArray(row) && row.length === 5)
+    )
+  )
+    return false;
+  return true;
+}
+
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  let body;
+  try {
+    body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+  } catch (_) {
+    return res.status(400).json({ error: "Invalid JSON" });
+  }
+
+  const { state, password } = body;
+  if (!isStateValid(state)) {
+    return res.status(400).json({ error: "Invalid state" });
+  }
+
+  const hostId = crypto.randomUUID();
+  let roomId;
+  do {
+    roomId = generateRoomId();
+  } while (store.get(roomId));
+
+  const room = {
+    roomId,
+    hostId,
+    state,
+    claims: {},
+    createdAt: Date.now(),
+    expiresAt: null,
+  };
+
+  if (password != null && String(password).trim() !== "") {
+    const salt = generateSalt();
+    room.passwordSalt = salt;
+    room.passwordHash = hashPassword(String(password).trim(), salt);
+  }
+
+  store.set(roomId, room);
+
+  const host = process.env.VERCEL_URL || "localhost:3000";
+  const isLocal = /^localhost(\d*)$|^127\.0\.0\.1(\d*)$/.test(host.replace(/:\d+$/, ""));
+  const protocol = isLocal ? "http" : "https";
+  const baseUrl = process.env.BASE_URL || `${protocol}://${host}`;
+  const shareUrl = `${baseUrl}/join.html?join=${roomId}`;
+
+  return res.status(201).json({ roomId, shareUrl, hostId });
+}

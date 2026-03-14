@@ -22,3 +22,7 @@ yarn-error.log*
 # Vitest
 coverage/
 .vitest/
+.vercel
+
+# Local dev room store (api/lib/store.js)
+.bingabu-rooms.json
