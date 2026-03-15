@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Missing roomId" });
   }
 
-  const room = store.get(roomId);
+  const room = await store.get(roomId);
   if (!room) {
     return res.status(404).json({ error: "Room not found" });
   }
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
   room.claims = room.claims || {};
   delete room.claims[String(slotIndex)];
   room.updatedAt = Date.now();
-  store.set(roomId, room);
+  await store.set(roomId, room);
 
   return res.status(200).json({
     roomId: room.roomId,

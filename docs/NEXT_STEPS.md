@@ -38,11 +38,77 @@ Step-by-step guidance for deploy, spectator mode, accessibility, and polish.
 6. **Optional: custom domain**  
    In the project → **Settings → Domains**, add a domain (e.g. `bingabu.yourdomain.com`) and follow the DNS instructions.
 
-7. **Optional: Vercel KV (persistent rooms)**  
-   Right now rooms are in memory and can be lost on cold starts. For production you can add Vercel KV:  
-   - In the Vercel project, go **Storage → Create Database → KV**.  
-   - Connect it to the project (env vars like `KV_REST_API_URL` and `KV_REST_API_TOKEN` are added automatically).  
-   - Then the codebase would need a small change: in `api/lib/store.js`, use the KV client to read/write rooms instead of (or in addition to) the file. That’s a separate code change; the app works without it for low traffic.
+7. **Required for joining: Redis (Upstash)**  
+   On Vercel, each request can run in a different serverless instance, so in-memory room data is not shared. Without Redis, the host creates a room in one instance and the joiner gets 404 in another. See **section 1b** below.
+
+---
+
+## 1b. Make joining work on Vercel (add Upstash Redis)
+
+**Goal:** Room data is shared across all serverless instances so that when someone opens the join link, the room is found (no more 404).
+
+The app looks for **`UPSTASH_REDIS_REST_URL`** and **`UPSTASH_REDIS_REST_TOKEN`**. When both are set, rooms are stored in Redis; otherwise they stay in memory (not shared on Vercel).
+
+### Step-by-step
+
+1. **Open your Vercel project**  
+   Go to [vercel.com/dashboard](https://vercel.com/dashboard), select your **Bingabu** project.
+
+2. **Open Integrations**  
+   In the top navigation, click **Integrations** (or use the left sidebar: your team/account → **Integrations**).  
+   If you see **Storage** in the sidebar instead, you can also go to **Storage** and look for an option to add a database (e.g. **Create Database** or **Connect Store**).
+
+3. **Open the Marketplace**  
+   Click **Browse Marketplace** (or **Add Integration** / **Marketplace**).  
+   In the Marketplace, filter or search for **Storage** or **Redis**.
+
+4. **Choose Upstash**  
+   Find **Upstash** (“Serverless DB: Redis, Vector, Queue, Search”) and click it.  
+   Click **Install** (or **Add Integration**).
+
+5. **Configure the integration**  
+   - Select your **Vercel account/team** if asked.  
+   - You may see a list of Upstash products (Redis, Vector, etc.). Choose **Redis**.  
+   - Pick a **pricing plan** (e.g. **Pay as you go** or **Free** if available).  
+   - Choose a **region** close to your users if prompted.  
+   - Optionally set a **name** for the database (e.g. `bingabu-rooms`).  
+   - Click **Create** / **Continue** / **Install** to provision the Redis database.
+
+6. **Connect the database to Bingabu**  
+   After the database is created, you’ll see a **Projects** or **Connect to project** step.  
+   - Click **Connect Project** (or **Connect**).  
+   - Select **Bingabu** from the list.  
+   - **Do not** set a custom environment variable prefix (leave it empty). The app expects `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.  
+   - Confirm **Connect** / **Save**.  
+   Vercel will inject the two env vars into the Bingabu project for the environments you selected (usually **Production**, **Preview**, **Development**).
+
+7. **Redeploy**  
+   New env vars apply only to new deployments.  
+   - Go to **Deployments**, open the **⋯** menu on the latest deployment, then **Redeploy**; or  
+   - Push a new commit to trigger a deploy.  
+   Wait for the deployment to finish.
+
+8. **Test**  
+   - Open your production URL, create a new room, copy the share link.  
+   - Open the link in an incognito window or another device.  
+   - You should see the join page (room code, optional password, then “Choose your player”). No 404.
+
+### If you don’t see Integrations or Storage
+
+- **Integrations** is under the main dashboard (team or personal account), not inside a single project. From the project, use the top bar or sidebar to get back to the team/account level, then **Integrations**.  
+- Alternatively, in the project go to **Settings → Environment Variables**. If you add Redis manually (e.g. from [Upstash Console](https://console.upstash.com)), create variables named exactly **`UPSTASH_REDIS_REST_URL`** and **`UPSTASH_REDIS_REST_TOKEN`** for Production (and Preview if you want).
+
+### Summary
+
+| Step | Where | Action |
+|------|--------|--------|
+| 1 | Dashboard | Open Bingabu project |
+| 2 | Top/side nav | Integrations → Browse Marketplace |
+| 3 | Marketplace | Find **Upstash** → Install |
+| 4 | Upstash | Choose Redis, plan, region → Create |
+| 5 | Upstash / Vercel | Connect project **Bingabu**, no prefix |
+| 6 | Deployments | Redeploy (or push a commit) |
+| 7 | Browser | Create room, open share link in incognito → join should work |
 
 ---
 

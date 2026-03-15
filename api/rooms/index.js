@@ -65,7 +65,7 @@ export default async function handler(req, res) {
   let roomId;
   do {
     roomId = generateRoomId();
-  } while (store.get(roomId));
+  } while (await store.get(roomId));
 
   const room = {
     roomId,
@@ -82,7 +82,7 @@ export default async function handler(req, res) {
     room.passwordHash = hashPassword(String(password).trim(), salt);
   }
 
-  store.set(roomId, room);
+  await store.set(roomId, room);
 
   const host = process.env.VERCEL_URL || "localhost:3000";
   const isLocal = /^localhost(\d*)$|^127\.0\.0\.1(\d*)$/.test(host.replace(/:\d+$/, ""));

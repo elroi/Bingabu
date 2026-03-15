@@ -113,10 +113,12 @@
       <button type="button" id="btn-code">Continue</button>
     </div>
     <div id="step-password" class="join-step hidden">
-      <label for="room-password">Room password</label>
-      <input type="password" id="room-password" placeholder="Enter password" autocomplete="off" />
-      <p id="password-error" class="error hidden"></p>
-      <button type="button" id="btn-password">Enter room</button>
+      <form id="password-form" onsubmit="return false;" aria-label="Room password">
+        <label for="room-password">Room password</label>
+        <input type="password" id="room-password" placeholder="Enter password" autocomplete="off" />
+        <p id="password-error" class="error hidden"></p>
+        <button type="button" id="btn-password">Enter room</button>
+      </form>
     </div>
     <div id="step-pick" class="join-step hidden">
       <p class="slot-label">Choose your player</p>

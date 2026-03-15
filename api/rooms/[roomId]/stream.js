@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Missing roomId" });
   }
 
-  const room = store.get(roomId);
+  const room = await store.get(roomId);
   if (!room) {
     return res.status(404).json({ error: "Room not found" });
   }
@@ -60,9 +60,9 @@ export default async function handler(req, res) {
 
   let lastUpdated = room.updatedAt || room.createdAt || 0;
 
-  const interval = setInterval(() => {
+  const interval = setInterval(async () => {
     try {
-      const current = store.get(roomId);
+      const current = await store.get(roomId);
       if (current && (current.updatedAt || current.createdAt) > lastUpdated) {
         lastUpdated = current.updatedAt || current.createdAt;
         res.write(`data: ${JSON.stringify({ updatedAt: lastUpdated })}\n\n`);

@@ -13,4 +13,4 @@ A web app for running 75-ball Bingo: caller/organizer view with participant card
 2. **Players:** Open the share link (or go to `join.html` and enter the room code). If the room is password-protected, enter the password. Choose your player (slot), then you’ll see your card and live updates as the host draws.
 3. **Host:** Use **Remove** next to a player to boot them; use **End room** to stop the room (your local game is unchanged).
 
-Rooms use an in-memory store by default; for production with multiple instances, configure a persistent store (e.g. Vercel KV).
+**Production (Vercel):** Room data is not shared across serverless instances unless you add Redis. See **[docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)** section **1b. Make joining work on Vercel (add Upstash Redis)** for step-by-step instructions. In short: Vercel Dashboard → Integrations → Marketplace → **Upstash** → Redis → Create → Connect project **Bingabu** → Redeploy. The app uses `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` when set.
