@@ -79,11 +79,11 @@ describe("Bingo host UX", () => {
     expect(setupPlayersIndex).toBeLessThan(remotePlayIndex);
   });
 
-  it("bingo.html remote-play hint mentions create room and share link", () => {
+  it("bingo.html remote-play subtitle mentions create room and playing with others", () => {
     const html = readPage("bingo");
-    expect(html).toMatch(/remote-play-hint/);
-    expect(html).toMatch(/create.*room/);
-    expect(html).toMatch(/share the link/);
+    expect(html).toMatch(/remote-play-subtitle|host-setup-subtitle/);
+    expect(html).toMatch(/create.*room|Create an online room/);
+    expect(html).toMatch(/play with others|playing in person/);
   });
 
   it("bingo.html participants section appears before Play with friends (remote-play) in DOM", () => {
@@ -140,10 +140,10 @@ describe("Bingo host UX", () => {
     expect(html).toMatch(/host-wizard-skip/);
   });
 
-  it("bingo.html has Show guide again control", () => {
+  it("bingo.html has Show guide control", () => {
     const html = readPage("bingo");
     expect(html).toMatch(/id="host-wizard-show-again"/);
-    expect(html).toMatch(/Show guide again/);
+    expect(html).toMatch(/Show guide/);
   });
 
   it("bingo.html has two-phase host views: setup and play", () => {

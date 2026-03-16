@@ -11,6 +11,7 @@
     <style>
       :root {
         --primary: #ff6b6b;
+        --primary-soft: #c97b63;
         --secondary: #4ecdc4;
         --accent: #ffe66d;
         --bg: #f7f9fc;
@@ -257,17 +258,26 @@
         display: none !important;
       }
 
-      .remote-play-section {
-        margin-top: 20px;
-        padding-top: 16px;
-        border-top: 1px dashed var(--secondary);
+      .host-setup-block {
         width: 100%;
       }
-      .remote-play-title {
+      .host-setup-view .host-setup-heading {
         font-family: "Fredoka One", cursive;
-        color: var(--primary);
         font-size: 1.1rem;
-        margin: 0 0 4px 0;
+        color: var(--primary-soft);
+        margin: 0 0 0 0;
+        text-shadow: 1px 1px 0 rgba(255, 230, 109, 0.2);
+      }
+      .host-setup-view .host-setup-heading.remote-play-heading {
+        color: var(--secondary);
+        text-shadow: 1px 1px 0 rgba(78, 205, 196, 0.25);
+      }
+      .remote-play-section {
+        margin-top: 24px;
+        width: 100%;
+      }
+      .remote-play-section .remote-play-subtitle {
+        margin-bottom: 12px;
       }
       .remote-play-api-unavailable {
         font-size: 0.85rem;
@@ -279,13 +289,30 @@
         padding: 2px 6px;
         border-radius: 4px;
       }
-      .remote-play-hint {
-        font-size: 0.85rem;
-        color: #636e72;
-        margin: 0 0 12px 0;
-      }
       .remote-play-create,
       .remote-play-active {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .remote-play-above-fold {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .remote-play-details-section {
+        margin-top: 16px;
+      }
+      .remote-play-details-section.remote-play-details-collapsed .section-chevron {
+        transform: rotate(-90deg);
+      }
+      .remote-play-details-section.remote-play-details-collapsed .setup-players-content {
+        display: none;
+      }
+      .remote-play-create-options,
+      .remote-play-active-details {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
@@ -417,7 +444,7 @@
       .setup-players-section h3 {
         font-family: "Fredoka One", cursive;
         font-size: 1rem;
-        color: var(--text);
+        color: var(--primary-soft);
         margin: 0 0 0 0;
         cursor: pointer;
         display: flex;
@@ -428,6 +455,12 @@
       }
       .setup-players-section h3:hover {
         color: var(--secondary);
+      }
+      .remote-play-details-section h3 {
+        color: var(--secondary);
+      }
+      .remote-play-details-section h3:hover {
+        color: var(--primary-soft);
       }
       .setup-players-section .section-chevron {
         font-size: 0.9rem;
@@ -502,7 +535,9 @@
       .host-step {
         padding: 4px 10px;
         border-radius: 8px;
-        background: rgba(0,0,0,0.04);
+        background: rgba(201, 123, 99, 0.12);
+        color: var(--primary-soft);
+        font-weight: 600;
       }
       .host-step[aria-current="step"] {
         background: var(--secondary);
@@ -510,11 +545,12 @@
         font-weight: 700;
       }
       .host-step.step-done {
-        background: rgba(78, 205, 196, 0.2);
-        color: var(--text);
+        background: rgba(78, 205, 196, 0.25);
+        color: var(--secondary);
       }
       .host-step-arrow {
-        color: #b2bec3;
+        color: var(--primary-soft);
+        opacity: 0.7;
         font-size: 0.85rem;
       }
 
@@ -645,7 +681,10 @@
       }
       .host-wizard-show-again-wrap {
         text-align: center;
-        margin: -8px 0 16px 0;
+        margin: 12px 0 0 0;
+      }
+      .host-setup-actions .host-wizard-show-again-wrap {
+        margin-top: 12px;
       }
       .host-wizard-show-again {
         background: none;
@@ -698,8 +737,18 @@
         opacity: 0.6;
         cursor: not-allowed;
       }
-      .host-setup-view .setup-players-section {
+      .host-setup-subtitle {
+        margin: 0 0 12px;
+        font-size: 0.95rem;
+        color: var(--text);
+        line-height: 1.4;
+      }
+      .participant-setting-above-fold {
         margin-top: 0;
+        margin-bottom: 4px;
+      }
+      .host-setup-view .setup-players-section {
+        margin-top: 16px;
       }
       .host-setup-view .remote-play-section {
         margin-top: 24px;
@@ -1238,9 +1287,6 @@
       <span class="host-step-arrow" aria-hidden="true">→</span>
       <span class="host-step" id="host-step-4" data-step="4">4. Draw</span>
     </nav>
-    <p class="host-wizard-show-again-wrap">
-      <button type="button" id="host-wizard-show-again" class="host-wizard-show-again">Show guide again</button>
-    </p>
 
     <div id="host-wizard-overlay" class="host-wizard-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="host-wizard-title" aria-live="polite">
       <div class="host-wizard-modal">
@@ -1258,56 +1304,71 @@
     </div>
 
     <div id="host-setup-view" class="host-setup-view">
-      <h2 id="host-setup-heading">Who's playing?</h2>
-      <section class="setup-players-section setup-players-in-controls" id="setup-players-section" aria-label="Participants and player names">
-        <h3 id="setup-players-header" role="button" tabindex="0" aria-expanded="true" aria-controls="setup-players-content">Participants & names <span class="section-chevron" aria-hidden="true">▼</span></h3>
+      <h2 id="host-setup-heading" class="host-setup-heading">Who's playing?</h2>
+      <p id="host-setup-subtitle" class="host-setup-subtitle">Specify how many players. Use the advanced options below for names and quirks if you like.</p>
+      <div class="participant-setting participant-setting-above-fold">
+        <label for="num-participants">Participants</label>
+        <input type="number" id="num-participants" min="0" max="12" value="0" title="" />
+      </div>
+      <section class="setup-players-section setup-players-in-controls setup-players-collapsed" id="setup-players-section" aria-label="Advanced participants settings">
+        <h3 id="setup-players-header" role="button" tabindex="0" aria-expanded="false" aria-controls="setup-players-content">Advanced participants settings <span class="section-chevron" aria-hidden="true">▼</span></h3>
         <div class="setup-players-content" id="setup-players-content">
-          <div class="participant-setting">
-            <label for="num-participants">Participants</label>
-            <input type="number" id="num-participants" min="1" max="12" value="1" title="" />
-          </div>
           <div class="participant-names-wrap" id="participant-names-wrap">
             <label id="participant-names-label">Player names (you can change these anytime)</label>
             <div class="participant-names" id="participant-names"></div>
           </div>
         </div>
       </section>
-      <section class="remote-play-section" id="remote-play-section" aria-label="Play with friends">
-        <h3 class="remote-play-title">Playing with friends online?</h3>
+      <section class="remote-play-section host-setup-block" id="remote-play-section" aria-label="Play with friends">
+        <h2 class="host-setup-heading remote-play-heading">Playing with friends online?</h2>
         <p id="remote-play-api-unavailable" class="remote-play-api-unavailable hidden">Remote play needs the API. Run <code>npm run dev:api</code> to enable it.</p>
-        <p class="remote-play-hint">Create a room and share the link so others can join.</p>
+        <p class="host-setup-subtitle remote-play-subtitle">Create an online room to play with others. Optional if you're playing in person.</p>
         <div id="remote-play-create" class="remote-play-create">
-          <div class="remote-play-password-wrap">
-            <input type="checkbox" id="remote-play-password-check" aria-label="Protect room with password" />
-            <label for="remote-play-password-check">Protect room with password</label>
-          </div>
-          <form id="remote-play-password-fields" class="remote-play-password-fields hidden" role="group" aria-label="Room password" onsubmit="return false;">
-            <input type="password" id="remote-play-password" placeholder="Room password" autocomplete="off" aria-label="Room password" />
-            <input type="password" id="remote-play-password-confirm" placeholder="Confirm password" autocomplete="off" aria-label="Confirm password" />
-          </form>
-          <button type="button" id="remote-play-create-btn" class="remote-play-btn">Create room</button>
+          <button type="button" id="remote-play-create-btn" class="remote-play-btn">Create an online game room</button>
         </div>
         <div id="remote-play-active" class="remote-play-active hidden">
-          <p class="remote-play-code-label">Room code</p>
-          <p id="remote-play-code" class="remote-play-code" aria-live="polite"></p>
-          <p class="remote-play-join-hint">Players: open <strong id="remote-play-join-url"></strong> and enter the code above.</p>
-          <div class="remote-play-copy-row">
-            <button type="button" id="remote-play-copy-code" class="remote-play-btn secondary">Copy code</button>
-            <button type="button" id="remote-play-copy-join-page" class="remote-play-btn secondary">Copy join page</button>
-            <button type="button" id="remote-play-copy-link" class="remote-play-btn secondary">Copy link</button>
+          <div class="remote-play-above-fold">
+            <p class="remote-play-code-label">Room code</p>
+            <p id="remote-play-code" class="remote-play-code" aria-live="polite"></p>
+            <button type="button" id="remote-play-end-btn" class="remote-play-btn end">End room</button>
           </div>
-          <div id="remote-play-qr-wrap" class="remote-play-qr-wrap hidden" aria-hidden="true">
-            <p class="remote-play-qr-label">Scan to join</p>
-            <img id="remote-play-qr" class="remote-play-qr" src="" alt="QR code to open the join page" />
-          </div>
-          <p id="remote-play-password-reminder" class="remote-play-password-reminder hidden">Room is protected — share the password with players.</p>
-          <p class="remote-play-joined-label">Players joined</p>
-          <ul id="remote-play-joined-list" class="remote-play-joined-list" aria-live="polite"></ul>
-          <button type="button" id="remote-play-end-btn" class="remote-play-btn end">End room</button>
         </div>
+        <section class="setup-players-section remote-play-details-section remote-play-details-collapsed" id="remote-play-details-section" aria-label="Online room details">
+          <h3 id="remote-play-details-header" role="button" tabindex="0" aria-expanded="false" aria-controls="remote-play-details-content">Online room details <span class="section-chevron" aria-hidden="true">▼</span></h3>
+          <div class="setup-players-content" id="remote-play-details-content">
+            <div id="remote-play-create-options" class="remote-play-create-options">
+              <div class="remote-play-password-wrap">
+                <input type="checkbox" id="remote-play-password-check" aria-label="Protect room with password" />
+                <label for="remote-play-password-check">Protect room with password</label>
+              </div>
+              <form id="remote-play-password-fields" class="remote-play-password-fields hidden" role="group" aria-label="Room password" onsubmit="return false;">
+                <input type="password" id="remote-play-password" placeholder="Room password" autocomplete="off" aria-label="Room password" />
+                <input type="password" id="remote-play-password-confirm" placeholder="Confirm password" autocomplete="off" aria-label="Confirm password" />
+              </form>
+            </div>
+            <div id="remote-play-active-details" class="remote-play-active-details hidden">
+              <p class="remote-play-join-hint">Players: open <strong id="remote-play-join-url"></strong> and enter the code above.</p>
+              <div class="remote-play-copy-row">
+                <button type="button" id="remote-play-copy-code" class="remote-play-btn secondary" title="Players enter this code on the join page to join your room.">Copy room code</button>
+                <button type="button" id="remote-play-copy-join-page" class="remote-play-btn secondary" title="Share this URL so players know where to go to enter the room code.">Copy join page URL</button>
+                <button type="button" id="remote-play-copy-link" class="remote-play-btn secondary" title="Share this link to let people join this room directly without entering a code.">Copy direct game link</button>
+              </div>
+              <div id="remote-play-qr-wrap" class="remote-play-qr-wrap hidden" aria-hidden="true">
+                <p class="remote-play-qr-label">Scan to join</p>
+                <img id="remote-play-qr" class="remote-play-qr" src="" alt="QR code to open the join page" />
+              </div>
+              <p id="remote-play-password-reminder" class="remote-play-password-reminder hidden">Room is protected — share the password with players.</p>
+              <p class="remote-play-joined-label">Players joined</p>
+              <ul id="remote-play-joined-list" class="remote-play-joined-list" aria-live="polite"></ul>
+            </div>
+          </div>
+        </section>
       </section>
       <div class="host-setup-actions">
         <button type="button" id="host-start-game-btn" class="host-btn-primary" disabled>Start the game</button>
+        <p class="host-wizard-show-again-wrap">
+          <button type="button" id="host-wizard-show-again" class="host-wizard-show-again">Show guide</button>
+        </p>
       </div>
     </div>
 
@@ -1453,6 +1514,8 @@
       const advancedControlsHeader = document.getElementById("advanced-controls-header");
       const remotePlayCreateEl = document.getElementById("remote-play-create");
       const remotePlayActiveEl = document.getElementById("remote-play-active");
+      const remotePlayDetailsSection = document.getElementById("remote-play-details-section");
+      const remotePlayDetailsHeader = document.getElementById("remote-play-details-header");
       const remotePlayCodeEl = document.getElementById("remote-play-code");
       const remotePlayPasswordCheck = document.getElementById("remote-play-password-check");
       const remotePlayPasswordFields = document.getElementById("remote-play-password-fields");
@@ -1477,7 +1540,7 @@
 
       let drawnSequence = [];
       let availableNumbers = [];
-      let numParticipants = 1;
+      let numParticipants = 0;
       let participantNames = [];
       let participantQuirks = []; // { excludeStr: string, preferStr: string } per player
       let participantCards = [];
@@ -1615,8 +1678,8 @@
             if (voices.length && !voices.some((v) => v.name === mcVoiceName)) mcVoiceName = "";
           }
           if (participantCards.length === 0 && drawnSequence.length > 0) {
-            numParticipants = 1;
-            numParticipantsInput.value = "1";
+            numParticipants = 0;
+            numParticipantsInput.value = "0";
             participantNames = participantNames.slice(0, 1);
             while (participantNames.length < 1) participantNames.push("");
             participantQuirks = participantQuirks.slice(0, 1);
@@ -1810,7 +1873,7 @@
       }
 
       function initGame() {
-        numParticipants = Math.min(12, Math.max(1, parseInt(numParticipantsInput.value, 10) || 1));
+        numParticipants = Math.min(12, Math.max(0, parseInt(numParticipantsInput.value, 10) || 0));
         numParticipantsInput.value = String(numParticipants);
         availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
         drawnSequence = [];
@@ -2256,15 +2319,10 @@
             inp.disabled = false;
           });
         }
-        // Fold names setup during game, expand during setup
-        if (setupPlayersSection && setupPlayersHeader) {
-          if (isMidGame) {
-            setupPlayersSection.classList.add("setup-players-collapsed");
-            setupPlayersHeader.setAttribute("aria-expanded", "false");
-          } else {
-            setupPlayersSection.classList.remove("setup-players-collapsed");
-            setupPlayersHeader.setAttribute("aria-expanded", "true");
-          }
+        // Keep advanced participants section collapsed during game; leave state during setup (starts collapsed)
+        if (setupPlayersSection && setupPlayersHeader && isMidGame) {
+          setupPlayersSection.classList.add("setup-players-collapsed");
+          setupPlayersHeader.setAttribute("aria-expanded", "false");
         }
 
         // Host steps: mark current step and completed steps
@@ -2293,13 +2351,10 @@
             if (step2Done) el.classList.add("step-done");
             else if (step1Done && !step2Done) el.setAttribute("aria-current", "step");
           } else if (step === 3) {
-            if (step2Done) el.classList.add("step-done");
-            else if (step2Done && !inGame) el.setAttribute("aria-current", "step");
+            if (inGame) el.classList.add("step-done");
+            else if (step2Done) el.setAttribute("aria-current", "step");
           } else if (step === 4) {
-            if (inGame) {
-              el.classList.add("step-done");
-              el.setAttribute("aria-current", "step");
-            } else if (step2Done) el.setAttribute("aria-current", "step");
+            if (inGame) el.setAttribute("aria-current", "step");
           }
         });
       }
@@ -2365,7 +2420,11 @@
         if (phase === "setup") updateStartGameButton();
       }
       function updateStartGameButton() {
-        if (hostStartGameBtn) hostStartGameBtn.disabled = numParticipants < 1;
+        if (!hostStartGameBtn) return;
+        const shouldDisable = numParticipants < 1;
+        hostStartGameBtn.disabled = shouldDisable;
+        if (shouldDisable) hostStartGameBtn.setAttribute("disabled", "");
+        else hostStartGameBtn.removeAttribute("disabled");
       }
       if (hostStartGameBtn) {
         hostStartGameBtn.addEventListener("click", () => {
@@ -2404,6 +2463,22 @@
           }
         });
       }
+
+      function toggleRemotePlayDetailsExpand() {
+        if (!remotePlayDetailsSection || !remotePlayDetailsHeader) return;
+        const collapsed = remotePlayDetailsSection.classList.toggle("remote-play-details-collapsed");
+        remotePlayDetailsHeader.setAttribute("aria-expanded", String(!collapsed));
+      }
+      if (remotePlayDetailsHeader) {
+        remotePlayDetailsHeader.addEventListener("click", toggleRemotePlayDetailsExpand);
+        remotePlayDetailsHeader.addEventListener("keydown", (e) => {
+          if (e.code === "Enter" || e.code === "Space") {
+            e.preventDefault();
+            toggleRemotePlayDetailsExpand();
+          }
+        });
+      }
+
       function toggleAdvancedControlsCard() {
         if (!advancedControlsCard || !advancedControlsHeader) return;
         const collapsed = advancedControlsCard.classList.toggle("advanced-controls-collapsed");
@@ -2423,9 +2498,16 @@
         return typeof window !== "undefined" && window.location && window.location.origin ? window.location.origin : "";
       }
 
+      const remotePlayCreateOptionsEl = document.getElementById("remote-play-create-options");
+      const remotePlayActiveDetailsEl = document.getElementById("remote-play-active-details");
+
       function showRemotePlayCreate() {
         if (remotePlayCreateEl) remotePlayCreateEl.classList.remove("hidden");
         if (remotePlayActiveEl) remotePlayActiveEl.classList.add("hidden");
+        if (remotePlayCreateOptionsEl) remotePlayCreateOptionsEl.classList.remove("hidden");
+        if (remotePlayActiveDetailsEl) remotePlayActiveDetailsEl.classList.add("hidden");
+        if (remotePlayDetailsSection) remotePlayDetailsSection.classList.add("remote-play-details-collapsed");
+        if (remotePlayDetailsHeader) remotePlayDetailsHeader.setAttribute("aria-expanded", "false");
         if (typeof updateHostSteps === "function") updateHostSteps();
       }
       const remotePlayJoinUrlEl = document.getElementById("remote-play-join-url");
@@ -2435,6 +2517,10 @@
       function showRemotePlayActive(roomId, shareUrl, hasPassword) {
         if (remotePlayCreateEl) remotePlayCreateEl.classList.add("hidden");
         if (remotePlayActiveEl) remotePlayActiveEl.classList.remove("hidden");
+        if (remotePlayCreateOptionsEl) remotePlayCreateOptionsEl.classList.add("hidden");
+        if (remotePlayActiveDetailsEl) remotePlayActiveDetailsEl.classList.remove("hidden");
+        if (remotePlayDetailsSection) remotePlayDetailsSection.classList.remove("remote-play-details-collapsed");
+        if (remotePlayDetailsHeader) remotePlayDetailsHeader.setAttribute("aria-expanded", "true");
         if (typeof updateHostSteps === "function") updateHostSteps();
         if (remotePlayCodeEl) remotePlayCodeEl.textContent = roomId || "";
         if (remotePlayPasswordReminder) remotePlayPasswordReminder.classList.toggle("hidden", !hasPassword);
@@ -2561,7 +2647,7 @@
         copyCodeBtn.addEventListener("click", () => {
           const code = remotePlayCodeEl.textContent;
           if (code && navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(code).then(() => { copyCodeBtn.textContent = "Copied!"; setTimeout(() => { copyCodeBtn.textContent = "Copy code"; }, 1500); });
+            navigator.clipboard.writeText(code).then(() => { copyCodeBtn.textContent = "Copied!"; setTimeout(() => { copyCodeBtn.textContent = "Copy room code"; }, 1500); });
           }
         });
       }
@@ -2569,7 +2655,7 @@
         copyJoinPageBtn.addEventListener("click", () => {
           const joinPageUrl = getApiBase() + "/join";
           if (joinPageUrl && navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(joinPageUrl).then(() => { copyJoinPageBtn.textContent = "Copied!"; setTimeout(() => { copyJoinPageBtn.textContent = "Copy join page"; }, 1500); });
+            navigator.clipboard.writeText(joinPageUrl).then(() => { copyJoinPageBtn.textContent = "Copied!"; setTimeout(() => { copyJoinPageBtn.textContent = "Copy join page URL"; }, 1500); });
           }
         });
       }
@@ -2577,7 +2663,7 @@
         copyLinkBtn.addEventListener("click", () => {
           const url = window._bingabuShareUrl || (getApiBase() + "/bingo.html?join=" + sessionStorage.getItem(REMOTE_ROOM_ID_KEY));
           if (url && navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(() => { copyLinkBtn.textContent = "Copied!"; setTimeout(() => { copyLinkBtn.textContent = "Copy link"; }, 1500); });
+            navigator.clipboard.writeText(url).then(() => { copyLinkBtn.textContent = "Copied!"; setTimeout(() => { copyLinkBtn.textContent = "Copy direct game link"; }, 1500); });
           }
         });
       }
@@ -2785,32 +2871,28 @@
 
       if (remotePlayCreateEl && remotePlayActiveEl) {
         const apiUnavailableEl = document.getElementById("remote-play-api-unavailable");
-        const hintEl = remotePlayCreateEl.previousElementSibling;
+        const remotePlaySubtitleEl = document.querySelector(".remote-play-subtitle");
         checkRemotePlayApiAvailable().then((available) => {
           if (!available && apiUnavailableEl) {
             apiUnavailableEl.classList.remove("hidden");
             remotePlayCreateEl.classList.add("hidden");
-            if (hintEl && hintEl.classList.contains("remote-play-hint")) hintEl.classList.add("hidden");
+            if (remotePlaySubtitleEl) remotePlaySubtitleEl.classList.add("hidden");
           } else {
             if (apiUnavailableEl) apiUnavailableEl.classList.add("hidden");
-            const roomId = sessionStorage.getItem(REMOTE_ROOM_ID_KEY);
-            const hostId = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
-            if (roomId && hostId) {
-              showRemotePlayActive(roomId, getApiBase() + "/join.html?join=" + roomId, false);
-              refreshJoinedList();
-              window._bingabuRoomPoll = setInterval(refreshJoinedList, 2000);
-            } else {
-              showRemotePlayCreate();
-            }
+            if (remotePlaySubtitleEl) remotePlaySubtitleEl.classList.remove("hidden");
+            // Do not restore a room on load; show room code block only after user clicks Create room
+            showRemotePlayCreate();
           }
         });
       }
 
-      numParticipantsInput.addEventListener("input", () => {
+      function syncParticipantsFromInput() {
         if (drawnSequence.length > 0) return;
-        const n = Math.min(12, Math.max(1, parseInt(numParticipantsInput.value, 10) || 1));
+        const n = Math.min(12, Math.max(0, parseInt(numParticipantsInput.value, 10) || 0));
         numParticipantsInput.value = String(n);
         numParticipants = n;
+        // Update Start the game button immediately so it always reflects participant count
+        if (typeof updateStartGameButton === "function") updateStartGameButton();
         participantCards = [];
         participantNames = participantNames.slice(0, n);
         while (participantNames.length < n) participantNames.push("");
@@ -2822,7 +2904,10 @@
         saveState();
         if (participantNamesEl) renderParticipantNameInputs();
         renderParticipantCards(null);
-      });
+        if (typeof updateHostSteps === "function") updateHostSteps();
+      }
+      numParticipantsInput.addEventListener("input", syncParticipantsFromInput);
+      numParticipantsInput.addEventListener("change", syncParticipantsFromInput);
 
       hideCardsCheckbox.addEventListener("change", () => {
         hideCards = hideCardsCheckbox.checked;
