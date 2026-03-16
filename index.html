@@ -31,7 +31,7 @@
         background-color: var(--bg);
         color: var(--text);
         margin: 0;
-        padding: 20px;
+        padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
         min-height: 100vh;
         display: flex;
         flex-direction: column;
@@ -118,6 +118,7 @@
         display: inline-block;
         transition: transform 0.1s, box-shadow 0.1s;
         min-width: 220px;
+        min-height: 44px;
         text-align: center;
       }
 
@@ -194,6 +195,16 @@
 
       footer a:hover {
         text-decoration: underline;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+        }
+        .how-it-works {
+          padding: 16px;
+          margin-bottom: 24px;
+        }
       }
     </style>
   </head>

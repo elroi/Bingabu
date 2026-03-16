@@ -26,7 +26,7 @@
         background-color: var(--bg);
         color: var(--text);
         margin: 0;
-        padding: 16px;
+        padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -45,7 +45,7 @@
       }
       .current-number {
         font-family: "Fredoka One", cursive;
-        font-size: 3rem;
+        font-size: clamp(2rem, 10vw, 3rem);
         color: var(--text);
       }
       .history-wrap {
@@ -169,6 +169,15 @@
         display: inline-block;
       }
       .hidden { display: none !important; }
+
+      @media (max-width: 600px) {
+        body {
+          padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        }
+        .participant-card {
+          padding: 10px;
+        }
+      }
     </style>
   </head>
   <body>

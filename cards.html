@@ -27,7 +27,7 @@
         background-color: var(--bg);
         color: var(--text);
         margin: 0;
-        padding: 20px;
+        padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -61,6 +61,7 @@
         font-family: "Fredoka One", cursive;
         cursor: pointer;
         padding: 10px 20px;
+        min-height: 44px;
         border-radius: 50px;
         border: none;
         font-size: 1rem;
@@ -125,6 +126,15 @@
 
       .empty-state.hidden {
         display: none;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+        }
+        .cards-container {
+          grid-template-columns: 1fr;
+        }
       }
 
       .cards-container.hidden {

@@ -30,7 +30,7 @@
         flex-direction: column;
         align-items: center;
         margin: 0;
-        padding: 20px;
+        padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
         overflow-x: hidden;
         user-select: none;
         -webkit-user-select: none;
@@ -104,6 +104,7 @@
         border: 2px dashed var(--secondary);
         min-height: 40px;
         scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
       }
 
       #history-list {
@@ -151,10 +152,10 @@
 
       #current-number {
         font-family: "Fredoka One", cursive;
-        font-size: 6rem;
+        font-size: clamp(3rem, 15vw, 6rem);
         margin: 10px 0;
         color: var(--text);
-        height: 110px;
+        min-height: 80px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -184,6 +185,7 @@
         flex: 2;
         font-size: 1.2rem;
         padding: 15px;
+        min-height: 44px;
         border-radius: 50px;
         background-color: var(--secondary);
         color: white;
@@ -954,6 +956,17 @@
       }
 
       @media (max-width: 600px) {
+        body {
+          padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        }
+        h1 {
+          font-size: 1.8rem;
+        }
+        .history-ball {
+          min-width: 30px;
+          height: 30px;
+          font-size: 0.8rem;
+        }
         .board {
           grid-template-columns: 1fr;
         }
@@ -963,6 +976,12 @@
         .controls-band {
           flex-direction: column;
           align-items: center;
+        }
+        .remote-play-btn {
+          min-height: 44px;
+        }
+        .remote-play-copy-row .remote-play-btn {
+          min-height: 44px;
         }
       }
     </style>

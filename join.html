@@ -21,7 +21,7 @@
         background-color: var(--bg);
         color: var(--text);
         margin: 0;
-        padding: 20px;
+        padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -77,6 +77,38 @@
         font-size: 0.9rem;
         color: var(--text);
       }
+      .join-hint.qr-hint {
+        margin-top: 8px;
+      }
+      .join-page-content {
+        width: 100%;
+        max-width: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .back-to-lobby {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text);
+        text-decoration: none;
+        margin-bottom: 16px;
+        padding: 10px 0;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 8px;
+        transition: background 0.15s, color 0.15s;
+      }
+      .back-to-lobby:hover {
+        color: var(--secondary);
+        background: rgba(78, 205, 196, 0.1);
+      }
+      .back-to-lobby:focus {
+        outline: 2px solid var(--secondary);
+        outline-offset: 2px;
+      }
       .error {
         color: var(--primary);
         font-size: 0.9rem;
@@ -103,67 +135,107 @@
       }
       .slot-list li button {
         flex-shrink: 0;
+        min-height: 44px;
       }
       .slot-list li.taken button {
         display: none;
       }
-      .lobby-section {
-        width: 100%;
-        max-width: 400px;
-        margin-top: 24px;
-        padding-top: 24px;
-        border-top: 2px solid var(--secondary);
-      }
-      .lobby-section h2 {
-        font-size: 1rem;
-        margin: 0 0 12px 0;
+
+      .btn-scan {
+        background: var(--bg);
         color: var(--text);
-      }
-      .lobby-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .lobby-list li {
-        margin-bottom: 8px;
-      }
-      .lobby-list li button {
-        width: 100%;
-        text-align: left;
-        padding: 12px 16px;
-        border-radius: 12px;
         border: 2px solid var(--secondary);
+      }
+      .btn-scan:hover {
         background: white;
-        color: var(--text);
-        font-family: "Quicksand", sans-serif;
-        font-weight: 700;
       }
-      .lobby-list li button:hover {
-        background: var(--secondary);
+
+      #qr-scanner-wrap {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+        box-sizing: border-box;
+      }
+      #qr-scanner-wrap.hidden {
+        display: none !important;
+      }
+      .qr-reader-container {
+        width: 100%;
+        max-width: 320px;
+        min-height: 240px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #111;
+      }
+      .qr-reader-container video {
+        display: block;
+        width: 100%;
+        max-height: 50vh;
+      }
+      #qr-reader__scan_region {
+        background: transparent;
+      }
+      .qr-scanner-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 16px;
+      }
+      #btn-qr-switch-camera,
+      #btn-qr-cancel {
+        min-height: 44px;
+        padding: 12px 24px;
+      }
+      .btn-qr-secondary {
+        background: rgba(255, 255, 255, 0.2);
         color: white;
+        border: 2px solid rgba(255, 255, 255, 0.5);
       }
-      .lobby-meta {
-        font-weight: 500;
-        font-size: 0.85rem;
-        opacity: 0.85;
-        margin-top: 4px;
+      .btn-qr-secondary:hover {
+        background: rgba(255, 255, 255, 0.3);
       }
-      .lobby-loading,
-      .lobby-empty {
-        font-size: 0.9rem;
-        color: var(--text);
-        opacity: 0.8;
+      #btn-qr-switch-camera.hidden {
+        display: none !important;
+      }
+      #qr-scanner-error {
+        color: white;
+        text-align: center;
+        margin: 16px 0 0;
+        max-width: 320px;
+      }
+      #qr-scanner-error.hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+        }
+        h1 {
+          font-size: 1.4rem;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Join a Bingabu game</h1>
-    <div id="step-code" class="join-step">
+    <div class="join-page-content">
+      <a href="index.html" class="back-to-lobby" aria-label="Back to lobby">← Back to lobby</a>
+      <h1>Join a Bingabu game</h1>
+      <div id="step-code" class="join-step">
       <p class="join-hint">Ask the host for the 6-letter room code and enter it below.</p>
       <label for="room-code">Room code</label>
       <input type="text" id="room-code" placeholder="e.g. ABC123" autocomplete="off" />
       <p id="code-error" class="error hidden"></p>
       <button type="button" id="btn-code">Continue</button>
+      <p class="join-hint qr-hint">Have a join QR from the host? Scan it.</p>
+      <button type="button" id="btn-scan-qr" class="btn-scan">Scan QR code</button>
     </div>
     <div id="step-password" class="join-step hidden">
       <form id="password-form" onsubmit="return false;" aria-label="Room password">
@@ -178,14 +250,18 @@
       <ul id="slot-list" class="slot-list" role="listbox"></ul>
       <p id="pick-error" class="error hidden"></p>
     </div>
+    </div>
 
-    <section id="lobby-section" class="lobby-section" aria-label="Available games">
-      <h2>Or pick a game</h2>
-      <div id="lobby-loading" class="lobby-loading hidden">Loading games…</div>
-      <div id="lobby-empty" class="lobby-empty hidden">No games right now. Create one as the host!</div>
-      <ul id="lobby-list" class="lobby-list"></ul>
-    </section>
+    <div id="qr-scanner-wrap" class="hidden" aria-label="Scan QR code" aria-modal="true">
+      <div id="qr-reader" class="qr-reader-container"></div>
+      <div class="qr-scanner-actions">
+        <button type="button" id="btn-qr-switch-camera" class="btn-qr-secondary hidden" aria-label="Switch camera">Switch camera</button>
+        <button type="button" id="btn-qr-cancel" aria-label="Cancel scanning">Cancel</button>
+      </div>
+      <p id="qr-scanner-error" class="hidden" aria-live="polite"></p>
+    </div>
 
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script type="module">
       const JOIN_STORAGE = { roomId: "bingabu-join-roomId", joinToken: "bingabu-join-token", deviceId: "bingabu-device-id", slotIndex: "bingabu-slot-index" };
 
@@ -263,43 +339,122 @@
         goWithCode(codeInput && codeInput.value);
       });
 
-      const lobbySection = document.getElementById("lobby-section");
-      const lobbyLoading = document.getElementById("lobby-loading");
-      const lobbyEmpty = document.getElementById("lobby-empty");
-      const lobbyList = document.getElementById("lobby-list");
-      async function loadLobby() {
-        if (!lobbyLoading || !lobbyEmpty || !lobbyList) return;
-        lobbyLoading.classList.remove("hidden");
-        lobbyEmpty.classList.add("hidden");
-        lobbyList.innerHTML = "";
+      function isJoinUrl(text) {
+        if (!text || typeof text !== "string") return false;
         try {
-          const res = await fetch(`${getApiBase()}/api/lobby?limit=20`);
-          const data = await res.json().catch(() => ({}));
-          lobbyLoading.classList.add("hidden");
-          const rooms = (data && data.rooms) || [];
-          if (rooms.length === 0) {
-            lobbyEmpty.classList.remove("hidden");
-            return;
-          }
-          rooms.forEach((room) => {
-            const li = document.createElement("li");
-            const btn = document.createElement("button");
-            btn.type = "button";
-            const names = (room.participantNames || []).slice(0, room.numParticipants || 0).filter(Boolean);
-            const label = names.length > 0 ? names.join(", ") : `${room.numParticipants || 0} player(s)`;
-            const updated = room.updatedAt || room.createdAt;
-            const when = updated ? (Date.now() - updated < 60000 ? "just now" : Math.floor((Date.now() - updated) / 60000) + " min ago") : "";
-            btn.innerHTML = `<span>${room.roomId}</span><span class="lobby-meta">${label}${when ? " · " + when : ""}</span>`;
-            btn.addEventListener("click", () => goWithCode(room.roomId));
-            li.appendChild(btn);
-            lobbyList.appendChild(li);
-          });
+          const u = new URL(text);
+          if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+          return u.pathname.includes("join");
         } catch (_) {
-          lobbyLoading.classList.add("hidden");
-          lobbyEmpty.classList.remove("hidden");
+          return false;
         }
       }
-      loadLobby();
+
+      let qrScanner = null;
+      let qrCameras = [];
+      let qrCameraIndex = 0;
+      const qrWrap = document.getElementById("qr-scanner-wrap");
+      const qrReaderEl = document.getElementById("qr-reader");
+      const qrScannerError = document.getElementById("qr-scanner-error");
+      const btnScanQr = document.getElementById("btn-scan-qr");
+      const btnQrCancel = document.getElementById("btn-qr-cancel");
+      const btnQrSwitchCamera = document.getElementById("btn-qr-switch-camera");
+
+      function closeQrScanner() {
+        if (qrScanner) {
+          qrScanner.stop().catch(() => {}).finally(() => {
+            if (qrReaderEl) qrReaderEl.innerHTML = "";
+            qrScanner = null;
+            qrCameras = [];
+            if (qrWrap) qrWrap.classList.add("hidden");
+            if (qrScannerError) {
+              qrScannerError.classList.add("hidden");
+              qrScannerError.textContent = "";
+            }
+            if (btnQrSwitchCamera) btnQrSwitchCamera.classList.add("hidden");
+          });
+        } else {
+          if (qrReaderEl) qrReaderEl.innerHTML = "";
+          if (qrWrap) qrWrap.classList.add("hidden");
+          if (qrScannerError) {
+            qrScannerError.classList.add("hidden");
+            qrScannerError.textContent = "";
+          }
+          if (btnQrSwitchCamera) btnQrSwitchCamera.classList.add("hidden");
+        }
+      }
+
+      function onQrScanSuccess(decodedText) {
+        if (!isJoinUrl(decodedText)) return;
+        closeQrScanner();
+        window.location.href = decodedText;
+      }
+
+      async function startQrCamera(cameraIdOrConfig) {
+        if (!qrScanner || !qrReaderEl) return;
+        const config = { fps: 10 };
+        await qrScanner.start(cameraIdOrConfig, config, onQrScanSuccess, () => {});
+      }
+
+      async function openQrScanner() {
+        if (!qrReaderEl || !qrWrap) return;
+        if (qrScanner) {
+          qrScanner.stop().catch(() => {});
+          qrScanner = null;
+        }
+        qrReaderEl.innerHTML = "";
+        qrWrap.classList.remove("hidden");
+        qrScannerError.classList.add("hidden");
+        qrScannerError.textContent = "";
+        if (btnQrSwitchCamera) btnQrSwitchCamera.classList.add("hidden");
+        const Html5Qrcode = window.Html5Qrcode;
+        if (!Html5Qrcode) {
+          qrScannerError.textContent = "QR scanner failed to load. Enter the room code above.";
+          qrScannerError.classList.remove("hidden");
+          return;
+        }
+        qrScanner = new Html5Qrcode("qr-reader");
+        try {
+          const devices = await Html5Qrcode.getCameras();
+          if (devices && devices.length > 0) {
+            qrCameras = devices;
+            const backIndex = devices.findIndex((d) => /back|rear|environment/i.test(d.label || ""));
+            qrCameraIndex = backIndex >= 0 ? backIndex : 0;
+            await startQrCamera(devices[qrCameraIndex].id);
+            if (devices.length > 1 && btnQrSwitchCamera) {
+              btnQrSwitchCamera.classList.remove("hidden");
+            }
+          } else {
+            await startQrCamera({ facingMode: "environment" });
+          }
+        } catch (err) {
+          try {
+            await startQrCamera({ facingMode: "environment" });
+            if (qrCameras.length > 1 && btnQrSwitchCamera) btnQrSwitchCamera.classList.remove("hidden");
+          } catch (err2) {
+            qrScanner = null;
+            qrReaderEl.innerHTML = "";
+            qrScannerError.textContent = "Camera required to scan. Enter the room code above instead.";
+            qrScannerError.classList.remove("hidden");
+          }
+        }
+      }
+
+      async function switchQrCamera() {
+        if (!qrScanner || qrCameras.length < 2) return;
+        qrCameraIndex = (qrCameraIndex + 1) % qrCameras.length;
+        try {
+          await qrScanner.stop();
+          await startQrCamera(qrCameras[qrCameraIndex].id);
+        } catch (err) {
+          qrScannerError.textContent = "Could not switch camera.";
+          qrScannerError.classList.remove("hidden");
+        }
+      }
+
+      if (btnScanQr) btnScanQr.addEventListener("click", () => openQrScanner());
+      if (btnQrCancel) btnQrCancel.addEventListener("click", () => closeQrScanner());
+      if (btnQrSwitchCamera) btnQrSwitchCamera.addEventListener("click", () => switchQrCamera());
 
       document.getElementById("btn-password").addEventListener("click", async () => {
         const roomId = sessionStorage.getItem(JOIN_STORAGE.roomId);
