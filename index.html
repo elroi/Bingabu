@@ -2,10 +2,225 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>bingabu</title>
-    <meta http-equiv="refresh" content="0; url=/bingo.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bingabu – Multiplayer bingo with friends</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #ff6b6b;
+        --secondary: #4ecdc4;
+        --accent: #ffe66d;
+        --bg: #f7f9fc;
+        --text: #2d3436;
+        --b-col: #ff6b6b;
+        --i-col: #feca57;
+        --n-col: #48dbfb;
+        --g-col: #1dd1a1;
+        --o-col: #ff9ff3;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Quicksand", sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 20px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow-x: hidden;
+      }
+
+      main {
+        width: 100%;
+        max-width: 480px;
+        text-align: center;
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .hero-title {
+        font-family: "Fredoka One", cursive;
+        font-size: clamp(2.5rem, 10vw, 4rem);
+        margin: 0 0 12px 0;
+        line-height: 1.1;
+        text-shadow: 3px 3px 0 var(--accent);
+        letter-spacing: -0.02em;
+      }
+
+      .hero-title .letter {
+        display: inline-block;
+        animation: letterPop 0.4s ease-out backwards;
+      }
+
+      .hero-title .letter:nth-child(1) { color: var(--b-col); animation-delay: 0.05s; }
+      .hero-title .letter:nth-child(2) { color: var(--i-col); animation-delay: 0.1s; }
+      .hero-title .letter:nth-child(3) { color: var(--n-col); animation-delay: 0.15s; }
+      .hero-title .letter:nth-child(4) { color: var(--g-col); animation-delay: 0.2s; }
+      .hero-title .letter:nth-child(5) { color: var(--accent); animation-delay: 0.25s; }
+      .hero-title .letter:nth-child(6) { color: var(--b-col); animation-delay: 0.3s; }
+      .hero-title .letter:nth-child(7) { color: var(--o-col); animation-delay: 0.35s; }
+
+      @keyframes letterPop {
+        from {
+          opacity: 0;
+          transform: scale(0.6) translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      .tagline {
+        font-size: 1.1rem;
+        color: var(--text);
+        margin: 0 0 32px 0;
+        line-height: 1.4;
+        opacity: 0.95;
+      }
+
+      .cta-group {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        align-items: center;
+        margin-bottom: 40px;
+      }
+
+      .btn {
+        font-family: "Fredoka One", cursive;
+        font-size: 1.2rem;
+        padding: 16px 32px;
+        border-radius: 50px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: transform 0.1s, box-shadow 0.1s;
+        min-width: 220px;
+        text-align: center;
+      }
+
+      .btn-primary {
+        background-color: var(--secondary);
+        color: white;
+        box-shadow: 0 6px 0 #39b5ae;
+      }
+
+      .btn-primary:hover {
+        filter: brightness(1.05);
+      }
+
+      .btn-primary:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #39b5ae;
+      }
+
+      .btn-secondary {
+        background: var(--bg);
+        color: var(--text);
+        border: 2px solid var(--secondary);
+      }
+
+      .btn-secondary:hover {
+        background: white;
+        border-color: var(--secondary);
+      }
+
+      .btn-secondary:active {
+        transform: translateY(2px);
+      }
+
+      .how-it-works {
+        text-align: left;
+        margin: 0 0 32px 0;
+        padding: 20px;
+        background: white;
+        border-radius: 16px;
+        border: 2px dashed var(--secondary);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      }
+
+      .how-it-works h2 {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1rem;
+        margin: 0 0 12px 0;
+        text-align: center;
+      }
+
+      .how-it-works ol {
+        margin: 0;
+        padding-left: 22px;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: var(--text);
+      }
+
+      .how-it-works li {
+        margin-bottom: 6px;
+      }
+
+      footer {
+        margin-top: auto;
+        padding-top: 24px;
+      }
+
+      footer a {
+        font-size: 0.9rem;
+        color: var(--secondary);
+        text-decoration: none;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+    </style>
   </head>
   <body>
-    <p>Loading bingabu… If you are not redirected, <a href="/bingo.html">click here</a>.</p>
+    <main>
+      <h1 class="hero-title" aria-label="Bingabu">
+        <span class="letter">B</span><span class="letter">i</span><span class="letter">n</span><span class="letter">g</span><span class="letter">a</span><span class="letter">b</span><span class="letter">u</span>
+      </h1>
+      <p class="tagline">Multiplayer bingo with friends. Draw numbers, share the link, play together.</p>
+
+      <div class="cta-group">
+        <a href="bingo.html" class="btn btn-primary">Host a game</a>
+        <a href="join.html" class="btn btn-secondary">Join with link</a>
+      </div>
+
+      <section class="how-it-works" aria-label="How it works">
+        <h2>How it works</h2>
+        <ol>
+          <li><strong>Host</strong> creates a room on the game board and shares the link.</li>
+          <li><strong>Friends</strong> open the link and join with their name.</li>
+          <li><strong>Play</strong> — host draws numbers, everyone marks their cards.</li>
+        </ol>
+      </section>
+
+      <footer>
+        <a href="bingo.html">Open game board</a>
+      </footer>
+    </main>
   </body>
 </html>
