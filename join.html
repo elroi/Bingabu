@@ -343,10 +343,23 @@
         el.classList.toggle("hidden", !msg);
       }
 
+      function alreadyInThisRoom(roomCode) {
+        const normalized = (roomCode || "").trim().toUpperCase();
+        if (!normalized) return false;
+        const storedRoomId = sessionStorage.getItem(JOIN_STORAGE.roomId);
+        const storedSlot = sessionStorage.getItem(JOIN_STORAGE.slotIndex);
+        return storedRoomId === normalized && storedSlot != null && storedSlot !== "";
+      }
+
       const params = new URLSearchParams(window.location.search);
       const joinFromUrl = params.get("join") || params.get("room") || params.get("code");
 
       if (joinFromUrl) {
+        if (alreadyInThisRoom(joinFromUrl)) {
+          const roomId = sessionStorage.getItem(JOIN_STORAGE.roomId);
+          const slotIndex = sessionStorage.getItem(JOIN_STORAGE.slotIndex);
+          window.location.replace(`player.html?room=${encodeURIComponent(roomId)}&slot=${slotIndex}`);
+        } else {
         document.getElementById("room-code").value = joinFromUrl;
         const hint = document.querySelector(".join-hint");
         if (hint) hint.classList.add("hidden");
@@ -360,6 +373,7 @@
         if (navLogo) navLogo.classList.remove("hidden");
         const joinTitle = document.getElementById("join-title");
         if (joinTitle) joinTitle.classList.add("centered");
+        }
       }
 
       async function goWithCode(code) {
@@ -386,6 +400,12 @@
             return;
           }
           sessionStorage.setItem(JOIN_STORAGE.roomId, code);
+          if (alreadyInThisRoom(code)) {
+            const roomId = sessionStorage.getItem(JOIN_STORAGE.roomId);
+            const slotIndex = sessionStorage.getItem(JOIN_STORAGE.slotIndex);
+            window.location.replace(`player.html?room=${encodeURIComponent(roomId)}&slot=${slotIndex}`);
+            return;
+          }
           const state = data.state != null ? data.state : data;
           window._joinRoomState = state;
           window._joinRoomClaims = data.claims || {};
@@ -538,6 +558,11 @@
           sessionStorage.setItem(JOIN_STORAGE.joinToken, data.joinToken || "");
           window._joinRoomState = data.state;
           window._joinRoomClaims = data.claims || {};
+          if (alreadyInThisRoom(roomId)) {
+            const slotIndex = sessionStorage.getItem(JOIN_STORAGE.slotIndex);
+            window.location.replace(`player.html?room=${encodeURIComponent(roomId)}&slot=${slotIndex}`);
+            return;
+          }
           renderSlotList(data.state, data.claims || {});
           showStep("step-pick");
         } finally {
@@ -589,7 +614,7 @@
           }
           if (data.joinToken) sessionStorage.setItem(JOIN_STORAGE.joinToken, data.joinToken);
           sessionStorage.setItem(JOIN_STORAGE.slotIndex, String(slotIndex));
-          window.location.href = `player.html?room=${encodeURIComponent(roomId)}&slot=${slotIndex}`;
+          window.location.replace(`player.html?room=${encodeURIComponent(roomId)}&slot=${slotIndex}`);
         } catch (e) {
           showError("pick-error", "Network error. Try again.");
         }
