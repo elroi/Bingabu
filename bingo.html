@@ -488,10 +488,245 @@
       .advanced-controls-card .mc-advanced {
         margin-top: 12px;
       }
-      .advanced-controls-card .setup-players-section {
+
+      .host-steps {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px 4px;
+        margin-bottom: 16px;
+        font-size: 0.9rem;
+        color: var(--text);
+      }
+      .host-step {
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.04);
+      }
+      .host-step[aria-current="step"] {
+        background: var(--secondary);
+        color: white;
+        font-weight: 700;
+      }
+      .host-step.step-done {
+        background: rgba(78, 205, 196, 0.2);
+        color: var(--text);
+      }
+      .host-step-arrow {
+        color: #b2bec3;
+        font-size: 0.85rem;
+      }
+
+      .first-visit-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        max-width: 900px;
+        width: 100%;
+        margin-bottom: 16px;
+        padding: 12px 16px;
+        background: rgba(78, 205, 196, 0.15);
+        border: 1px solid var(--secondary);
+        border-radius: 12px;
+      }
+      .first-visit-banner.hidden {
+        display: none !important;
+      }
+      .first-visit-banner-text {
+        margin: 0;
+        font-size: 0.95rem;
+        color: var(--text);
+        flex: 1;
+        min-width: 200px;
+      }
+      .first-visit-banner-text strong {
+        color: var(--primary);
+      }
+      .first-visit-banner-dismiss {
+        font-family: "Fredoka One", cursive;
+        cursor: pointer;
+        padding: 8px 16px;
+        border-radius: 50px;
+        border: none;
+        background: var(--secondary);
+        color: white;
+        font-size: 0.9rem;
+      }
+      .first-visit-banner-dismiss:hover {
+        opacity: 0.9;
+      }
+      .first-visit-banner-dismiss:focus {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+
+      .host-wizard-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+      }
+      .host-wizard-overlay.hidden {
+        display: none !important;
+      }
+      .host-wizard-modal {
+        background: var(--bg);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        max-width: 420px;
+        width: 100%;
+        padding: 24px;
+        border: 2px solid var(--secondary);
+      }
+      .host-wizard-title {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1.25rem;
+        margin: 0 0 8px 0;
+      }
+      .host-wizard-body {
+        font-size: 1rem;
+        color: var(--text);
+        margin: 0 0 20px 0;
+        line-height: 1.5;
+      }
+      .host-wizard-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+      }
+      .host-wizard-actions .host-wizard-next,
+      .host-wizard-actions .host-wizard-back,
+      .host-wizard-actions .host-wizard-skip {
+        font-family: "Fredoka One", cursive;
+        cursor: pointer;
+        padding: 10px 20px;
+        border-radius: 50px;
+        border: none;
+        font-size: 0.95rem;
+      }
+      .host-wizard-next {
+        background: var(--secondary);
+        color: white;
+      }
+      .host-wizard-next:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .host-wizard-back {
+        background: var(--bg);
+        color: var(--text);
+        border: 2px solid var(--secondary);
+      }
+      .host-wizard-skip {
+        background: transparent;
+        color: #636e72;
+      }
+      .host-wizard-skip:hover {
+        text-decoration: underline;
+      }
+      .host-wizard-progress {
+        font-size: 0.85rem;
+        color: #636e72;
+        margin-bottom: 12px;
+      }
+      .host-wizard-highlight {
+        box-shadow: 0 0 0 3px var(--secondary);
+        border-radius: 8px;
+        scroll-margin-top: 100px;
+      }
+      .host-wizard-show-again-wrap {
+        text-align: center;
+        margin: -8px 0 16px 0;
+      }
+      .host-wizard-show-again {
+        background: none;
+        border: none;
+        color: #636e72;
+        font-size: 0.85rem;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+      .host-wizard-show-again:hover {
+        color: var(--secondary);
+      }
+
+      .host-setup-view,
+      .host-play-view {
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .host-setup-view.hidden,
+      .host-play-view.hidden {
+        display: none !important;
+      }
+      .host-setup-view h2 {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1.5rem;
+        margin: 0 0 16px 0;
+      }
+      .host-setup-actions {
+        margin-top: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .host-setup-actions .host-btn-primary {
+        font-family: "Fredoka One", cursive;
+        cursor: pointer;
+        padding: 12px 24px;
+        border-radius: 50px;
+        border: none;
+        background: var(--secondary);
+        color: white;
+        font-size: 1rem;
+      }
+      .host-setup-actions .host-btn-primary:hover {
+        filter: brightness(1.05);
+      }
+      .host-setup-actions .host-btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .host-setup-view .setup-players-section {
+        margin-top: 0;
+      }
+      .host-setup-view .remote-play-section {
+        margin-top: 24px;
+      }
+      .host-new-game-in-play {
+        font-family: "Fredoka One", cursive;
+        cursor: pointer;
+        padding: 10px 20px;
+        border-radius: 50px;
+        border: 2px solid var(--secondary);
+        background: var(--bg);
+        color: var(--text);
+        font-size: 0.95rem;
+      }
+      .host-new-game-in-play:hover {
+        background: var(--secondary);
+        color: white;
+      }
+
+      .setup-players-in-controls {
         margin-top: 20px;
-        padding-top: 16px;
-        border-top: 1px dashed rgba(0,0,0,0.1);
+      }
+      .setup-players-new-game-wrap {
+        margin-top: 16px;
+      }
+      .setup-players-new-game-wrap #reset-btn {
+        font-family: "Fredoka One", cursive;
       }
 
       .shortcuts {
@@ -989,6 +1224,99 @@
   <body>
     <h1 id="bingo-app-title" class="home-link hero-title" tabindex="0" role="link" aria-label="Bingabu"><span class="letter">B</span><span class="letter">i</span><span class="letter">n</span><span class="letter">g</span><span class="letter">a</span><span class="letter">b</span><span class="letter">u</span></h1>
 
+    <div id="first-visit-banner" class="first-visit-banner hidden" role="region" aria-label="First-time host tip" aria-live="polite">
+      <p class="first-visit-banner-text">First time hosting? Set players, click <strong>Generate cards</strong>, create the room if playing online, then <strong>Start the game</strong> and use <strong>DRAW</strong> to call numbers.</p>
+      <button type="button" id="first-visit-banner-dismiss" class="first-visit-banner-dismiss">Got it</button>
+    </div>
+
+    <nav class="host-steps" id="host-steps" aria-label="Host steps">
+      <span class="host-step" id="host-step-1" data-step="1">1. Players</span>
+      <span class="host-step-arrow" aria-hidden="true">→</span>
+      <span class="host-step" id="host-step-2" data-step="2">2. Generate cards</span>
+      <span class="host-step-arrow" aria-hidden="true">→</span>
+      <span class="host-step" id="host-step-3" data-step="3">3. Create room</span>
+      <span class="host-step-arrow" aria-hidden="true">→</span>
+      <span class="host-step" id="host-step-4" data-step="4">4. Share</span>
+      <span class="host-step-arrow" aria-hidden="true">→</span>
+      <span class="host-step" id="host-step-5" data-step="5">5. Draw</span>
+    </nav>
+    <p class="host-wizard-show-again-wrap">
+      <button type="button" id="host-wizard-show-again" class="host-wizard-show-again">Show guide again</button>
+    </p>
+
+    <div id="host-wizard-overlay" class="host-wizard-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="host-wizard-title" aria-live="polite">
+      <div class="host-wizard-modal">
+        <p id="host-wizard-progress" class="host-wizard-progress">Step 1 of 5</p>
+        <h2 id="host-wizard-title" class="host-wizard-title">Set players</h2>
+        <p id="host-wizard-body" class="host-wizard-body">Set the number of players and add their names below.</p>
+        <div class="host-wizard-actions">
+          <button type="button" id="host-wizard-back" class="host-wizard-back">Back</button>
+          <div>
+            <button type="button" id="host-wizard-skip" class="host-wizard-skip">Skip</button>
+            <button type="button" id="host-wizard-next" class="host-wizard-next">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="host-setup-view" class="host-setup-view">
+      <h2 id="host-setup-heading">Who's playing?</h2>
+      <section class="setup-players-section setup-players-in-controls" id="setup-players-section" aria-label="Participants and player names">
+        <h3 id="setup-players-header" role="button" tabindex="0" aria-expanded="true" aria-controls="setup-players-content">Participants & names <span class="section-chevron" aria-hidden="true">▼</span></h3>
+        <div class="setup-players-content" id="setup-players-content">
+          <div class="participant-setting">
+            <label for="num-participants">Participants</label>
+            <input type="number" id="num-participants" min="1" max="12" value="1" title="" />
+          </div>
+          <div class="participant-names-wrap" id="participant-names-wrap">
+            <label id="participant-names-label">Player names (you can change these anytime)</label>
+            <div class="participant-names" id="participant-names"></div>
+          </div>
+          <div class="setup-players-new-game-wrap">
+            <button type="button" id="reset-btn" class="reset-btn-primary host-btn-primary">Generate cards</button>
+          </div>
+        </div>
+      </section>
+      <section class="remote-play-section" id="remote-play-section" aria-label="Play with friends">
+        <h3 class="remote-play-title">Playing with friends online?</h3>
+        <p id="remote-play-api-unavailable" class="remote-play-api-unavailable hidden">Remote play needs the API. Run <code>npm run dev:api</code> to enable it.</p>
+        <p class="remote-play-hint">Create a room and share the link so others can join.</p>
+        <div id="remote-play-create" class="remote-play-create">
+          <div class="remote-play-password-wrap">
+            <input type="checkbox" id="remote-play-password-check" aria-label="Protect room with password" />
+            <label for="remote-play-password-check">Protect room with password</label>
+          </div>
+          <form id="remote-play-password-fields" class="remote-play-password-fields hidden" role="group" aria-label="Room password" onsubmit="return false;">
+            <input type="password" id="remote-play-password" placeholder="Room password" autocomplete="off" aria-label="Room password" />
+            <input type="password" id="remote-play-password-confirm" placeholder="Confirm password" autocomplete="off" aria-label="Confirm password" />
+          </form>
+          <button type="button" id="remote-play-create-btn" class="remote-play-btn">Create room</button>
+        </div>
+        <div id="remote-play-active" class="remote-play-active hidden">
+          <p class="remote-play-code-label">Room code</p>
+          <p id="remote-play-code" class="remote-play-code" aria-live="polite"></p>
+          <p class="remote-play-join-hint">Players: open <strong id="remote-play-join-url"></strong> and enter the code above.</p>
+          <div class="remote-play-copy-row">
+            <button type="button" id="remote-play-copy-code" class="remote-play-btn secondary">Copy code</button>
+            <button type="button" id="remote-play-copy-join-page" class="remote-play-btn secondary">Copy join page</button>
+            <button type="button" id="remote-play-copy-link" class="remote-play-btn secondary">Copy link</button>
+          </div>
+          <div id="remote-play-qr-wrap" class="remote-play-qr-wrap hidden" aria-hidden="true">
+            <p class="remote-play-qr-label">Scan to join</p>
+            <img id="remote-play-qr" class="remote-play-qr" src="" alt="QR code to open the join page" />
+          </div>
+          <p id="remote-play-password-reminder" class="remote-play-password-reminder hidden">Room is protected — share the password with players.</p>
+          <p class="remote-play-joined-label">Players joined</p>
+          <ul id="remote-play-joined-list" class="remote-play-joined-list" aria-live="polite"></ul>
+          <button type="button" id="remote-play-end-btn" class="remote-play-btn end">End room</button>
+        </div>
+      </section>
+      <div class="host-setup-actions">
+        <button type="button" id="host-start-game-btn" class="host-btn-primary" disabled>Start the game</button>
+      </div>
+    </div>
+
+    <div id="host-play-view" class="host-play-view hidden">
     <div class="history-outer">
       <div class="history-container">
         <div id="history-list"></div>
@@ -1008,44 +1336,10 @@
           <span>◀ Previous</span>
           <span>Space / Next ▶</span>
         </div>
-        <button id="reset-btn">New Game</button>
+        <button type="button" id="new-game-btn" class="host-new-game-in-play">New game</button>
         <div class="controls-actions">
           <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
         </div>
-        <section class="remote-play-section" id="remote-play-section" aria-label="Play with friends">
-          <h3 class="remote-play-title">Play with friends</h3>
-          <p id="remote-play-api-unavailable" class="remote-play-api-unavailable hidden">Remote play needs the API. Run <code>npm run dev:api</code> to enable it.</p>
-          <p class="remote-play-hint">Set players and start a new game above, then create a room and share the link.</p>
-          <div id="remote-play-create" class="remote-play-create">
-            <div class="remote-play-password-wrap">
-              <input type="checkbox" id="remote-play-password-check" aria-label="Protect room with password" />
-              <label for="remote-play-password-check">Protect room with password</label>
-            </div>
-            <form id="remote-play-password-fields" class="remote-play-password-fields hidden" role="group" aria-label="Room password" onsubmit="return false;">
-              <input type="password" id="remote-play-password" placeholder="Room password" autocomplete="off" aria-label="Room password" />
-              <input type="password" id="remote-play-password-confirm" placeholder="Confirm password" autocomplete="off" aria-label="Confirm password" />
-            </form>
-            <button type="button" id="remote-play-create-btn" class="remote-play-btn">Create room</button>
-          </div>
-          <div id="remote-play-active" class="remote-play-active hidden">
-            <p class="remote-play-code-label">Room code</p>
-            <p id="remote-play-code" class="remote-play-code" aria-live="polite"></p>
-            <p class="remote-play-join-hint">Players: open <strong id="remote-play-join-url"></strong> and enter the code above.</p>
-            <div class="remote-play-copy-row">
-              <button type="button" id="remote-play-copy-code" class="remote-play-btn secondary">Copy code</button>
-              <button type="button" id="remote-play-copy-join-page" class="remote-play-btn secondary">Copy join page</button>
-              <button type="button" id="remote-play-copy-link" class="remote-play-btn secondary">Copy link</button>
-            </div>
-            <div id="remote-play-qr-wrap" class="remote-play-qr-wrap hidden" aria-hidden="true">
-              <p class="remote-play-qr-label">Scan to join</p>
-              <img id="remote-play-qr" class="remote-play-qr" src="" alt="QR code to open the join page" />
-            </div>
-            <p id="remote-play-password-reminder" class="remote-play-password-reminder hidden">Room is protected — share the password with players.</p>
-            <p class="remote-play-joined-label">Players joined</p>
-            <ul id="remote-play-joined-list" class="remote-play-joined-list" aria-live="polite"></ul>
-            <button type="button" id="remote-play-end-btn" class="remote-play-btn end">End room</button>
-          </div>
-        </section>
       </div>
     </div>
 
@@ -1057,7 +1351,7 @@
     </div>
 
     <section class="advanced-controls-card" id="advanced-controls-card">
-      <h2 id="advanced-controls-header" class="advanced-controls-card-title" role="button" tabindex="0" aria-expanded="true" aria-controls="advanced-controls-content">Advanced Controls <span class="section-chevron" aria-hidden="true">▼</span></h2>
+      <h2 id="advanced-controls-header" class="advanced-controls-card-title" role="button" tabindex="0" aria-expanded="true" aria-controls="advanced-controls-content">Settings & options <span class="section-chevron" aria-hidden="true">▼</span></h2>
       <div class="advanced-controls-content" id="advanced-controls-content">
         <div class="hide-cards-setting">
           <input type="checkbox" id="hide-cards" />
@@ -1096,19 +1390,6 @@
             </div>
           </div>
         </div>
-        <section class="setup-players-section" id="setup-players-section" aria-label="Participants and player names">
-          <h3 id="setup-players-header" role="button" tabindex="0" aria-expanded="true" aria-controls="setup-players-content">Participants & names <span class="section-chevron" aria-hidden="true">▼</span></h3>
-          <div class="setup-players-content" id="setup-players-content">
-            <div class="participant-setting">
-              <label for="num-participants">Participants</label>
-              <input type="number" id="num-participants" min="1" max="12" value="1" title="" />
-            </div>
-            <div class="participant-names-wrap" id="participant-names-wrap">
-              <label id="participant-names-label">Player names (you can change these anytime)</label>
-              <div class="participant-names" id="participant-names"></div>
-            </div>
-          </div>
-        </section>
       </div>
     </section>
 
@@ -1139,6 +1420,7 @@
       <h2 id="participant-cards-header" role="button" tabindex="0" aria-expanded="true" aria-controls="participant-cards">Participant cards <span class="section-chevron" aria-hidden="true">▼</span></h2>
       <div class="participant-cards-grid" id="participant-cards"></div>
     </section>
+    </div>
 
     <script type="module">
       import { getOrdinal, getRankedPlayers, getRankingPhrase } from "./ranking.js";
@@ -1182,6 +1464,12 @@
       const remotePlayPasswordFields = document.getElementById("remote-play-password-fields");
       const remotePlayPasswordReminder = document.getElementById("remote-play-password-reminder");
       const remotePlayJoinedList = document.getElementById("remote-play-joined-list");
+      const hostSetupView = document.getElementById("host-setup-view");
+      const hostPlayView = document.getElementById("host-play-view");
+      const hostStartGameBtn = document.getElementById("host-start-game-btn");
+      const newGameBtn = document.getElementById("new-game-btn");
+      const hostStepsNav = document.getElementById("host-steps");
+      const hostWizardShowAgainWrap = document.querySelector(".host-wizard-show-again-wrap");
 
       const POINTS_PER_LINE = 10;
       // MC voice: defaults and optional random variation (advanced panel can override)
@@ -1255,6 +1543,7 @@
 
       const REMOTE_ROOM_ID_KEY = "bingabu-remote-roomId";
       const REMOTE_HOST_ID_KEY = "bingabu-remote-hostId";
+      const HOST_PHASE_KEY = "bingabu-host-phase";
 
       async function pushRoomStateIfHost() {
         try {
@@ -1983,6 +2272,46 @@
             setupPlayersHeader.setAttribute("aria-expanded", "true");
           }
         }
+
+        // Host steps: mark current step and completed steps
+        updateHostSteps();
+        if (getHostPhase() === "setup" && typeof updateStartGameButton === "function") updateStartGameButton();
+      }
+
+      function updateHostSteps() {
+        const steps = [document.getElementById("host-step-1"), document.getElementById("host-step-2"), document.getElementById("host-step-3"), document.getElementById("host-step-4"), document.getElementById("host-step-5")];
+        const hasParticipants = numParticipants >= 1;
+        const firstPlayerNameSet = participantNames[0] && String(participantNames[0]).trim() !== "";
+        const playersSetupDone = hasParticipants && (numParticipants > 1 || firstPlayerNameSet);
+        const gameInited = participantCards.length > 0;
+        const hasStartedDrawing = drawnSequence.length > 0;
+        const gameReady = gameInited && (hasStartedDrawing || numParticipants > 1 || firstPlayerNameSet);
+        const roomActive = remotePlayActiveEl && !remotePlayActiveEl.classList.contains("hidden");
+        const inGame = hasStartedDrawing;
+        const step1Done = playersSetupDone;
+        const step2Done = gameReady;
+        const step3Done = roomActive;
+        steps.forEach((el, i) => {
+          if (!el) return;
+          el.removeAttribute("aria-current");
+          el.classList.remove("step-done");
+          const step = i + 1;
+          if (step === 1) {
+            if (step1Done) el.classList.add("step-done");
+            else el.setAttribute("aria-current", "step");
+          } else if (step === 2) {
+            if (step2Done) el.classList.add("step-done");
+            else if (step1Done && !step2Done) el.setAttribute("aria-current", "step");
+          } else if (step === 3) {
+            if (step3Done) el.classList.add("step-done");
+            else if (step2Done && !step3Done) el.setAttribute("aria-current", "step");
+          } else if (step === 4) {
+            if (inGame) el.classList.add("step-done");
+            else if (step3Done) el.setAttribute("aria-current", "step");
+          } else if (step === 5) {
+            if (inGame) el.setAttribute("aria-current", "step");
+          }
+        });
       }
 
       function drawNumber() {
@@ -2017,13 +2346,66 @@
       drawBtn.addEventListener("click", drawNumber);
       prevBtn.addEventListener("click", prevNumber);
       resetBtn.addEventListener("click", () => {
-        const inMidGame = drawnSequence.length > 0;
-        if (inMidGame && !confirm("Start a new game? Current game will be lost.")) return;
         try {
           localStorage.removeItem(STORAGE_KEY);
         } catch (_) {}
         initGame();
+        updateStartGameButton();
       });
+
+      function getHostPhase() {
+        try {
+          const p = sessionStorage.getItem(HOST_PHASE_KEY);
+          if (p === "play" || p === "setup") return p;
+        } catch (_) {}
+        return "setup";
+      }
+      function setHostPhase(phase) {
+        try {
+          sessionStorage.setItem(HOST_PHASE_KEY, phase);
+        } catch (_) {}
+      }
+      function applyPhase() {
+        const phase = getHostPhase();
+        if (hostSetupView) hostSetupView.classList.toggle("hidden", phase !== "setup");
+        if (hostPlayView) hostPlayView.classList.toggle("hidden", phase !== "play");
+        if (hostStepsNav) hostStepsNav.classList.toggle("hidden", phase !== "setup");
+        if (hostWizardShowAgainWrap) hostWizardShowAgainWrap.classList.toggle("hidden", phase !== "setup");
+        const firstVisitBanner = document.getElementById("first-visit-banner");
+        if (firstVisitBanner) {
+          try {
+            const onboardingDone = !!localStorage.getItem(ONBOARDING_DONE_KEY);
+            firstVisitBanner.classList.toggle("hidden", phase !== "setup" || onboardingDone);
+          } catch (_) {
+            firstVisitBanner.classList.add("hidden");
+          }
+        }
+        if (phase === "setup") updateStartGameButton();
+      }
+      function updateStartGameButton() {
+        if (hostStartGameBtn) hostStartGameBtn.disabled = participantCards.length === 0;
+      }
+      if (hostStartGameBtn) {
+        hostStartGameBtn.addEventListener("click", () => {
+          try {
+            localStorage.setItem(ONBOARDING_DONE_KEY, "1");
+          } catch (_) {}
+          setHostPhase("play");
+          applyPhase();
+        });
+      }
+      if (newGameBtn) {
+        newGameBtn.addEventListener("click", () => {
+          const inMidGame = drawnSequence.length > 0;
+          if (inMidGame && !confirm("Start a new game? Current game will be lost.")) return;
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+          } catch (_) {}
+          setHostPhase("setup");
+          initGame();
+          applyPhase();
+        });
+      }
 
       function toggleSetupPlayersExpand() {
         if (!setupPlayersSection || !setupPlayersHeader) return;
@@ -2061,6 +2443,7 @@
       function showRemotePlayCreate() {
         if (remotePlayCreateEl) remotePlayCreateEl.classList.remove("hidden");
         if (remotePlayActiveEl) remotePlayActiveEl.classList.add("hidden");
+        if (typeof updateHostSteps === "function") updateHostSteps();
       }
       const remotePlayJoinUrlEl = document.getElementById("remote-play-join-url");
       const remotePlayQrWrap = document.getElementById("remote-play-qr-wrap");
@@ -2069,6 +2452,7 @@
       function showRemotePlayActive(roomId, shareUrl, hasPassword) {
         if (remotePlayCreateEl) remotePlayCreateEl.classList.add("hidden");
         if (remotePlayActiveEl) remotePlayActiveEl.classList.remove("hidden");
+        if (typeof updateHostSteps === "function") updateHostSteps();
         if (remotePlayCodeEl) remotePlayCodeEl.textContent = roomId || "";
         if (remotePlayPasswordReminder) remotePlayPasswordReminder.classList.toggle("hidden", !hasPassword);
         window._bingabuShareUrl = shareUrl || "";
@@ -2228,6 +2612,10 @@
         function goHome() {
           const inMidGame = drawnSequence.length > 0;
           if (inMidGame && !confirm("End your current game and go home?")) return;
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+            sessionStorage.removeItem(HOST_PHASE_KEY);
+          } catch (_) {}
           window.location.href = "index.html";
         }
         bingoAppTitle.addEventListener("click", goHome);
@@ -2238,6 +2626,174 @@
           }
         });
       }
+
+      const ONBOARDING_DONE_KEY = "bingabu-host-onboarding-done";
+      const firstVisitBanner = document.getElementById("first-visit-banner");
+      const firstVisitBannerDismiss = document.getElementById("first-visit-banner-dismiss");
+      if (firstVisitBanner && firstVisitBannerDismiss) {
+        function dismissFirstVisitBanner() {
+          try {
+            localStorage.setItem(ONBOARDING_DONE_KEY, "1");
+          } catch (_) {}
+          firstVisitBanner.classList.add("hidden");
+        }
+        firstVisitBannerDismiss.addEventListener("click", dismissFirstVisitBanner);
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && firstVisitBanner && !firstVisitBanner.classList.contains("hidden")) {
+            dismissFirstVisitBanner();
+          }
+        });
+      }
+
+      const HOST_WIZARD_STEPS = [
+        { title: "Set players", body: "Set the number of players and add their names below.", highlight: "#setup-players-section" },
+        { title: "Generate cards", body: "Click Generate cards to create bingo cards for everyone.", highlight: "#reset-btn" },
+        { title: "Create room", body: "To play with friends remotely, create a room. Optional if you're playing in person.", highlight: "#remote-play-section" },
+        { title: "Share", body: "Share the room code or link with players so they can join.", highlight: "#remote-play-section" },
+        { title: "Draw", body: "Use DRAW to call numbers. Have fun!", highlight: "#draw-btn" },
+      ];
+      const hostWizardOverlay = document.getElementById("host-wizard-overlay");
+      const hostWizardTitle = document.getElementById("host-wizard-title");
+      const hostWizardBody = document.getElementById("host-wizard-body");
+      const hostWizardProgress = document.getElementById("host-wizard-progress");
+      const hostWizardNext = document.getElementById("host-wizard-next");
+      const hostWizardBack = document.getElementById("host-wizard-back");
+      const hostWizardSkip = document.getElementById("host-wizard-skip");
+      const hostWizardShowAgain = document.getElementById("host-wizard-show-again");
+
+      function getWizardStepDone(step) {
+        const hasParticipants = numParticipants >= 1;
+        const firstPlayerNameSet = participantNames[0] && String(participantNames[0]).trim() !== "";
+        const playersSetupDone = hasParticipants && (numParticipants > 1 || firstPlayerNameSet);
+        const gameInited = participantCards.length > 0;
+        const hasStartedDrawing = drawnSequence.length > 0;
+        const gameReady = gameInited && (hasStartedDrawing || numParticipants > 1 || firstPlayerNameSet);
+        const roomActive = remotePlayActiveEl && !remotePlayActiveEl.classList.contains("hidden");
+        if (step === 1) return playersSetupDone;
+        if (step === 2) return gameReady;
+        if (step === 3) return roomActive;
+        if (step === 4) return roomActive;
+        if (step === 5) return hasStartedDrawing;
+        return false;
+      }
+
+      let hostWizardStep = 1;
+      let hostWizardHighlightEl = null;
+
+      function removeWizardHighlight() {
+        if (hostWizardHighlightEl) {
+          hostWizardHighlightEl.classList.remove("host-wizard-highlight");
+          hostWizardHighlightEl = null;
+        }
+      }
+
+      function applyWizardStep(step) {
+        hostWizardStep = step;
+        const config = HOST_WIZARD_STEPS[step - 1];
+        if (hostWizardTitle) hostWizardTitle.textContent = config.title;
+        if (hostWizardBody) hostWizardBody.textContent = config.body;
+        if (hostWizardProgress) hostWizardProgress.textContent = `Step ${step} of 5`;
+        removeWizardHighlight();
+        const target = document.querySelector(config.highlight);
+        if (target) {
+          hostWizardHighlightEl = target;
+          target.classList.add("host-wizard-highlight");
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        if (hostWizardBack) hostWizardBack.classList.toggle("hidden", step === 1);
+        if (hostWizardNext) {
+          hostWizardNext.textContent = step === 5 ? "Done" : "Next";
+          const stepDone = getWizardStepDone(step);
+          hostWizardNext.disabled = step < 5 ? !stepDone : false;
+        }
+      }
+
+      function closeHostWizard() {
+        try {
+          localStorage.setItem(ONBOARDING_DONE_KEY, "1");
+        } catch (_) {}
+        removeWizardHighlight();
+        if (hostWizardOverlay) hostWizardOverlay.classList.add("hidden");
+        if (firstVisitBanner) firstVisitBanner.classList.add("hidden");
+      }
+
+      function openHostWizard() {
+        hostWizardStep = 1;
+        applyWizardStep(1);
+        if (hostWizardOverlay) hostWizardOverlay.classList.remove("hidden");
+        if (firstVisitBanner) firstVisitBanner.classList.add("hidden");
+        if (hostWizardNext && getWizardStepDone(1)) hostWizardNext.focus();
+        else if (hostWizardSkip) hostWizardSkip.focus();
+      }
+
+      if (hostWizardNext) {
+        hostWizardNext.addEventListener("click", () => {
+          if (hostWizardStep < 5) {
+            applyWizardStep(hostWizardStep + 1);
+            if (hostWizardNext && !hostWizardNext.disabled) hostWizardNext.focus();
+          } else {
+            closeHostWizard();
+          }
+        });
+      }
+      if (hostWizardBack) {
+        hostWizardBack.addEventListener("click", () => {
+          if (hostWizardStep > 1) applyWizardStep(hostWizardStep - 1);
+          if (hostWizardBack) hostWizardBack.focus();
+        });
+      }
+      if (hostWizardSkip) {
+        hostWizardSkip.addEventListener("click", () => {
+          closeHostWizard();
+        });
+      }
+      if (hostWizardShowAgain) {
+        hostWizardShowAgain.addEventListener("click", () => {
+          try {
+            localStorage.removeItem(ONBOARDING_DONE_KEY);
+          } catch (_) {}
+          openHostWizard();
+        });
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        if (hostWizardOverlay && !hostWizardOverlay.classList.contains("hidden")) {
+          e.preventDefault();
+          closeHostWizard();
+        }
+      });
+
+      if (hostWizardOverlay) {
+        const focusables = () => [
+          hostWizardBack,
+          hostWizardSkip,
+          hostWizardNext,
+        ].filter((el) => el && !el.classList.contains("hidden") && !el.disabled);
+        hostWizardOverlay.addEventListener("keydown", (e) => {
+          if (e.key !== "Tab") return;
+          const list = focusables();
+          if (list.length === 0) return;
+          const i = list.indexOf(document.activeElement);
+          if (i === -1) return;
+          e.preventDefault();
+          const next = e.shiftKey ? list[(i - 1 + list.length) % list.length] : list[(i + 1) % list.length];
+          if (next) next.focus();
+        });
+      }
+
+      if (hostWizardBack) hostWizardBack.classList.add("hidden");
+
+      try {
+        if (!localStorage.getItem(ONBOARDING_DONE_KEY) && getHostPhase() === "setup") openHostWizard();
+      } catch (_) {}
+
+      setInterval(() => {
+        if (!hostWizardOverlay || hostWizardOverlay.classList.contains("hidden")) return;
+        if (hostWizardNext && hostWizardNext.disabled && getWizardStepDone(hostWizardStep)) {
+          hostWizardNext.disabled = false;
+        }
+      }, 500);
 
       async function checkRemotePlayApiAvailable() {
         try {
@@ -2404,6 +2960,9 @@
         if (participantNamesEl) renderParticipantNameInputs();
         updateUI();
       }
+      if (drawnSequence.length > 0) setHostPhase("play");
+      applyPhase();
+      updateStartGameButton();
       applyMcAdvancedToDom();
     </script>
   </body>

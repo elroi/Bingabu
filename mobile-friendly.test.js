@@ -68,3 +68,101 @@ describe("Mobile-friendly: bingo host responsive current number", () => {
     expect(hasClamp || hasMinHeight).toBe(true);
   });
 });
+
+describe("Bingo host UX", () => {
+  it("bingo.html has Participants section before Play with friends section in DOM", () => {
+    const html = readPage("bingo");
+    const setupPlayersIndex = html.indexOf('id="setup-players-section"');
+    const remotePlayIndex = html.indexOf('id="remote-play-section"');
+    expect(setupPlayersIndex).toBeGreaterThan(-1);
+    expect(remotePlayIndex).toBeGreaterThan(-1);
+    expect(setupPlayersIndex).toBeLessThan(remotePlayIndex);
+  });
+
+  it("bingo.html remote-play hint mentions create room and share link", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/remote-play-hint/);
+    expect(html).toMatch(/create.*room/);
+    expect(html).toMatch(/share the link/);
+  });
+
+  it("bingo.html New game button appears after participants section and before Play with friends in DOM", () => {
+    const html = readPage("bingo");
+    const setupPlayersIndex = html.indexOf('id="setup-players-section"');
+    const resetBtnIndex = html.indexOf('id="reset-btn"');
+    const remotePlayIndex = html.indexOf('id="remote-play-section"');
+    expect(setupPlayersIndex).toBeGreaterThan(-1);
+    expect(resetBtnIndex).toBeGreaterThan(-1);
+    expect(remotePlayIndex).toBeGreaterThan(-1);
+    expect(resetBtnIndex).toBeGreaterThan(setupPlayersIndex);
+    expect(resetBtnIndex).toBeLessThan(remotePlayIndex);
+  });
+
+  it("bingo.html has host steps strip with all five step labels", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/host-steps/);
+    expect(html).toMatch(/1\. Players/);
+    expect(html).toMatch(/2\. Generate cards/);
+    expect(html).toMatch(/3\. Create room/);
+    expect(html).toMatch(/4\. Share/);
+    expect(html).toMatch(/5\. Draw/);
+  });
+
+  it("bingo.html has first-visit banner with Got it dismiss control", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/id="first-visit-banner"/);
+    expect(html).toMatch(/id="first-visit-banner-dismiss"/);
+    expect(html).toMatch(/Got it/);
+  });
+
+  it("bingo.html script references onboarding localStorage key", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/bingabu-host-onboarding-done/);
+  });
+
+  it("bingo.html Advanced Controls renamed to Settings & options", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/Settings & options/);
+  });
+
+  it("bingo.html has host wizard overlay with modal, steps, Next, Back, Skip", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/id="host-wizard-overlay"/);
+    expect(html).toMatch(/host-wizard-modal/);
+    expect(html).toMatch(/host-wizard-progress/);
+    expect(html).toMatch(/id="host-wizard-next"/);
+    expect(html).toMatch(/id="host-wizard-back"/);
+    expect(html).toMatch(/id="host-wizard-skip"/);
+    expect(html).toMatch(/Step 1 of 5/);
+    expect(html).toMatch(/Skip/);
+  });
+
+  it("bingo.html wizard Skip closes wizard and sets onboarding done key", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/closeHostWizard/);
+    expect(html).toMatch(/localStorage\.setItem\(ONBOARDING_DONE_KEY/);
+    expect(html).toMatch(/host-wizard-skip/);
+  });
+
+  it("bingo.html has Show guide again control", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/id="host-wizard-show-again"/);
+    expect(html).toMatch(/Show guide again/);
+  });
+
+  it("bingo.html has two-phase host views: setup and play", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/id="host-setup-view"/);
+    expect(html).toMatch(/id="host-play-view"/);
+    expect(html).toMatch(/Who's playing\?/);
+    expect(html).toMatch(/Generate cards/);
+    expect(html).toMatch(/id="host-start-game-btn"/);
+    expect(html).toMatch(/Start the game/);
+    expect(html).toMatch(/id="new-game-btn"/);
+  });
+
+  it("bingo.html script uses host phase sessionStorage key", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/bingabu-host-phase/);
+  });
+});
