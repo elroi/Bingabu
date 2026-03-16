@@ -86,26 +86,22 @@ describe("Bingo host UX", () => {
     expect(html).toMatch(/share the link/);
   });
 
-  it("bingo.html New game button appears after participants section and before Play with friends in DOM", () => {
+  it("bingo.html participants section appears before Play with friends (remote-play) in DOM", () => {
     const html = readPage("bingo");
     const setupPlayersIndex = html.indexOf('id="setup-players-section"');
-    const resetBtnIndex = html.indexOf('id="reset-btn"');
     const remotePlayIndex = html.indexOf('id="remote-play-section"');
     expect(setupPlayersIndex).toBeGreaterThan(-1);
-    expect(resetBtnIndex).toBeGreaterThan(-1);
     expect(remotePlayIndex).toBeGreaterThan(-1);
-    expect(resetBtnIndex).toBeGreaterThan(setupPlayersIndex);
-    expect(resetBtnIndex).toBeLessThan(remotePlayIndex);
+    expect(setupPlayersIndex).toBeLessThan(remotePlayIndex);
   });
 
-  it("bingo.html has host steps strip with all five step labels", () => {
+  it("bingo.html has host steps strip with all four step labels", () => {
     const html = readPage("bingo");
     expect(html).toMatch(/host-steps/);
     expect(html).toMatch(/1\. Players/);
-    expect(html).toMatch(/2\. Generate cards/);
-    expect(html).toMatch(/3\. Create room/);
-    expect(html).toMatch(/4\. Share/);
-    expect(html).toMatch(/5\. Draw/);
+    expect(html).toMatch(/2\. Create room/);
+    expect(html).toMatch(/3\. Share/);
+    expect(html).toMatch(/4\. Draw/);
   });
 
   it("bingo.html has first-visit banner with Got it dismiss control", () => {
@@ -133,7 +129,7 @@ describe("Bingo host UX", () => {
     expect(html).toMatch(/id="host-wizard-next"/);
     expect(html).toMatch(/id="host-wizard-back"/);
     expect(html).toMatch(/id="host-wizard-skip"/);
-    expect(html).toMatch(/Step 1 of 5/);
+    expect(html).toMatch(/Step 1 of 4/);
     expect(html).toMatch(/Skip/);
   });
 
@@ -155,7 +151,6 @@ describe("Bingo host UX", () => {
     expect(html).toMatch(/id="host-setup-view"/);
     expect(html).toMatch(/id="host-play-view"/);
     expect(html).toMatch(/Who's playing\?/);
-    expect(html).toMatch(/Generate cards/);
     expect(html).toMatch(/id="host-start-game-btn"/);
     expect(html).toMatch(/Start the game/);
     expect(html).toMatch(/id="new-game-btn"/);

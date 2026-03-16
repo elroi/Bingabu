@@ -26,7 +26,7 @@ One clear path: **Setup** (linear, one thing at a time) → **Play** (board + ca
 1. **Players**  
    - Heading: “Set up your game” or “Who’s playing?”  
    - Number of participants (1–12) + player names.  
-   - One primary button: **“Generate cards”** (runs `initGame()`).
+   - *(No separate “Generate cards” step; cards are generated when the host clicks “Start the game”.)*
 
 2. **Optional: Play with friends**  
    - Only after cards are generated: “Playing with friends online?”  
@@ -57,7 +57,7 @@ One clear path: **Setup** (linear, one thing at a time) → **Play** (board + ca
 ```
 [Land on bingo.html]
     → If no saved game or phase=setup → Show SETUP view only
-          → Set players → Generate cards
+          → Set players
           → (Optional) Create room → Share link
           → "Start calling" → Show PLAY view
     → If saved game and phase=play (or already drawing) → Show PLAY view

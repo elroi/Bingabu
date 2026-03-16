@@ -1225,20 +1225,18 @@
     <h1 id="bingo-app-title" class="home-link hero-title" tabindex="0" role="link" aria-label="Bingabu"><span class="letter">B</span><span class="letter">i</span><span class="letter">n</span><span class="letter">g</span><span class="letter">a</span><span class="letter">b</span><span class="letter">u</span></h1>
 
     <div id="first-visit-banner" class="first-visit-banner hidden" role="region" aria-label="First-time host tip" aria-live="polite">
-      <p class="first-visit-banner-text">First time hosting? Set players, click <strong>Generate cards</strong>, create the room if playing online, then <strong>Start the game</strong> and use <strong>DRAW</strong> to call numbers.</p>
+      <p class="first-visit-banner-text">First time hosting? Set players, create the room if playing online, then <strong>Start the game</strong> and use <strong>DRAW</strong> to call numbers.</p>
       <button type="button" id="first-visit-banner-dismiss" class="first-visit-banner-dismiss">Got it</button>
     </div>
 
     <nav class="host-steps" id="host-steps" aria-label="Host steps">
       <span class="host-step" id="host-step-1" data-step="1">1. Players</span>
       <span class="host-step-arrow" aria-hidden="true">→</span>
-      <span class="host-step" id="host-step-2" data-step="2">2. Generate cards</span>
+      <span class="host-step" id="host-step-2" data-step="2">2. Create room</span>
       <span class="host-step-arrow" aria-hidden="true">→</span>
-      <span class="host-step" id="host-step-3" data-step="3">3. Create room</span>
+      <span class="host-step" id="host-step-3" data-step="3">3. Share</span>
       <span class="host-step-arrow" aria-hidden="true">→</span>
-      <span class="host-step" id="host-step-4" data-step="4">4. Share</span>
-      <span class="host-step-arrow" aria-hidden="true">→</span>
-      <span class="host-step" id="host-step-5" data-step="5">5. Draw</span>
+      <span class="host-step" id="host-step-4" data-step="4">4. Draw</span>
     </nav>
     <p class="host-wizard-show-again-wrap">
       <button type="button" id="host-wizard-show-again" class="host-wizard-show-again">Show guide again</button>
@@ -1246,7 +1244,7 @@
 
     <div id="host-wizard-overlay" class="host-wizard-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="host-wizard-title" aria-live="polite">
       <div class="host-wizard-modal">
-        <p id="host-wizard-progress" class="host-wizard-progress">Step 1 of 5</p>
+        <p id="host-wizard-progress" class="host-wizard-progress">Step 1 of 4</p>
         <h2 id="host-wizard-title" class="host-wizard-title">Set players</h2>
         <p id="host-wizard-body" class="host-wizard-body">Set the number of players and add their names below.</p>
         <div class="host-wizard-actions">
@@ -1271,9 +1269,6 @@
           <div class="participant-names-wrap" id="participant-names-wrap">
             <label id="participant-names-label">Player names (you can change these anytime)</label>
             <div class="participant-names" id="participant-names"></div>
-          </div>
-          <div class="setup-players-new-game-wrap">
-            <button type="button" id="reset-btn" class="reset-btn-primary host-btn-primary">Generate cards</button>
           </div>
         </div>
       </section>
@@ -1428,7 +1423,6 @@
       const STORAGE_KEY = "bingo-manager-state";
       const drawBtn = document.getElementById("draw-btn");
       const prevBtn = document.getElementById("prev-btn");
-      const resetBtn = document.getElementById("reset-btn");
       const display = document.getElementById("current-number");
       const historyList = document.getElementById("history-list");
       const historyContainer = document.querySelector(".history-container");
@@ -2279,18 +2273,14 @@
       }
 
       function updateHostSteps() {
-        const steps = [document.getElementById("host-step-1"), document.getElementById("host-step-2"), document.getElementById("host-step-3"), document.getElementById("host-step-4"), document.getElementById("host-step-5")];
+        const steps = [document.getElementById("host-step-1"), document.getElementById("host-step-2"), document.getElementById("host-step-3"), document.getElementById("host-step-4")];
         const hasParticipants = numParticipants >= 1;
         const firstPlayerNameSet = participantNames[0] && String(participantNames[0]).trim() !== "";
         const playersSetupDone = hasParticipants && (numParticipants > 1 || firstPlayerNameSet);
-        const gameInited = participantCards.length > 0;
-        const hasStartedDrawing = drawnSequence.length > 0;
-        const gameReady = gameInited && (hasStartedDrawing || numParticipants > 1 || firstPlayerNameSet);
         const roomActive = remotePlayActiveEl && !remotePlayActiveEl.classList.contains("hidden");
-        const inGame = hasStartedDrawing;
+        const inGame = drawnSequence.length > 0;
         const step1Done = playersSetupDone;
-        const step2Done = gameReady;
-        const step3Done = roomActive;
+        const step2Done = roomActive;
         steps.forEach((el, i) => {
           if (!el) return;
           el.removeAttribute("aria-current");
@@ -2303,13 +2293,13 @@
             if (step2Done) el.classList.add("step-done");
             else if (step1Done && !step2Done) el.setAttribute("aria-current", "step");
           } else if (step === 3) {
-            if (step3Done) el.classList.add("step-done");
-            else if (step2Done && !step3Done) el.setAttribute("aria-current", "step");
+            if (step2Done) el.classList.add("step-done");
+            else if (step2Done && !inGame) el.setAttribute("aria-current", "step");
           } else if (step === 4) {
-            if (inGame) el.classList.add("step-done");
-            else if (step3Done) el.setAttribute("aria-current", "step");
-          } else if (step === 5) {
-            if (inGame) el.setAttribute("aria-current", "step");
+            if (inGame) {
+              el.classList.add("step-done");
+              el.setAttribute("aria-current", "step");
+            } else if (step2Done) el.setAttribute("aria-current", "step");
           }
         });
       }
@@ -2345,14 +2335,6 @@
 
       drawBtn.addEventListener("click", drawNumber);
       prevBtn.addEventListener("click", prevNumber);
-      resetBtn.addEventListener("click", () => {
-        try {
-          localStorage.removeItem(STORAGE_KEY);
-        } catch (_) {}
-        initGame();
-        updateStartGameButton();
-      });
-
       function getHostPhase() {
         try {
           const p = sessionStorage.getItem(HOST_PHASE_KEY);
@@ -2383,10 +2365,11 @@
         if (phase === "setup") updateStartGameButton();
       }
       function updateStartGameButton() {
-        if (hostStartGameBtn) hostStartGameBtn.disabled = participantCards.length === 0;
+        if (hostStartGameBtn) hostStartGameBtn.disabled = numParticipants < 1;
       }
       if (hostStartGameBtn) {
         hostStartGameBtn.addEventListener("click", () => {
+          initGame();
           try {
             localStorage.setItem(ONBOARDING_DONE_KEY, "1");
           } catch (_) {}
@@ -2647,10 +2630,9 @@
 
       const HOST_WIZARD_STEPS = [
         { title: "Set players", body: "Set the number of players and add their names below.", highlight: "#setup-players-section" },
-        { title: "Generate cards", body: "Click Generate cards to create bingo cards for everyone.", highlight: "#reset-btn" },
         { title: "Create room", body: "To play with friends remotely, create a room. Optional if you're playing in person.", highlight: "#remote-play-section" },
         { title: "Share", body: "Share the room code or link with players so they can join.", highlight: "#remote-play-section" },
-        { title: "Draw", body: "Use DRAW to call numbers. Have fun!", highlight: "#draw-btn" },
+        { title: "Draw", body: "Click Start the game, then use DRAW to call numbers. Have fun!", highlight: "#host-start-game-btn" },
       ];
       const hostWizardOverlay = document.getElementById("host-wizard-overlay");
       const hostWizardTitle = document.getElementById("host-wizard-title");
@@ -2665,15 +2647,12 @@
         const hasParticipants = numParticipants >= 1;
         const firstPlayerNameSet = participantNames[0] && String(participantNames[0]).trim() !== "";
         const playersSetupDone = hasParticipants && (numParticipants > 1 || firstPlayerNameSet);
-        const gameInited = participantCards.length > 0;
-        const hasStartedDrawing = drawnSequence.length > 0;
-        const gameReady = gameInited && (hasStartedDrawing || numParticipants > 1 || firstPlayerNameSet);
         const roomActive = remotePlayActiveEl && !remotePlayActiveEl.classList.contains("hidden");
+        const hasStartedDrawing = drawnSequence.length > 0;
         if (step === 1) return playersSetupDone;
-        if (step === 2) return gameReady;
+        if (step === 2) return roomActive;
         if (step === 3) return roomActive;
-        if (step === 4) return roomActive;
-        if (step === 5) return hasStartedDrawing;
+        if (step === 4) return hasStartedDrawing;
         return false;
       }
 
@@ -2692,7 +2671,7 @@
         const config = HOST_WIZARD_STEPS[step - 1];
         if (hostWizardTitle) hostWizardTitle.textContent = config.title;
         if (hostWizardBody) hostWizardBody.textContent = config.body;
-        if (hostWizardProgress) hostWizardProgress.textContent = `Step ${step} of 5`;
+        if (hostWizardProgress) hostWizardProgress.textContent = `Step ${step} of 4`;
         removeWizardHighlight();
         const target = document.querySelector(config.highlight);
         if (target) {
@@ -2702,9 +2681,9 @@
         }
         if (hostWizardBack) hostWizardBack.classList.toggle("hidden", step === 1);
         if (hostWizardNext) {
-          hostWizardNext.textContent = step === 5 ? "Done" : "Next";
+          hostWizardNext.textContent = step === 4 ? "Done" : "Next";
           const stepDone = getWizardStepDone(step);
-          hostWizardNext.disabled = step < 5 ? !stepDone : false;
+          hostWizardNext.disabled = step < 4 ? !stepDone : false;
         }
       }
 
@@ -2728,7 +2707,7 @@
 
       if (hostWizardNext) {
         hostWizardNext.addEventListener("click", () => {
-          if (hostWizardStep < 5) {
+          if (hostWizardStep < 4) {
             applyWizardStep(hostWizardStep + 1);
             if (hostWizardNext && !hostWizardNext.disabled) hostWizardNext.focus();
           } else {
