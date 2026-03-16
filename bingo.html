@@ -306,10 +306,33 @@
         margin: 0 0 8px 0;
         color: var(--text);
       }
+      .remote-play-join-hint {
+        margin: 0 0 8px 0;
+        font-size: 0.9rem;
+        color: var(--text);
+      }
+      .remote-play-join-hint strong {
+        word-break: break-all;
+      }
       .remote-play-copy-row {
         display: flex;
+        flex-wrap: wrap;
         gap: 10px;
         margin-bottom: 8px;
+      }
+      .remote-play-qr-wrap {
+        margin: 12px 0;
+      }
+      .remote-play-qr-label {
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin: 0 0 6px 0;
+      }
+      .remote-play-qr {
+        display: block;
+        width: 160px;
+        height: 160px;
+        border-radius: 8px;
       }
       .remote-play-password-reminder {
         font-size: 0.85rem;
@@ -951,9 +974,15 @@
           <div id="remote-play-active" class="remote-play-active hidden">
             <p class="remote-play-code-label">Room code</p>
             <p id="remote-play-code" class="remote-play-code" aria-live="polite"></p>
+            <p class="remote-play-join-hint">Players: open <strong id="remote-play-join-url"></strong> and enter the code above.</p>
             <div class="remote-play-copy-row">
               <button type="button" id="remote-play-copy-code" class="remote-play-btn secondary">Copy code</button>
+              <button type="button" id="remote-play-copy-join-page" class="remote-play-btn secondary">Copy join page</button>
               <button type="button" id="remote-play-copy-link" class="remote-play-btn secondary">Copy link</button>
+            </div>
+            <div id="remote-play-qr-wrap" class="remote-play-qr-wrap hidden" aria-hidden="true">
+              <p class="remote-play-qr-label">Scan to join</p>
+              <img id="remote-play-qr" class="remote-play-qr" src="" alt="QR code to open the join page" />
             </div>
             <p id="remote-play-password-reminder" class="remote-play-password-reminder hidden">Room is protected — share the password with players.</p>
             <p class="remote-play-joined-label">Players joined</p>
@@ -1977,12 +2006,28 @@
         if (remotePlayCreateEl) remotePlayCreateEl.classList.remove("hidden");
         if (remotePlayActiveEl) remotePlayActiveEl.classList.add("hidden");
       }
+      const remotePlayJoinUrlEl = document.getElementById("remote-play-join-url");
+      const remotePlayQrWrap = document.getElementById("remote-play-qr-wrap");
+      const remotePlayQrImg = document.getElementById("remote-play-qr");
+
       function showRemotePlayActive(roomId, shareUrl, hasPassword) {
         if (remotePlayCreateEl) remotePlayCreateEl.classList.add("hidden");
         if (remotePlayActiveEl) remotePlayActiveEl.classList.remove("hidden");
         if (remotePlayCodeEl) remotePlayCodeEl.textContent = roomId || "";
         if (remotePlayPasswordReminder) remotePlayPasswordReminder.classList.toggle("hidden", !hasPassword);
         window._bingabuShareUrl = shareUrl || "";
+        const joinPageUrl = getApiBase() + "/join";
+        if (remotePlayJoinUrlEl) remotePlayJoinUrlEl.textContent = joinPageUrl;
+        if (remotePlayQrWrap && remotePlayQrImg) {
+          if (shareUrl) {
+            remotePlayQrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(shareUrl);
+            remotePlayQrWrap.classList.remove("hidden");
+            remotePlayQrWrap.setAttribute("aria-hidden", "false");
+          } else {
+            remotePlayQrWrap.classList.add("hidden");
+            remotePlayQrWrap.setAttribute("aria-hidden", "true");
+          }
+        }
       }
 
       async function refreshJoinedList() {
@@ -2034,6 +2079,7 @@
 
       const createRoomBtn = document.getElementById("remote-play-create-btn");
       const copyCodeBtn = document.getElementById("remote-play-copy-code");
+      const copyJoinPageBtn = document.getElementById("remote-play-copy-join-page");
       const copyLinkBtn = document.getElementById("remote-play-copy-link");
       const endRoomBtn = document.getElementById("remote-play-end-btn");
 
@@ -2085,6 +2131,14 @@
           const code = remotePlayCodeEl.textContent;
           if (code && navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(code).then(() => { copyCodeBtn.textContent = "Copied!"; setTimeout(() => { copyCodeBtn.textContent = "Copy code"; }, 1500); });
+          }
+        });
+      }
+      if (copyJoinPageBtn) {
+        copyJoinPageBtn.addEventListener("click", () => {
+          const joinPageUrl = getApiBase() + "/join";
+          if (joinPageUrl && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(joinPageUrl).then(() => { copyJoinPageBtn.textContent = "Copied!"; setTimeout(() => { copyJoinPageBtn.textContent = "Copy join page"; }, 1500); });
           }
         });
       }

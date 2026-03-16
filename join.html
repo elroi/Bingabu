@@ -72,6 +72,11 @@
         opacity: 0.6;
         cursor: not-allowed;
       }
+      .join-hint {
+        margin: 0 0 12px 0;
+        font-size: 0.9rem;
+        color: var(--text);
+      }
       .error {
         color: var(--primary);
         font-size: 0.9rem;
@@ -102,11 +107,59 @@
       .slot-list li.taken button {
         display: none;
       }
+      .lobby-section {
+        width: 100%;
+        max-width: 400px;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 2px solid var(--secondary);
+      }
+      .lobby-section h2 {
+        font-size: 1rem;
+        margin: 0 0 12px 0;
+        color: var(--text);
+      }
+      .lobby-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .lobby-list li {
+        margin-bottom: 8px;
+      }
+      .lobby-list li button {
+        width: 100%;
+        text-align: left;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 2px solid var(--secondary);
+        background: white;
+        color: var(--text);
+        font-family: "Quicksand", sans-serif;
+        font-weight: 700;
+      }
+      .lobby-list li button:hover {
+        background: var(--secondary);
+        color: white;
+      }
+      .lobby-meta {
+        font-weight: 500;
+        font-size: 0.85rem;
+        opacity: 0.85;
+        margin-top: 4px;
+      }
+      .lobby-loading,
+      .lobby-empty {
+        font-size: 0.9rem;
+        color: var(--text);
+        opacity: 0.8;
+      }
     </style>
   </head>
   <body>
     <h1>Join a Bingabu game</h1>
     <div id="step-code" class="join-step">
+      <p class="join-hint">Ask the host for the 6-letter room code and enter it below.</p>
       <label for="room-code">Room code</label>
       <input type="text" id="room-code" placeholder="e.g. ABC123" autocomplete="off" />
       <p id="code-error" class="error hidden"></p>
@@ -125,6 +178,13 @@
       <ul id="slot-list" class="slot-list" role="listbox"></ul>
       <p id="pick-error" class="error hidden"></p>
     </div>
+
+    <section id="lobby-section" class="lobby-section" aria-label="Available games">
+      <h2>Or pick a game</h2>
+      <div id="lobby-loading" class="lobby-loading hidden">Loading games…</div>
+      <div id="lobby-empty" class="lobby-empty hidden">No games right now. Create one as the host!</div>
+      <ul id="lobby-list" class="lobby-list"></ul>
+    </section>
 
     <script type="module">
       const JOIN_STORAGE = { roomId: "bingabu-join-roomId", joinToken: "bingabu-join-token", deviceId: "bingabu-device-id", slotIndex: "bingabu-slot-index" };
@@ -160,18 +220,19 @@
 
       if (joinFromUrl) {
         document.getElementById("room-code").value = joinFromUrl;
+        const hint = document.querySelector(".join-hint");
+        if (hint) hint.classList.add("hidden");
       }
 
-      document.getElementById("btn-code").addEventListener("click", async () => {
-        const codeInput = document.getElementById("room-code");
-        const code = (codeInput && codeInput.value || "").trim().toUpperCase();
+      async function goWithCode(code) {
+        code = (code || "").trim().toUpperCase();
         showError("code-error", "");
         if (!code) {
           showError("code-error", "Enter a room code.");
           return;
         }
         const btn = document.getElementById("btn-code");
-        btn.disabled = true;
+        if (btn) btn.disabled = true;
         try {
           const res = await fetch(`${getApiBase()}/api/rooms/${code}`);
           const data = await res.json().catch(() => ({}));
@@ -193,9 +254,52 @@
           renderSlotList(state, data.claims || {});
           showStep("step-pick");
         } finally {
-          btn.disabled = false;
+          if (btn) btn.disabled = false;
         }
+      }
+
+      document.getElementById("btn-code").addEventListener("click", () => {
+        const codeInput = document.getElementById("room-code");
+        goWithCode(codeInput && codeInput.value);
       });
+
+      const lobbySection = document.getElementById("lobby-section");
+      const lobbyLoading = document.getElementById("lobby-loading");
+      const lobbyEmpty = document.getElementById("lobby-empty");
+      const lobbyList = document.getElementById("lobby-list");
+      async function loadLobby() {
+        if (!lobbyLoading || !lobbyEmpty || !lobbyList) return;
+        lobbyLoading.classList.remove("hidden");
+        lobbyEmpty.classList.add("hidden");
+        lobbyList.innerHTML = "";
+        try {
+          const res = await fetch(`${getApiBase()}/api/lobby?limit=20`);
+          const data = await res.json().catch(() => ({}));
+          lobbyLoading.classList.add("hidden");
+          const rooms = (data && data.rooms) || [];
+          if (rooms.length === 0) {
+            lobbyEmpty.classList.remove("hidden");
+            return;
+          }
+          rooms.forEach((room) => {
+            const li = document.createElement("li");
+            const btn = document.createElement("button");
+            btn.type = "button";
+            const names = (room.participantNames || []).slice(0, room.numParticipants || 0).filter(Boolean);
+            const label = names.length > 0 ? names.join(", ") : `${room.numParticipants || 0} player(s)`;
+            const updated = room.updatedAt || room.createdAt;
+            const when = updated ? (Date.now() - updated < 60000 ? "just now" : Math.floor((Date.now() - updated) / 60000) + " min ago") : "";
+            btn.innerHTML = `<span>${room.roomId}</span><span class="lobby-meta">${label}${when ? " · " + when : ""}</span>`;
+            btn.addEventListener("click", () => goWithCode(room.roomId));
+            li.appendChild(btn);
+            lobbyList.appendChild(li);
+          });
+        } catch (_) {
+          lobbyLoading.classList.add("hidden");
+          lobbyEmpty.classList.remove("hidden");
+        }
+      }
+      loadLobby();
 
       document.getElementById("btn-password").addEventListener("click", async () => {
         const roomId = sessionStorage.getItem(JOIN_STORAGE.roomId);

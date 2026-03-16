@@ -8,6 +8,7 @@ import path from "path";
 
 const ROOM_TTL_SEC = 24 * 60 * 60; // 24 hours
 const ROOM_KEY_PREFIX = "bingabu:room:";
+const LOBBY_SET_KEY = "bingabu:lobby";
 
 const memory = globalThis.__bingabu_rooms ?? new Map();
 if (!globalThis.__bingabu_rooms) globalThis.__bingabu_rooms = memory;
@@ -110,10 +111,12 @@ async function set(roomId, room) {
   if (!room.expiresAt) {
     room.expiresAt = Date.now() + ROOM_TTL_SEC * 1000;
   }
+  const score = room.updatedAt || room.createdAt || Date.now();
   const redis = await getRedis();
   if (redis) {
     try {
       await redis.set(ROOM_KEY_PREFIX + roomId, JSON.stringify(room), { ex: ROOM_TTL_SEC });
+      await redis.zadd(LOBBY_SET_KEY, { score, member: roomId });
       return;
     } catch (_) {
       // fall through to memory
@@ -128,6 +131,7 @@ async function remove(roomId) {
   if (redis) {
     try {
       await redis.del(ROOM_KEY_PREFIX + roomId);
+      await redis.zrem(LOBBY_SET_KEY, roomId);
       return;
     } catch (_) {}
   }
@@ -135,4 +139,41 @@ async function remove(roomId) {
   if (typeof process !== "undefined" && process.env) saveToFile();
 }
 
-export { get, set, remove, ROOM_TTL_SEC };
+async function listRecent(limit = 20) {
+  const redis = await getRedis();
+  if (redis) {
+    try {
+      const roomIds = await redis.zrange(LOBBY_SET_KEY, 0, limit - 1, { rev: true });
+      const rooms = [];
+      for (const id of roomIds) {
+        const room = await get(id);
+        if (room) {
+          rooms.push({
+            roomId: room.roomId,
+            createdAt: room.createdAt,
+            updatedAt: room.updatedAt,
+            numParticipants: room.state && room.state.numParticipants,
+            participantNames: room.state && room.state.participantNames,
+          });
+        }
+      }
+      return rooms;
+    } catch (_) {
+      return [];
+    }
+  }
+  const entries = Array.from(memory.entries())
+    .map(([id, room]) => ({ id, room }))
+    .filter(({ room }) => !room.expiresAt || room.expiresAt > Date.now())
+    .sort((a, b) => (b.room.updatedAt || b.room.createdAt || 0) - (a.room.updatedAt || a.room.createdAt || 0))
+    .slice(0, limit);
+  return entries.map(({ room }) => ({
+    roomId: room.roomId,
+    createdAt: room.createdAt,
+    updatedAt: room.updatedAt,
+    numParticipants: room.state && room.state.numParticipants,
+    participantNames: room.state && room.state.participantNames,
+  }));
+}
+
+export { get, set, remove, listRecent, ROOM_TTL_SEC };
