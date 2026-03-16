@@ -44,6 +44,18 @@
         text-shadow: 2px 2px 0px var(--accent);
       }
 
+      h1.home-link {
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      h1.home-link:hover {
+        opacity: 0.85;
+      }
+      h1.home-link:focus {
+        outline: 2px solid var(--secondary);
+        outline-offset: 4px;
+      }
+
       /* Timeline / History Ruler */
       .history-outer {
         width: 100%;
@@ -931,7 +943,7 @@
     </style>
   </head>
   <body>
-    <h1>BINGABU</h1>
+    <h1 id="bingo-app-title" class="home-link" tabindex="0" role="link">BINGABU</h1>
 
     <div class="history-outer">
       <div class="history-container">
@@ -2164,6 +2176,22 @@
           sessionStorage.removeItem(REMOTE_HOST_ID_KEY);
           if (window._bingabuRoomPoll) clearInterval(window._bingabuRoomPoll);
           showRemotePlayCreate();
+        });
+      }
+
+      const bingoAppTitle = document.getElementById("bingo-app-title");
+      if (bingoAppTitle) {
+        function goHome() {
+          const inMidGame = drawnSequence.length > 0;
+          if (inMidGame && !confirm("End your current game and go home?")) return;
+          window.location.href = "index.html";
+        }
+        bingoAppTitle.addEventListener("click", goHome);
+        bingoAppTitle.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            goHome();
+          }
         });
       }
 
