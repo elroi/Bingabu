@@ -15,6 +15,11 @@
         --accent: #ffe66d;
         --bg: #f7f9fc;
         --text: #2d3436;
+        --b-col: #ff6b6b;
+        --i-col: #feca57;
+        --n-col: #48dbfb;
+        --g-col: #1dd1a1;
+        --o-col: #ff9ff3;
       }
       body {
         font-family: "Quicksand", sans-serif;
@@ -33,12 +38,18 @@
         font-size: 1.8rem;
         margin: 0 0 24px 0;
       }
+      h1.centered {
+        text-align: center;
+      }
       .join-step {
         width: 100%;
         max-width: 400px;
         display: flex;
         flex-direction: column;
         gap: 16px;
+      }
+      .hidden {
+        display: none !important;
       }
       .join-step.hidden {
         display: none !important;
@@ -108,6 +119,46 @@
       .back-to-lobby:focus {
         outline: 2px solid var(--secondary);
         outline-offset: 2px;
+      }
+      .app-logo {
+        font-family: "Fredoka One", cursive;
+        font-size: 1.75rem;
+        margin: 0 auto 16px auto;
+        text-decoration: none;
+        display: block;
+        width: fit-content;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        text-shadow: 2px 2px 0 var(--accent);
+        transition: opacity 0.15s;
+      }
+      .app-logo:hover {
+        opacity: 0.9;
+      }
+      .app-logo:focus {
+        outline: 2px solid var(--secondary);
+        outline-offset: 4px;
+      }
+      .app-logo .letter {
+        display: inline-block;
+        animation: letterPop 0.4s ease-out backwards;
+      }
+      .app-logo .letter:nth-child(1) { color: var(--b-col); animation-delay: 0.05s; }
+      .app-logo .letter:nth-child(2) { color: var(--i-col); animation-delay: 0.1s; }
+      .app-logo .letter:nth-child(3) { color: var(--n-col); animation-delay: 0.15s; }
+      .app-logo .letter:nth-child(4) { color: var(--g-col); animation-delay: 0.2s; }
+      .app-logo .letter:nth-child(5) { color: var(--accent); animation-delay: 0.25s; }
+      .app-logo .letter:nth-child(6) { color: var(--b-col); animation-delay: 0.3s; }
+      .app-logo .letter:nth-child(7) { color: var(--o-col); animation-delay: 0.35s; }
+      @keyframes letterPop {
+        from {
+          opacity: 0;
+          transform: scale(0.6) translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
       }
       .error {
         color: var(--primary);
@@ -226,8 +277,9 @@
   </head>
   <body>
     <div class="join-page-content">
-      <a href="index.html" class="back-to-lobby" aria-label="Back to lobby">← Back to lobby</a>
-      <h1>Join a Bingabu game</h1>
+      <a href="index.html" id="nav-back" class="back-to-lobby" aria-label="Back to lobby">← Back to lobby</a>
+      <a href="index.html" id="nav-logo" class="app-logo hidden" aria-label="Bingabu"><span class="letter">B</span><span class="letter">i</span><span class="letter">n</span><span class="letter">g</span><span class="letter">a</span><span class="letter">b</span><span class="letter">u</span></a>
+      <h1 id="join-title">Join a Bingabu game</h1>
       <div id="step-code" class="join-step">
       <p class="join-hint">Ask the host for the 6-letter room code and enter it below.</p>
       <label for="room-code">Room code</label>
@@ -298,6 +350,16 @@
         document.getElementById("room-code").value = joinFromUrl;
         const hint = document.querySelector(".join-hint");
         if (hint) hint.classList.add("hidden");
+        const qrHint = document.querySelector(".join-hint.qr-hint");
+        if (qrHint) qrHint.classList.add("hidden");
+        const scanBtn = document.getElementById("btn-scan-qr");
+        if (scanBtn) scanBtn.classList.add("hidden");
+        const navBack = document.getElementById("nav-back");
+        const navLogo = document.getElementById("nav-logo");
+        if (navBack) navBack.classList.add("hidden");
+        if (navLogo) navLogo.classList.remove("hidden");
+        const joinTitle = document.getElementById("join-title");
+        if (joinTitle) joinTitle.classList.add("centered");
       }
 
       async function goWithCode(code) {
