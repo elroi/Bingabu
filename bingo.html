@@ -2038,6 +2038,14 @@
           const res = await fetch(`${getApiBase()}/api/rooms/${roomId}`, {
             headers: { "X-Host-Id": hostId },
           });
+          if (res.status === 404 || res.status === 410) {
+            if (window._bingabuRoomPoll) clearInterval(window._bingabuRoomPoll);
+            window._bingabuRoomPoll = null;
+            sessionStorage.removeItem(REMOTE_ROOM_ID_KEY);
+            sessionStorage.removeItem(REMOTE_HOST_ID_KEY);
+            showRemotePlayCreate();
+            return;
+          }
           if (!res.ok) return;
           const data = await res.json();
           const claims = data.claims || {};
