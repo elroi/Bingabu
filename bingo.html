@@ -750,6 +750,35 @@
       .host-setup-view .setup-players-section {
         margin-top: 16px;
       }
+      .daub-mode-setup {
+        margin-top: 24px;
+      }
+      .daub-mode-toggle {
+        display: inline-flex;
+        border-radius: 50px;
+        padding: 4px;
+        background: #e9ecef;
+        gap: 0;
+      }
+      .daub-mode-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 50px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        background: transparent;
+        color: var(--text);
+      }
+      .daub-mode-btn[aria-pressed="true"] {
+        background: var(--secondary);
+        color: white;
+      }
+      .daub-mode-hint {
+        margin: 8px 0 0;
+        font-size: 0.9rem;
+        color: var(--text);
+        opacity: 0.9;
+      }
       .host-setup-view .remote-play-section {
         margin-top: 24px;
       }
@@ -765,6 +794,20 @@
       }
       .host-new-game-in-play:hover {
         background: var(--secondary);
+        color: white;
+      }
+      .push-to-players-btn {
+        font-family: "Fredoka One", cursive;
+        cursor: pointer;
+        padding: 8px 16px;
+        border-radius: 50px;
+        border: 2px solid #e67e22;
+        background: var(--bg);
+        color: #e67e22;
+        font-size: 0.85rem;
+      }
+      .push-to-players-btn:hover {
+        background: #e67e22;
         color: white;
       }
 
@@ -1137,6 +1180,10 @@
       .participant-card .card-cell.col-n.marked { background: var(--n-col); }
       .participant-card .card-cell.col-g.marked { background: var(--g-col); }
       .participant-card .card-cell.col-o.marked { background: var(--o-col); }
+      .participant-card .card-cell.missed-daub {
+        outline: 2px dashed #e67e22;
+        outline-offset: -2px;
+      }
       .participant-card .card-cell.latest-draw {
         border: 2px solid #333;
         animation: pulse 0.5s infinite alternate;
@@ -1319,6 +1366,15 @@
           </div>
         </div>
       </section>
+      <section class="daub-mode-setup host-setup-block" id="daub-mode-setup" aria-label="Number marking">
+        <h2 class="host-setup-heading daub-mode-heading">Number marking</h2>
+        <p class="host-setup-subtitle daub-mode-subtitle">How should numbers be marked on player cards?</p>
+        <div class="daub-mode-toggle" role="group" aria-label="Auto or manual daub">
+          <button type="button" id="daub-mode-auto" class="daub-mode-btn" aria-pressed="true">Auto daub</button>
+          <button type="button" id="daub-mode-manual" class="daub-mode-btn" aria-pressed="false">Manual daub</button>
+        </div>
+        <p class="daub-mode-hint" id="daub-mode-hint">Numbers will color automatically when called.</p>
+      </section>
       <section class="remote-play-section host-setup-block" id="remote-play-section" aria-label="Play with friends">
         <h2 class="host-setup-heading remote-play-heading">Playing with friends online?</h2>
         <p id="remote-play-api-unavailable" class="remote-play-api-unavailable hidden">Remote play needs the API. Run <code>npm run dev:api</code> to enable it.</p>
@@ -1355,11 +1411,13 @@
               </div>
               <div id="remote-play-qr-wrap" class="remote-play-qr-wrap hidden" aria-hidden="true">
                 <p class="remote-play-qr-label">Scan to join</p>
-                <img id="remote-play-qr" class="remote-play-qr" src="" alt="QR code to open the join page" />
+                <img id="remote-play-qr" class="remote-play-qr" src="" alt="QR code to open the join page" referrerpolicy="no-referrer" />
+                <p class="remote-play-qr-fallback hidden" style="font-size:0.85rem; margin-top:8px;">Use the link above if the QR does not load.</p>
               </div>
               <p id="remote-play-password-reminder" class="remote-play-password-reminder hidden">Room is protected — share the password with players.</p>
               <p class="remote-play-joined-label">Players joined</p>
               <ul id="remote-play-joined-list" class="remote-play-joined-list" aria-live="polite"></ul>
+              <button type="button" id="sync-to-players-btn" class="remote-play-btn secondary" title="Push current state (including daubs) to players so their cards update.">Sync to players</button>
             </div>
           </div>
         </section>
@@ -1393,6 +1451,7 @@
           <span>Space / Next ▶</span>
         </div>
         <button type="button" id="new-game-btn" class="host-new-game-in-play">New game</button>
+        <button type="button" id="push-to-players-btn" class="push-to-players-btn hidden" title="Show players an indicator on numbers they should have marked.">Push to players</button>
         <div class="controls-actions">
           <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
         </div>
@@ -1412,6 +1471,14 @@
         <div class="hide-cards-setting">
           <input type="checkbox" id="hide-cards" />
           <label for="hide-cards">Hide cards (use your own)</label>
+        </div>
+        <div class="manual-daub-setting">
+          <input type="checkbox" id="manual-daub-only" aria-label="Players mark their own numbers" />
+          <label for="manual-daub-only">Players mark their own numbers (no auto-coloring)</label>
+        </div>
+        <div class="manual-daub-auto-hint-setting hidden" id="manual-daub-auto-hint-wrap">
+          <input type="checkbox" id="manual-daub-auto-hint" checked aria-label="Show hint frame on numbers to mark" />
+          <label for="manual-daub-auto-hint">Show hint on numbers to mark (manual daub)</label>
         </div>
         <div class="mc-setting">
           <input type="checkbox" id="mc-announces" checked />
@@ -1494,6 +1561,12 @@
       const participantCardsSection = document.getElementById("participant-cards-section");
       const participantCardsHeader = document.getElementById("participant-cards-header");
       const hideCardsCheckbox = document.getElementById("hide-cards");
+      const manualDaubOnlyCheckbox = document.getElementById("manual-daub-only");
+      const manualDaubAutoHintCheckbox = document.getElementById("manual-daub-auto-hint");
+      const manualDaubAutoHintWrap = document.getElementById("manual-daub-auto-hint-wrap");
+      const daubModeAutoBtn = document.getElementById("daub-mode-auto");
+      const daubModeManualBtn = document.getElementById("daub-mode-manual");
+      const daubModeHint = document.getElementById("daub-mode-hint");
       const leaderboardList = document.getElementById("leaderboard-list");
       const winnerDeclaration = document.getElementById("winner-declaration");
       const mcAnnouncementEl = document.getElementById("mc-announcement");
@@ -1525,6 +1598,7 @@
       const hostPlayView = document.getElementById("host-play-view");
       const hostStartGameBtn = document.getElementById("host-start-game-btn");
       const newGameBtn = document.getElementById("new-game-btn");
+      const pushToPlayersBtn = document.getElementById("push-to-players-btn");
       const hostStepsNav = document.getElementById("host-steps");
       const hostWizardShowAgainWrap = document.querySelector(".host-wizard-show-again-wrap");
 
@@ -1545,6 +1619,10 @@
       let participantQuirks = []; // { excludeStr: string, preferStr: string } per player
       let participantCards = [];
       let hideCards = false;
+      let manualDaubOnly = false;
+      let manualDaubAutoHint = true;
+      let participantDaubs = {};
+      let indicatorPulseAt = 0;
       let mcEnabled = true;
       let mcSimple = false;
       let mcVoice = null;
@@ -1582,6 +1660,10 @@
           participantQuirks: participantQuirks.slice(0, numParticipants),
           participantCards,
           hideCards,
+          manualDaubOnly,
+          manualDaubAutoHint,
+          participantDaubs: { ...participantDaubs },
+          indicatorPulseAt,
           mcEnabled,
           mcSimple,
           mcVoiceName,
@@ -1595,12 +1677,15 @@
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(getStateForApi()));
         } catch (_) {}
+        stateDirtySinceLastPush = true;
+        if (typeof updateSyncToPlayersButton === "function") updateSyncToPlayersButton();
         pushRoomStateIfHost();
       }
 
       const REMOTE_ROOM_ID_KEY = "bingabu-remote-roomId";
       const REMOTE_HOST_ID_KEY = "bingabu-remote-hostId";
       const HOST_PHASE_KEY = "bingabu-host-phase";
+      let stateDirtySinceLastPush = false;
 
       async function pushRoomStateIfHost() {
         try {
@@ -1614,6 +1699,8 @@
             body: JSON.stringify({ state: getStateForApi() }),
           });
           if (!res.ok) return;
+          stateDirtySinceLastPush = false;
+          if (typeof updateSyncToPlayersButton === "function") updateSyncToPlayersButton();
         } catch (_) {}
       }
 
@@ -1660,6 +1747,20 @@
             hideCards = data.hideCards;
             hideCardsCheckbox.checked = hideCards;
             participantCardsSection.classList.toggle("hidden", hideCards);
+          }
+          if (typeof data.manualDaubOnly === "boolean") {
+            manualDaubOnly = data.manualDaubOnly;
+            applyDaubModeUI();
+          }
+          if (typeof data.manualDaubAutoHint === "boolean") {
+            manualDaubAutoHint = data.manualDaubAutoHint;
+            if (manualDaubAutoHintCheckbox) manualDaubAutoHintCheckbox.checked = manualDaubAutoHint;
+          }
+          if (data.participantDaubs && typeof data.participantDaubs === "object") {
+            participantDaubs = { ...data.participantDaubs };
+          }
+          if (typeof data.indicatorPulseAt === "number" && data.indicatorPulseAt > 0) {
+            indicatorPulseAt = data.indicatorPulseAt;
           }
           if (typeof data.mcEnabled === "boolean") {
             mcEnabled = data.mcEnabled;
@@ -2206,6 +2307,7 @@
         if (participantCards.length === 0) return;
         const drawnSet = new Set(drawnSequence);
         participantCards.forEach((card, index) => {
+          const daubs = participantDaubs[String(index)] || [];
           const wrap = document.createElement("div");
           wrap.className = "participant-card-wrap";
           const title = document.createElement("div");
@@ -2232,10 +2334,14 @@
                 markedCount++;
               } else {
                 cell.textContent = val;
-                const marked = drawnSet.has(val);
+                const daubed = daubs.includes(`${row},${col}`);
+                const marked = drawnSet.has(val) || daubed;
                 if (marked) {
                   cell.classList.add("marked");
                   markedCount++;
+                }
+                if (drawnSet.has(val) && !daubed) {
+                  cell.classList.add("missed-daub");
                 }
                 if (val === lastNum) cell.classList.add("latest-draw");
               }
@@ -2300,6 +2406,7 @@
 
         // Button States
         prevBtn.disabled = drawnSequence.length === 0;
+        if (pushToPlayersBtn) pushToPlayersBtn.classList.toggle("hidden", !manualDaubOnly);
 
         if (drawnSequence.length === 75) {
           drawBtn.innerText = "FINISH!";
@@ -2448,6 +2555,15 @@
           applyPhase();
         });
       }
+      if (pushToPlayersBtn) {
+        pushToPlayersBtn.addEventListener("click", () => {
+          indicatorPulseAt = Date.now();
+          saveState();
+          pushRoomStateIfHost();
+          pushToPlayersBtn.textContent = "Sent!";
+          setTimeout(() => { pushToPlayersBtn.textContent = "Push to players"; }, 1500);
+        });
+      }
 
       function toggleSetupPlayersExpand() {
         if (!setupPlayersSection || !setupPlayersHeader) return;
@@ -2522,14 +2638,23 @@
         if (remotePlayDetailsSection) remotePlayDetailsSection.classList.remove("remote-play-details-collapsed");
         if (remotePlayDetailsHeader) remotePlayDetailsHeader.setAttribute("aria-expanded", "true");
         if (typeof updateHostSteps === "function") updateHostSteps();
+        if (typeof updateSyncToPlayersButton === "function") updateSyncToPlayersButton();
         if (remotePlayCodeEl) remotePlayCodeEl.textContent = roomId || "";
         if (remotePlayPasswordReminder) remotePlayPasswordReminder.classList.toggle("hidden", !hasPassword);
-        window._bingabuShareUrl = shareUrl || "";
+        const resolvedShareUrl = shareUrl || (roomId ? getApiBase() + "/join.html?join=" + roomId : "");
+        window._bingabuShareUrl = resolvedShareUrl;
         const joinPageUrl = getApiBase() + "/join";
         if (remotePlayJoinUrlEl) remotePlayJoinUrlEl.textContent = joinPageUrl;
         if (remotePlayQrWrap && remotePlayQrImg) {
-          if (shareUrl) {
-            remotePlayQrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(shareUrl);
+          if (resolvedShareUrl) {
+            const qrSrc = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(resolvedShareUrl);
+            remotePlayQrImg.onerror = () => {
+              const fallback = remotePlayQrWrap.querySelector(".remote-play-qr-fallback");
+              if (fallback) fallback.classList.remove("hidden");
+            };
+            const fallbackEl = remotePlayQrWrap.querySelector(".remote-play-qr-fallback");
+            if (fallbackEl) fallbackEl.classList.add("hidden");
+            remotePlayQrImg.src = qrSrc;
             remotePlayQrWrap.classList.remove("hidden");
             remotePlayQrWrap.setAttribute("aria-hidden", "false");
           } else {
@@ -2560,6 +2685,10 @@
           const claims = data.claims || {};
           const names = (data.state && data.state.participantNames) || [];
           const np = (data.state && data.state.numParticipants) || 0;
+          if (data.state && data.state.participantDaubs && typeof data.state.participantDaubs === "object") {
+            participantDaubs = { ...data.state.participantDaubs };
+            updateUI();
+          }
           remotePlayJoinedList.innerHTML = "";
           for (let i = 0; i < np; i++) {
             const li = document.createElement("li");
@@ -2598,6 +2727,7 @@
       const copyCodeBtn = document.getElementById("remote-play-copy-code");
       const copyJoinPageBtn = document.getElementById("remote-play-copy-join-page");
       const copyLinkBtn = document.getElementById("remote-play-copy-link");
+      const syncToPlayersBtn = document.getElementById("sync-to-players-btn");
       const endRoomBtn = document.getElementById("remote-play-end-btn");
 
       if (remotePlayPasswordCheck && remotePlayPasswordFields) {
@@ -2633,7 +2763,9 @@
             }
             sessionStorage.setItem(REMOTE_ROOM_ID_KEY, data.roomId);
             sessionStorage.setItem(REMOTE_HOST_ID_KEY, data.hostId);
+            stateDirtySinceLastPush = false;
             showRemotePlayActive(data.roomId, data.shareUrl, !!body.password);
+            updateSyncToPlayersButton();
             refreshJoinedList();
             let pollInterval = setInterval(refreshJoinedList, 2000);
             window._bingabuRoomPoll = pollInterval;
@@ -2665,6 +2797,23 @@
           if (url && navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(url).then(() => { copyLinkBtn.textContent = "Copied!"; setTimeout(() => { copyLinkBtn.textContent = "Copy direct game link"; }, 1500); });
           }
+        });
+      }
+      function updateSyncToPlayersButton() {
+        const roomId = sessionStorage.getItem(REMOTE_ROOM_ID_KEY);
+        const hostId = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+        if (syncToPlayersBtn) {
+          syncToPlayersBtn.disabled = !roomId || !hostId || !stateDirtySinceLastPush;
+          syncToPlayersBtn.title = stateDirtySinceLastPush
+            ? "Push current state (including daubs) to players so their cards update."
+            : "No changes to sync; button enables when you change settings or after a draw.";
+        }
+      }
+      if (syncToPlayersBtn) {
+        syncToPlayersBtn.addEventListener("click", () => {
+          pushRoomStateIfHost();
+          syncToPlayersBtn.textContent = "Synced!";
+          setTimeout(() => { syncToPlayersBtn.textContent = "Sync to players"; }, 1500);
         });
       }
       if (endRoomBtn) {
@@ -2914,6 +3063,42 @@
         participantCardsSection.classList.toggle("hidden", hideCards);
         saveState();
       });
+
+      function applyDaubModeUI() {
+        if (daubModeAutoBtn) daubModeAutoBtn.setAttribute("aria-pressed", String(!manualDaubOnly));
+        if (daubModeManualBtn) daubModeManualBtn.setAttribute("aria-pressed", String(manualDaubOnly));
+        if (daubModeHint) daubModeHint.textContent = manualDaubOnly ? "Players tap to mark numbers when called." : "Numbers will color automatically when called.";
+        if (manualDaubOnlyCheckbox) manualDaubOnlyCheckbox.checked = manualDaubOnly;
+        if (manualDaubAutoHintWrap) manualDaubAutoHintWrap.classList.toggle("hidden", !manualDaubOnly);
+        if (manualDaubAutoHintCheckbox) manualDaubAutoHintCheckbox.checked = manualDaubAutoHint;
+      }
+      if (daubModeAutoBtn) {
+        daubModeAutoBtn.addEventListener("click", () => {
+          manualDaubOnly = false;
+          applyDaubModeUI();
+          saveState();
+        });
+      }
+      if (daubModeManualBtn) {
+        daubModeManualBtn.addEventListener("click", () => {
+          manualDaubOnly = true;
+          applyDaubModeUI();
+          saveState();
+        });
+      }
+      if (manualDaubOnlyCheckbox) {
+        manualDaubOnlyCheckbox.addEventListener("change", () => {
+          manualDaubOnly = manualDaubOnlyCheckbox.checked;
+          applyDaubModeUI();
+          saveState();
+        });
+      }
+      if (manualDaubAutoHintCheckbox) {
+        manualDaubAutoHintCheckbox.addEventListener("change", () => {
+          manualDaubAutoHint = manualDaubAutoHintCheckbox.checked;
+          saveState();
+        });
+      }
 
       mcAnnouncesCheckbox.addEventListener("change", () => {
         mcEnabled = mcAnnouncesCheckbox.checked;
