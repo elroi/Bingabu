@@ -1393,6 +1393,10 @@
           <h3 id="remote-play-details-header" role="button" tabindex="0" aria-expanded="false" aria-controls="remote-play-details-content">Online room details <span class="section-chevron" aria-hidden="true">▼</span></h3>
           <div class="setup-players-content" id="remote-play-details-content">
             <div id="remote-play-create-options" class="remote-play-create-options">
+              <div class="remote-play-translation-wrap">
+                <input type="checkbox" id="translation-enabled" aria-label="Allow players to translate the interface" />
+                <label for="translation-enabled">Allow players to translate the interface (e.g. Google Translate)</label>
+              </div>
               <div class="remote-play-password-wrap">
                 <input type="checkbox" id="remote-play-password-check" aria-label="Protect room with password" />
                 <label for="remote-play-password-check">Protect room with password</label>
@@ -1480,6 +1484,10 @@
           <input type="checkbox" id="manual-daub-auto-hint" checked aria-label="Show hint frame on numbers to mark" />
           <label for="manual-daub-auto-hint">Show hint on numbers to mark (manual daub)</label>
         </div>
+        <div class="translation-enabled-setting">
+          <input type="checkbox" id="translation-enabled-play" aria-label="Allow players to translate the interface" />
+          <label for="translation-enabled-play">Allow players to translate the interface (e.g. Google Translate)</label>
+        </div>
         <div class="mc-setting">
           <input type="checkbox" id="mc-announces" checked />
           <label for="mc-announces">MC announces numbers</label>
@@ -1564,6 +1572,8 @@
       const manualDaubOnlyCheckbox = document.getElementById("manual-daub-only");
       const manualDaubAutoHintCheckbox = document.getElementById("manual-daub-auto-hint");
       const manualDaubAutoHintWrap = document.getElementById("manual-daub-auto-hint-wrap");
+      const translationEnabledCheckbox = document.getElementById("translation-enabled");
+      const translationEnabledPlayCheckbox = document.getElementById("translation-enabled-play");
       const daubModeAutoBtn = document.getElementById("daub-mode-auto");
       const daubModeManualBtn = document.getElementById("daub-mode-manual");
       const daubModeHint = document.getElementById("daub-mode-hint");
@@ -1621,6 +1631,7 @@
       let hideCards = false;
       let manualDaubOnly = false;
       let manualDaubAutoHint = true;
+      let translationEnabled = false;
       let participantDaubs = {};
       let indicatorPulseAt = 0;
       let mcEnabled = true;
@@ -1662,6 +1673,7 @@
           hideCards,
           manualDaubOnly,
           manualDaubAutoHint,
+          translationEnabled,
           participantDaubs: { ...participantDaubs },
           indicatorPulseAt,
           mcEnabled,
@@ -1755,6 +1767,11 @@
           if (typeof data.manualDaubAutoHint === "boolean") {
             manualDaubAutoHint = data.manualDaubAutoHint;
             if (manualDaubAutoHintCheckbox) manualDaubAutoHintCheckbox.checked = manualDaubAutoHint;
+          }
+          if (typeof data.translationEnabled === "boolean") {
+            translationEnabled = data.translationEnabled;
+            if (translationEnabledCheckbox) translationEnabledCheckbox.checked = translationEnabled;
+            if (translationEnabledPlayCheckbox) translationEnabledPlayCheckbox.checked = translationEnabled;
           }
           if (data.participantDaubs && typeof data.participantDaubs === "object") {
             participantDaubs = { ...data.participantDaubs };
@@ -3071,6 +3088,8 @@
         if (manualDaubOnlyCheckbox) manualDaubOnlyCheckbox.checked = manualDaubOnly;
         if (manualDaubAutoHintWrap) manualDaubAutoHintWrap.classList.toggle("hidden", !manualDaubOnly);
         if (manualDaubAutoHintCheckbox) manualDaubAutoHintCheckbox.checked = manualDaubAutoHint;
+        if (translationEnabledCheckbox) translationEnabledCheckbox.checked = translationEnabled;
+        if (translationEnabledPlayCheckbox) translationEnabledPlayCheckbox.checked = translationEnabled;
       }
       if (daubModeAutoBtn) {
         daubModeAutoBtn.addEventListener("click", () => {
@@ -3096,6 +3115,20 @@
       if (manualDaubAutoHintCheckbox) {
         manualDaubAutoHintCheckbox.addEventListener("change", () => {
           manualDaubAutoHint = manualDaubAutoHintCheckbox.checked;
+          saveState();
+        });
+      }
+      if (translationEnabledCheckbox) {
+        translationEnabledCheckbox.addEventListener("change", () => {
+          translationEnabled = translationEnabledCheckbox.checked;
+          if (translationEnabledPlayCheckbox) translationEnabledPlayCheckbox.checked = translationEnabled;
+          saveState();
+        });
+      }
+      if (translationEnabledPlayCheckbox) {
+        translationEnabledPlayCheckbox.addEventListener("change", () => {
+          translationEnabled = translationEnabledPlayCheckbox.checked;
+          if (translationEnabledCheckbox) translationEnabledCheckbox.checked = translationEnabled;
           saveState();
         });
       }

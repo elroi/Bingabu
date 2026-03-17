@@ -265,6 +265,42 @@
         display: none !important;
       }
 
+      #bingabu-translate-wrap {
+        position: fixed;
+        top: max(12px, env(safe-area-inset-top));
+        right: max(12px, env(safe-area-inset-right));
+        z-index: 9998;
+        max-width: 200px;
+        min-height: 28px;
+      }
+      #bingabu-translate-wrap.hidden {
+        display: none !important;
+      }
+      .bingabu-translate-label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .bingabu-translate-select {
+        font-size: 0.9rem;
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 2px solid var(--secondary);
+        background: var(--bg);
+        color: var(--text);
+        max-width: 100%;
+        min-width: 160px;
+      }
+      @media (max-width: 480px) {
+        #bingabu-translate-wrap {
+          max-width: min(220px, calc(100vw - 24px));
+        }
+      }
+      body.translate-visible .join-page-content {
+        padding-top: 44px;
+      }
+
       @media (max-width: 600px) {
         body {
           padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
@@ -277,6 +313,27 @@
   </head>
   <body>
     <div class="join-page-content">
+      <div id="bingabu-translate-wrap" class="hidden" role="region" aria-label="Translate this page">
+        <label for="bingabu-translate-select" class="bingabu-translate-label">Translate this page</label>
+        <select id="bingabu-translate-select" class="bingabu-translate-select" aria-label="Choose language (opens in new tab)">
+          <option value="">— Select language —</option>
+          <option value="ar">العربية</option>
+          <option value="zh-CN">中文</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="he">עברית</option>
+          <option value="es">Español</option>
+          <option value="ru">Русский</option>
+          <option value="pt">Português</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="nl">Nederlands</option>
+          <option value="pl">Polski</option>
+          <option value="tr">Türkçe</option>
+        </select>
+      </div>
       <a href="index.html" id="nav-back" class="back-to-lobby" aria-label="Back to lobby">← Back to lobby</a>
       <a href="index.html" id="nav-logo" class="app-logo hidden" aria-label="Bingabu"><span class="letter">B</span><span class="letter">i</span><span class="letter">n</span><span class="letter">g</span><span class="letter">a</span><span class="letter">b</span><span class="letter">u</span></a>
       <h1 id="join-title">Join a Bingabu game</h1>
@@ -319,6 +376,30 @@
 
       function getApiBase() {
         return typeof window !== "undefined" && window.location && window.location.origin ? window.location.origin : "";
+      }
+
+      function applyTranslationUI(state) {
+        const wrap = document.getElementById("bingabu-translate-wrap");
+        const selectEl = document.getElementById("bingabu-translate-select");
+        if (!wrap) return;
+        const enabled = !!(state && state.translationEnabled);
+        if (enabled) {
+          wrap.classList.remove("hidden");
+          document.body.classList.add("translate-visible");
+          if (selectEl && !selectEl.dataset.bound) {
+            selectEl.dataset.bound = "1";
+            selectEl.addEventListener("change", function () {
+              const code = this.value;
+              if (!code) return;
+              const url = "https://translate.google.com/translate?sl=auto&tl=" + encodeURIComponent(code) + "&u=" + encodeURIComponent(window.location.href);
+              window.open(url, "_blank", "noopener,noreferrer");
+              this.value = "";
+            });
+          }
+        } else {
+          wrap.classList.add("hidden");
+          document.body.classList.remove("translate-visible");
+        }
       }
 
       function getDeviceId() {
@@ -410,6 +491,7 @@
           window._joinRoomState = state;
           window._joinRoomClaims = data.claims || {};
           renderSlotList(state, data.claims || {});
+          applyTranslationUI(state);
           showStep("step-pick");
         } finally {
           if (btn) btn.disabled = false;
@@ -564,6 +646,7 @@
             return;
           }
           renderSlotList(data.state, data.claims || {});
+          applyTranslationUI(data.state);
           showStep("step-pick");
         } finally {
           btn.disabled = false;
