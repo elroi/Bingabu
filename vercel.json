@@ -1,7 +1,8 @@
 {
   "outputDirectory": ".",
   "rewrites": [
-    { "source": "/j/:code", "destination": "/join.html?join=:code" }
+    { "source": "/j/:code", "destination": "/join.html?join=:code" },
+    { "source": "/api/health", "destination": "/api/lobby?health=1" }
   ],
   "functions": {
     "api/**/*.js": {
