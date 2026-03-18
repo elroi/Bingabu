@@ -603,16 +603,15 @@
         position: fixed;
         inset: 0;
         background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
         z-index: 1000;
         padding: 20px;
+        pointer-events: none; /* allow clicks to reach page; modal has pointer-events: auto */
       }
       .host-wizard-overlay.hidden {
         display: none !important;
       }
       .host-wizard-modal {
+        position: fixed;
         background: var(--bg);
         border-radius: 20px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
@@ -620,6 +619,11 @@
         width: 100%;
         padding: 24px;
         border: 2px solid var(--secondary);
+        pointer-events: auto; /* receive clicks so Back/Skip/Next work despite overlay pointer-events: none */
+      }
+      .wizard-step-target {
+        border-radius: 12px;
+        transition: background-color 0.2s, box-shadow 0.2s, border-color 0.2s;
       }
       .host-wizard-title {
         font-family: "Fredoka One", cursive;
@@ -675,8 +679,10 @@
         margin-bottom: 12px;
       }
       .host-wizard-highlight {
-        box-shadow: 0 0 0 3px var(--secondary);
-        border-radius: 8px;
+        background: var(--bg);
+        border: 2px solid var(--secondary);
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
         scroll-margin-top: 100px;
       }
       .host-wizard-show-again-wrap {
@@ -1351,11 +1357,13 @@
     </div>
 
     <div id="host-setup-view" class="host-setup-view">
-      <h2 id="host-setup-heading" class="host-setup-heading">Who's playing?</h2>
-      <p id="host-setup-subtitle" class="host-setup-subtitle">Specify how many players. Use the advanced options below for names and quirks if you like.</p>
-      <div class="participant-setting participant-setting-above-fold">
-        <label for="num-participants">Participants</label>
-        <input type="number" id="num-participants" min="0" max="12" value="0" title="" />
+      <div id="wizard-step-1-target" class="wizard-step-target">
+        <h2 id="host-setup-heading" class="host-setup-heading">Who's playing?</h2>
+        <p id="host-setup-subtitle" class="host-setup-subtitle">Specify how many players. Use the advanced options below for names and quirks if you like.</p>
+        <div class="participant-setting participant-setting-above-fold">
+          <label for="num-participants">Participants</label>
+          <input type="number" id="num-participants" min="0" max="12" value="0" title="" />
+        </div>
       </div>
       <section class="setup-players-section setup-players-in-controls setup-players-collapsed" id="setup-players-section" aria-label="Advanced participants settings">
         <h3 id="setup-players-header" role="button" tabindex="0" aria-expanded="false" aria-controls="setup-players-content">Advanced participants settings <span class="section-chevron" aria-hidden="true">▼</span></h3>
@@ -1393,10 +1401,6 @@
           <h3 id="remote-play-details-header" role="button" tabindex="0" aria-expanded="false" aria-controls="remote-play-details-content">Online room details <span class="section-chevron" aria-hidden="true">▼</span></h3>
           <div class="setup-players-content" id="remote-play-details-content">
             <div id="remote-play-create-options" class="remote-play-create-options">
-              <div class="remote-play-translation-wrap">
-                <input type="checkbox" id="translation-enabled" aria-label="Allow players to translate the interface" />
-                <label for="translation-enabled">Allow players to translate the interface (e.g. Google Translate)</label>
-              </div>
               <div class="remote-play-password-wrap">
                 <input type="checkbox" id="remote-play-password-check" aria-label="Protect room with password" />
                 <label for="remote-play-password-check">Protect room with password</label>
@@ -1484,10 +1488,6 @@
           <input type="checkbox" id="manual-daub-auto-hint" checked aria-label="Show hint frame on numbers to mark" />
           <label for="manual-daub-auto-hint">Show hint on numbers to mark (manual daub)</label>
         </div>
-        <div class="translation-enabled-setting">
-          <input type="checkbox" id="translation-enabled-play" aria-label="Allow players to translate the interface" />
-          <label for="translation-enabled-play">Allow players to translate the interface (e.g. Google Translate)</label>
-        </div>
         <div class="mc-setting">
           <input type="checkbox" id="mc-announces" checked />
           <label for="mc-announces">MC announces numbers</label>
@@ -1572,8 +1572,6 @@
       const manualDaubOnlyCheckbox = document.getElementById("manual-daub-only");
       const manualDaubAutoHintCheckbox = document.getElementById("manual-daub-auto-hint");
       const manualDaubAutoHintWrap = document.getElementById("manual-daub-auto-hint-wrap");
-      const translationEnabledCheckbox = document.getElementById("translation-enabled");
-      const translationEnabledPlayCheckbox = document.getElementById("translation-enabled-play");
       const daubModeAutoBtn = document.getElementById("daub-mode-auto");
       const daubModeManualBtn = document.getElementById("daub-mode-manual");
       const daubModeHint = document.getElementById("daub-mode-hint");
@@ -1631,7 +1629,6 @@
       let hideCards = false;
       let manualDaubOnly = false;
       let manualDaubAutoHint = true;
-      let translationEnabled = false;
       let participantDaubs = {};
       let indicatorPulseAt = 0;
       let mcEnabled = true;
@@ -1673,7 +1670,6 @@
           hideCards,
           manualDaubOnly,
           manualDaubAutoHint,
-          translationEnabled,
           participantDaubs: { ...participantDaubs },
           indicatorPulseAt,
           mcEnabled,
@@ -1767,11 +1763,6 @@
           if (typeof data.manualDaubAutoHint === "boolean") {
             manualDaubAutoHint = data.manualDaubAutoHint;
             if (manualDaubAutoHintCheckbox) manualDaubAutoHintCheckbox.checked = manualDaubAutoHint;
-          }
-          if (typeof data.translationEnabled === "boolean") {
-            translationEnabled = data.translationEnabled;
-            if (translationEnabledCheckbox) translationEnabledCheckbox.checked = translationEnabled;
-            if (translationEnabledPlayCheckbox) translationEnabledPlayCheckbox.checked = translationEnabled;
           }
           if (data.participantDaubs && typeof data.participantDaubs === "object") {
             participantDaubs = { ...data.participantDaubs };
@@ -2881,12 +2872,13 @@
       }
 
       const HOST_WIZARD_STEPS = [
-        { title: "Set players", body: "Set the number of players and add their names below.", highlight: "#setup-players-section" },
-        { title: "Create room", body: "To play with friends remotely, create a room. Optional if you're playing in person.", highlight: "#remote-play-section" },
-        { title: "Share", body: "Share the room code or link with players so they can join.", highlight: "#remote-play-section" },
-        { title: "Draw", body: "Click Start the game, then use DRAW to call numbers. Have fun!", highlight: "#host-start-game-btn" },
+        { title: "Set players", body: "Set the number of players and add their names below.", highlight: "#wizard-step-1-target", focus: "#num-participants" },
+        { title: "Create room", body: "To play with friends remotely, create a room. Optional if you're playing in person.", highlight: "#remote-play-section", focus: "#remote-play-create-btn" },
+        { title: "Share", body: "Share the room code or link with players so they can join.", highlight: "#remote-play-section", focus: "#remote-play-copy-code" },
+        { title: "Draw", body: "Click Start the game, then use DRAW to call numbers. Have fun!", highlight: "#host-start-game-btn", focus: "#host-start-game-btn" },
       ];
       const hostWizardOverlay = document.getElementById("host-wizard-overlay");
+      const hostWizardModal = document.querySelector(".host-wizard-modal");
       const hostWizardTitle = document.getElementById("host-wizard-title");
       const hostWizardBody = document.getElementById("host-wizard-body");
       const hostWizardProgress = document.getElementById("host-wizard-progress");
@@ -2918,6 +2910,23 @@
         }
       }
 
+      function positionWizardModal(targetEl) {
+        if (!hostWizardModal || !targetEl) return;
+        const gap = 16;
+        const padding = 20;
+        const rect = targetEl.getBoundingClientRect();
+        const modalRect = hostWizardModal.getBoundingClientRect();
+        const viewportW = window.innerWidth;
+        const viewportH = window.innerHeight;
+        let top = rect.bottom + gap;
+        let left = rect.left;
+        if (top + modalRect.height > viewportH - padding) top = Math.max(padding, rect.top - modalRect.height - gap);
+        if (left + modalRect.width > viewportW - padding) left = viewportW - padding - modalRect.width;
+        if (left < padding) left = padding;
+        hostWizardModal.style.top = top + "px";
+        hostWizardModal.style.left = left + "px";
+      }
+
       function applyWizardStep(step) {
         hostWizardStep = step;
         const config = HOST_WIZARD_STEPS[step - 1];
@@ -2934,8 +2943,19 @@
         if (hostWizardBack) hostWizardBack.classList.toggle("hidden", step === 1);
         if (hostWizardNext) {
           hostWizardNext.textContent = step === 4 ? "Done" : "Next";
-          const stepDone = getWizardStepDone(step);
-          hostWizardNext.disabled = step < 4 ? !stepDone : false;
+          hostWizardNext.disabled = false; /* always clickable so user can advance or edit page then Next */
+        }
+        if (target) {
+          requestAnimationFrame(() => {
+            positionWizardModal(target);
+            const focusSel = config.focus;
+            let focusEl = focusSel && document.querySelector(focusSel);
+            if (focusEl && (focusEl.offsetParent === null || getComputedStyle(focusEl).visibility === "hidden")) {
+              if (step === 3) focusEl = document.querySelector("#remote-play-create-btn");
+              else focusEl = null;
+            }
+            if (focusEl && typeof focusEl.focus === "function") focusEl.focus();
+          });
         }
       }
 
@@ -2950,11 +2970,9 @@
 
       function openHostWizard() {
         hostWizardStep = 1;
-        applyWizardStep(1);
         if (hostWizardOverlay) hostWizardOverlay.classList.remove("hidden");
         if (firstVisitBanner) firstVisitBanner.classList.add("hidden");
-        if (hostWizardNext && getWizardStepDone(1)) hostWizardNext.focus();
-        else if (hostWizardSkip) hostWizardSkip.focus();
+        applyWizardStep(1); /* positions modal and focuses step target */
       }
 
       if (hostWizardNext) {
@@ -3088,8 +3106,6 @@
         if (manualDaubOnlyCheckbox) manualDaubOnlyCheckbox.checked = manualDaubOnly;
         if (manualDaubAutoHintWrap) manualDaubAutoHintWrap.classList.toggle("hidden", !manualDaubOnly);
         if (manualDaubAutoHintCheckbox) manualDaubAutoHintCheckbox.checked = manualDaubAutoHint;
-        if (translationEnabledCheckbox) translationEnabledCheckbox.checked = translationEnabled;
-        if (translationEnabledPlayCheckbox) translationEnabledPlayCheckbox.checked = translationEnabled;
       }
       if (daubModeAutoBtn) {
         daubModeAutoBtn.addEventListener("click", () => {
@@ -3115,20 +3131,6 @@
       if (manualDaubAutoHintCheckbox) {
         manualDaubAutoHintCheckbox.addEventListener("change", () => {
           manualDaubAutoHint = manualDaubAutoHintCheckbox.checked;
-          saveState();
-        });
-      }
-      if (translationEnabledCheckbox) {
-        translationEnabledCheckbox.addEventListener("change", () => {
-          translationEnabled = translationEnabledCheckbox.checked;
-          if (translationEnabledPlayCheckbox) translationEnabledPlayCheckbox.checked = translationEnabled;
-          saveState();
-        });
-      }
-      if (translationEnabledPlayCheckbox) {
-        translationEnabledPlayCheckbox.addEventListener("change", () => {
-          translationEnabled = translationEnabledPlayCheckbox.checked;
-          if (translationEnabledCheckbox) translationEnabledCheckbox.checked = translationEnabled;
           saveState();
         });
       }
