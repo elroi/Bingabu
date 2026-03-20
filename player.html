@@ -199,74 +199,9 @@
           padding: 10px;
         }
       }
-      #bingabu-translate-wrap {
-        position: fixed;
-        top: max(12px, env(safe-area-inset-top));
-        right: max(12px, env(safe-area-inset-right));
-        z-index: 9998;
-        max-width: 200px;
-        min-height: 28px;
-      }
-      #bingabu-translate-wrap.hidden {
-        display: none !important;
-      }
-      @media (max-width: 480px) {
-        #bingabu-translate-wrap {
-          max-width: min(220px, calc(100vw - 24px));
-        }
-      }
-      .bingabu-translate-label {
-        display: block;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-bottom: 4px;
-      }
-      .bingabu-translate-select {
-        font-size: 0.9rem;
-        padding: 6px 10px;
-        border-radius: 8px;
-        border: 2px solid var(--secondary);
-        background: var(--bg);
-        color: var(--text);
-        max-width: 100%;
-        min-width: 160px;
-      }
-      body.translate-visible #game-wrap {
-        padding-top: 44px;
-      }
-      #bingabu-translation-disabled-msg {
-        font-size: 0.85rem;
-        color: var(--text);
-        margin-bottom: 12px;
-      }
-      #bingabu-translation-disabled-msg.hidden {
-        display: none !important;
-      }
     </style>
   </head>
   <body>
-    <div id="bingabu-translate-wrap" class="hidden" role="region" aria-label="Translate this page">
-      <label for="bingabu-translate-select" class="bingabu-translate-label">Translate this page</label>
-      <select id="bingabu-translate-select" class="bingabu-translate-select" aria-label="Choose language (opens in new tab)">
-        <option value="">— Select language —</option>
-        <option value="ar">العربية</option>
-        <option value="zh-CN">中文</option>
-        <option value="fr">Français</option>
-        <option value="de">Deutsch</option>
-        <option value="he">עברית</option>
-        <option value="es">Español</option>
-        <option value="ru">Русский</option>
-        <option value="pt">Português</option>
-        <option value="ja">日本語</option>
-        <option value="ko">한국어</option>
-        <option value="hi">हिन्दी</option>
-        <option value="it">Italiano</option>
-        <option value="nl">Nederlands</option>
-        <option value="pl">Polski</option>
-        <option value="tr">Türkçe</option>
-      </select>
-    </div>
-    <p id="bingabu-translation-disabled-msg" class="hidden" aria-live="polite"></p>
     <div id="game-wrap">
       <h1 id="player-title">Your card</h1>
       <div class="current-wrap">
@@ -291,51 +226,18 @@
         return typeof window !== "undefined" && window.location && window.location.origin ? window.location.origin : "";
       }
 
-      let translationWasEnabled = false;
-
-      // #region agent log
-      const _log = (location, message, data, hypothesisId) => {
-        fetch("http://127.0.0.1:7619/ingest/60fe76b0-4110-4f75-9eed-1b6d8a7909b5", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "f1ed6d" }, body: JSON.stringify({ sessionId: "f1ed6d", location, message, data: data || {}, hypothesisId, timestamp: Date.now() }) }).catch(() => {});
-      };
-      // #endregion
-
-      function applyTranslationUI(state) {
-        const wrap = document.getElementById("bingabu-translate-wrap");
-        const msgEl = document.getElementById("bingabu-translation-disabled-msg");
-        const selectEl = document.getElementById("bingabu-translate-select");
-        if (!wrap) return;
-        const enabled = !!(state && state.translationEnabled);
-        if (enabled) {
-          translationWasEnabled = true;
-          wrap.classList.remove("hidden");
-          document.body.classList.add("translate-visible");
-          if (msgEl) msgEl.classList.add("hidden");
-          if (selectEl && !selectEl.dataset.bound) {
-            selectEl.dataset.bound = "1";
-            selectEl.addEventListener("change", function () {
-              const code = this.value;
-              if (!code) return;
-              const url = "https://translate.google.com/translate?sl=auto&tl=" + encodeURIComponent(code) + "&u=" + encodeURIComponent(window.location.href);
-              window.open(url, "_blank", "noopener,noreferrer");
-              this.value = "";
-            });
-          }
-        } else {
-          wrap.classList.add("hidden");
-          document.body.classList.remove("translate-visible");
-          if (msgEl && translationWasEnabled) {
-            msgEl.textContent = "Translation was disabled by the host. Reload the page to see the original language.";
-            msgEl.classList.remove("hidden");
-          }
-        }
-      }
-
       const params = new URLSearchParams(window.location.search);
+      const hostPlayer = params.get("hostPlayer") === "1";
+      const REMOTE_HOST_ID_KEY = "bingabu-remote-hostId";
       let roomId = params.get("room") || sessionStorage.getItem(JOIN_STORAGE.roomId);
       let slotIndex = parseInt(params.get("slot"), 10);
       if (Number.isNaN(slotIndex)) slotIndex = parseInt(sessionStorage.getItem(JOIN_STORAGE.slotIndex), 10);
       const joinToken = sessionStorage.getItem(JOIN_STORAGE.joinToken);
-      const deviceId = sessionStorage.getItem(JOIN_STORAGE.deviceId);
+      let deviceId = sessionStorage.getItem(JOIN_STORAGE.deviceId);
+      if (hostPlayer) {
+        const hid = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+        if (hid) deviceId = hid;
+      }
 
       const DAUBS_KEY = "bingabu-daubs";
       function getDaubsKey() {
@@ -367,6 +269,9 @@
 
       if (!roomId || (typeof slotIndex !== "number" || slotIndex < 0)) {
         document.getElementById("game-wrap").innerHTML = "<p>Missing room or player. <a href='join.html'>Join a game</a>.</p>";
+      } else if (hostPlayer && !sessionStorage.getItem(REMOTE_HOST_ID_KEY)) {
+        document.getElementById("game-wrap").innerHTML =
+          "<p>Open this link from the same browser where you are hosting (or use <a href='join.html'>Join a game</a>).</p>";
       } else {
         function getColumnClass(col) {
           return ["col-b", "col-i", "col-n", "col-g", "col-o"][col];
@@ -538,8 +443,6 @@
                 if (card[r][c] === "FREE" || drawnSet.has(card[r][c])) markedCount++;
           }
           if (statusEl) statusEl.textContent = `${markedCount}/24 marked`;
-
-          applyTranslationUI(state);
         }
 
         let daubsPushTimer = null;
@@ -549,6 +452,9 @@
             daubsPushTimer = null;
             const headers = { "Content-Type": "application/json" };
             if (joinToken) headers["Authorization"] = "Bearer " + joinToken;
+            if (hostPlayer && sessionStorage.getItem(REMOTE_HOST_ID_KEY)) {
+              headers["X-Host-Id"] = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+            }
             fetch(`${getApiBase()}/api/rooms/${roomId}/daubs`, {
               method: "POST",
               headers,
@@ -569,6 +475,9 @@
         async function fetchRoom() {
           const headers = {};
           if (joinToken) headers["Authorization"] = "Bearer " + joinToken;
+          if (hostPlayer && sessionStorage.getItem(REMOTE_HOST_ID_KEY)) {
+            headers["X-Host-Id"] = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+          }
           const statusEl = document.getElementById("status");
           try {
             const res = await fetch(`${getApiBase()}/api/rooms/${roomId}`, { headers });
@@ -606,7 +515,11 @@
               eventSource.close();
             } catch (_) {}
           }
-          const qs = joinToken ? "?joinToken=" + encodeURIComponent(joinToken) : "";
+          const qsParts = [];
+          if (joinToken) qsParts.push("joinToken=" + encodeURIComponent(joinToken));
+          const streamHostId = hostPlayer ? sessionStorage.getItem(REMOTE_HOST_ID_KEY) : null;
+          if (streamHostId) qsParts.push("hostId=" + encodeURIComponent(streamHostId));
+          const qs = qsParts.length ? "?" + qsParts.join("&") : "";
           const url = getApiBase() + "/api/rooms/" + roomId + "/stream" + qs;
           try {
             eventSource = new EventSource(url);

@@ -704,6 +704,89 @@
         color: var(--secondary);
       }
 
+      .play-wizard-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        padding: 20px;
+        pointer-events: none;
+      }
+      .play-wizard-overlay.hidden {
+        display: none !important;
+      }
+      .play-wizard-modal {
+        position: fixed;
+        background: var(--bg);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        max-width: 420px;
+        width: 100%;
+        padding: 24px;
+        border: 2px solid var(--secondary);
+        pointer-events: auto;
+      }
+      .play-wizard-progress {
+        font-size: 0.85rem;
+        color: #636e72;
+        margin-bottom: 12px;
+      }
+      .play-wizard-title {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1.25rem;
+        margin: 0 0 8px 0;
+      }
+      .play-wizard-body {
+        font-size: 1rem;
+        color: var(--text);
+        margin: 0 0 20px 0;
+        line-height: 1.5;
+      }
+      .play-wizard-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+      }
+      .play-wizard-actions .play-wizard-next,
+      .play-wizard-actions .play-wizard-back,
+      .play-wizard-actions .play-wizard-skip {
+        font-family: "Fredoka One", cursive;
+        cursor: pointer;
+        padding: 10px 20px;
+        border-radius: 50px;
+        border: none;
+        font-size: 0.95rem;
+      }
+      .play-wizard-next {
+        background: var(--secondary);
+        color: white;
+      }
+      .play-wizard-back {
+        background: var(--bg);
+        color: var(--text);
+        border: 2px solid var(--secondary);
+      }
+      .play-wizard-skip {
+        background: transparent;
+        color: #636e72;
+      }
+      .play-wizard-skip:hover {
+        text-decoration: underline;
+      }
+      .play-wizard-highlight {
+        background: var(--bg);
+        color: var(--text);
+        border: 2px solid var(--secondary);
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        scroll-margin-top: 100px;
+      }
+      .play-wizard-show-again-wrap {
+        margin-top: 12px;
+      }
+
       .host-setup-view,
       .host-play-view {
         width: 100%;
@@ -1341,6 +1424,21 @@
       <span class="host-step" id="host-step-4" data-step="4">4. Draw</span>
     </nav>
 
+    <div id="play-wizard-overlay" class="play-wizard-overlay hidden" role="region" aria-label="Play guide" aria-live="polite">
+      <div class="play-wizard-modal">
+        <p id="play-wizard-progress" class="play-wizard-progress">Step 1 of 5</p>
+        <h2 id="play-wizard-title" class="play-wizard-title">Current number</h2>
+        <p id="play-wizard-body" class="play-wizard-body">The last number called appears here.</p>
+        <div class="play-wizard-actions">
+          <button type="button" id="play-wizard-back" class="play-wizard-back">Back</button>
+          <div>
+            <button type="button" id="play-wizard-skip" class="play-wizard-skip">Skip</button>
+            <button type="button" id="play-wizard-next" class="play-wizard-next">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="host-wizard-overlay" class="host-wizard-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="host-wizard-title" aria-live="polite">
       <div class="host-wizard-modal">
         <p id="host-wizard-progress" class="host-wizard-progress">Step 1 of 4</p>
@@ -1426,6 +1524,7 @@
               <p class="remote-play-joined-label">Players joined</p>
               <ul id="remote-play-joined-list" class="remote-play-joined-list" aria-live="polite"></ul>
               <button type="button" id="sync-to-players-btn" class="remote-play-btn secondary" title="Push current state (including daubs) to players so their cards update.">Sync to players</button>
+              <button type="button" id="host-join-as-player-btn-setup" class="remote-play-btn secondary host-join-as-player-btn" title="Open your player card in a new tab while you host here.">Join as player</button>
             </div>
           </div>
         </section>
@@ -1439,14 +1538,14 @@
     </div>
 
     <div id="host-play-view" class="host-play-view hidden">
-    <div class="history-outer">
+    <div class="history-outer" id="play-wizard-history-target">
       <div class="history-container">
         <div id="history-list"></div>
       </div>
     </div>
 
     <div class="controls-band">
-    <div class="controls">
+    <div class="controls" id="play-wizard-draw-target">
       <div id="current-number">--</div>
       <div class="mc-announcement" id="mc-announcement" aria-live="polite"></div>
       <div class="btn-group">
@@ -1460,9 +1559,13 @@
         </div>
         <button type="button" id="new-game-btn" class="host-new-game-in-play">New game</button>
         <button type="button" id="push-to-players-btn" class="push-to-players-btn hidden" title="Show players an indicator on numbers they should have marked.">Push to players</button>
+        <button type="button" id="host-join-as-player-btn" class="host-join-as-player-btn push-to-players-btn hidden" title="Open your player card in a new tab (same device). You stay on this page to call numbers.">Join as player</button>
         <div class="controls-actions">
           <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
         </div>
+        <p class="host-wizard-show-again-wrap play-wizard-show-again-wrap">
+          <button type="button" id="play-wizard-show-again" class="host-wizard-show-again">Show guide</button>
+        </p>
       </div>
     </div>
 
@@ -2533,6 +2636,14 @@
           }
         }
         if (phase === "setup") updateStartGameButton();
+        if (phase === "play") {
+          try {
+            if (!localStorage.getItem(PLAY_WIZARD_DONE_KEY)) {
+              requestAnimationFrame(() => requestAnimationFrame(openPlayWizard));
+            }
+          } catch (_) {}
+        }
+        if (typeof updateHostJoinAsPlayerButton === "function") updateHostJoinAsPlayerButton();
       }
       function updateStartGameButton() {
         if (!hostStartGameBtn) return;
@@ -2572,6 +2683,9 @@
           setTimeout(() => { pushToPlayersBtn.textContent = "Push to players"; }, 1500);
         });
       }
+      document.querySelectorAll(".host-join-as-player-btn").forEach((btn) => {
+        btn.addEventListener("click", () => hostJoinAsPlayer());
+      });
 
       function toggleSetupPlayersExpand() {
         if (!setupPlayersSection || !setupPlayersHeader) return;
@@ -2633,6 +2747,7 @@
         if (remotePlayDetailsSection) remotePlayDetailsSection.classList.add("remote-play-details-collapsed");
         if (remotePlayDetailsHeader) remotePlayDetailsHeader.setAttribute("aria-expanded", "false");
         if (typeof updateHostSteps === "function") updateHostSteps();
+        if (typeof updateHostJoinAsPlayerButton === "function") updateHostJoinAsPlayerButton();
       }
       const remotePlayJoinUrlEl = document.getElementById("remote-play-join-url");
       const remotePlayQrWrap = document.getElementById("remote-play-qr-wrap");
@@ -2670,6 +2785,76 @@
             remotePlayQrWrap.setAttribute("aria-hidden", "true");
           }
         }
+      }
+
+      async function hostJoinAsPlayer() {
+        const roomId = sessionStorage.getItem(REMOTE_ROOM_ID_KEY);
+        const hostId = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+        if (!roomId || !hostId) return;
+        const base = getApiBase();
+        try {
+          const res = await fetch(`${base}/api/rooms/${roomId}`, {
+            headers: { "X-Host-Id": hostId },
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.status === 404 || res.status === 410) {
+            alert("Room no longer exists. Create a new room if needed.");
+            return;
+          }
+          const np = (data.state && data.state.numParticipants) || numParticipants;
+          if (!np || np < 1) {
+            alert("Add at least one player in setup before joining as a player.");
+            return;
+          }
+          const claims = data.claims || {};
+          let slot = -1;
+          for (let i = 0; i < np; i++) {
+            if (claims[String(i)] === hostId) {
+              slot = i;
+              break;
+            }
+          }
+          if (slot < 0) {
+            for (let i = 0; i < np; i++) {
+              if (!Object.prototype.hasOwnProperty.call(claims, String(i))) {
+                slot = i;
+                break;
+              }
+            }
+          }
+          if (slot < 0) {
+            alert("All player slots are taken. Remove a player or add more participants in a new game.");
+            return;
+          }
+          const claimRes = await fetch(`${base}/api/rooms/${roomId}/claim`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Host-Id": hostId },
+            body: JSON.stringify({ slotIndex: slot, deviceId: hostId }),
+          });
+          const claimData = await claimRes.json().catch(() => ({}));
+          if (!claimRes.ok) {
+            alert(claimData.error || "Could not join as player.");
+            return;
+          }
+          try {
+            sessionStorage.setItem("bingabu-slot-index", String(slot));
+            sessionStorage.setItem("bingabu-join-roomId", roomId);
+          } catch (_) {}
+          const playerUrl = `${base}/player.html?room=${encodeURIComponent(roomId)}&slot=${slot}&hostPlayer=1`;
+          window.open(playerUrl, "_blank", "noopener,noreferrer");
+          refreshJoinedList();
+        } catch (_) {
+          alert("Network error. Try again.");
+        }
+      }
+
+      function updateHostJoinAsPlayerButton() {
+        const roomId = sessionStorage.getItem(REMOTE_ROOM_ID_KEY);
+        const hostId = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+        const show = !!(roomId && hostId && numParticipants >= 1);
+        document.querySelectorAll(".host-join-as-player-btn").forEach((btn) => {
+          btn.classList.toggle("hidden", !show);
+        });
       }
 
       async function refreshJoinedList() {
@@ -2774,6 +2959,7 @@
             stateDirtySinceLastPush = false;
             showRemotePlayActive(data.roomId, data.shareUrl, !!body.password);
             updateSyncToPlayersButton();
+            updateHostJoinAsPlayerButton();
             refreshJoinedList();
             let pollInterval = setInterval(refreshJoinedList, 2000);
             window._bingabuRoomPoll = pollInterval;
@@ -2816,6 +3002,7 @@
             ? "Push current state (including daubs) to players so their cards update."
             : "No changes to sync; button enables when you change settings or after a draw.";
         }
+        updateHostJoinAsPlayerButton();
       }
       if (syncToPlayersBtn) {
         syncToPlayersBtn.addEventListener("click", () => {
@@ -2854,6 +3041,7 @@
       }
 
       const ONBOARDING_DONE_KEY = "bingabu-host-onboarding-done";
+      const PLAY_WIZARD_DONE_KEY = "bingabu-play-wizard-done";
       const firstVisitBanner = document.getElementById("first-visit-banner");
       const firstVisitBannerDismiss = document.getElementById("first-visit-banner-dismiss");
       if (firstVisitBanner && firstVisitBannerDismiss) {
@@ -3005,11 +3193,120 @@
         });
       }
 
+      const PLAY_WIZARD_STEPS = [
+        { title: "Current number", body: "The last number called appears here.", highlight: "#current-number", focus: "#current-number" },
+        { title: "History", body: "All called numbers are listed here.", highlight: "#play-wizard-history-target", focus: "#history-list" },
+        { title: "Call numbers", body: "Click DRAW to call the next number. Use Previous to go back.", highlight: "#play-wizard-draw-target", focus: "#draw-btn" },
+        { title: "Call sheet", body: "This is your call sheet. Mark numbers as you call them.", highlight: "#bingo-board", focus: "#bingo-board" },
+        { title: "Players' cards", body: "Players' cards appear here. Ready? Click Done to start calling.", highlight: "#participant-cards-section", focus: "#draw-btn" },
+      ];
+      const playWizardOverlay = document.getElementById("play-wizard-overlay");
+      const playWizardModal = document.querySelector(".play-wizard-modal");
+      const playWizardTitle = document.getElementById("play-wizard-title");
+      const playWizardBody = document.getElementById("play-wizard-body");
+      const playWizardProgress = document.getElementById("play-wizard-progress");
+      const playWizardBack = document.getElementById("play-wizard-back");
+      const playWizardSkip = document.getElementById("play-wizard-skip");
+      const playWizardNext = document.getElementById("play-wizard-next");
+      const playWizardShowAgain = document.getElementById("play-wizard-show-again");
+      let playWizardStep = 1;
+      let playWizardHighlightEl = null;
+
+      function removePlayWizardHighlight() {
+        if (playWizardHighlightEl) {
+          playWizardHighlightEl.classList.remove("play-wizard-highlight");
+          playWizardHighlightEl = null;
+        }
+      }
+
+      function positionPlayWizardModal(targetEl) {
+        if (!playWizardModal || !targetEl) return;
+        const gap = 16;
+        const padding = 20;
+        const rect = targetEl.getBoundingClientRect();
+        const modalRect = playWizardModal.getBoundingClientRect();
+        const viewportW = window.innerWidth;
+        const viewportH = window.innerHeight;
+        let top = rect.bottom + gap;
+        let left = rect.left;
+        if (top + modalRect.height > viewportH - padding) top = Math.max(padding, rect.top - modalRect.height - gap);
+        if (left + modalRect.width > viewportW - padding) left = viewportW - padding - modalRect.width;
+        if (left < padding) left = padding;
+        playWizardModal.style.top = top + "px";
+        playWizardModal.style.left = left + "px";
+      }
+
+      function applyPlayWizardStep(step) {
+        playWizardStep = step;
+        const config = PLAY_WIZARD_STEPS[step - 1];
+        if (playWizardTitle) playWizardTitle.textContent = config.title;
+        if (playWizardBody) playWizardBody.textContent = config.body;
+        if (playWizardProgress) playWizardProgress.textContent = `Step ${step} of 5`;
+        removePlayWizardHighlight();
+        const target = document.querySelector(config.highlight);
+        if (target) {
+          playWizardHighlightEl = target;
+          target.classList.add("play-wizard-highlight");
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        if (playWizardBack) playWizardBack.classList.toggle("hidden", step === 1);
+        if (playWizardNext) {
+          playWizardNext.textContent = step === 5 ? "Done" : "Next";
+        }
+        if (target) {
+          requestAnimationFrame(() => {
+            positionPlayWizardModal(target);
+            const focusEl = config.focus && document.querySelector(config.focus);
+            if (focusEl && typeof focusEl.focus === "function") focusEl.focus();
+          });
+        }
+      }
+
+      function closePlayWizard() {
+        try {
+          localStorage.setItem(PLAY_WIZARD_DONE_KEY, "1");
+        } catch (_) {}
+        removePlayWizardHighlight();
+        if (playWizardOverlay) playWizardOverlay.classList.add("hidden");
+      }
+
+      function openPlayWizard() {
+        playWizardStep = 1;
+        if (playWizardOverlay) playWizardOverlay.classList.remove("hidden");
+        applyPlayWizardStep(1);
+      }
+
+      if (playWizardNext) {
+        playWizardNext.addEventListener("click", () => {
+          if (playWizardStep < 5) applyPlayWizardStep(playWizardStep + 1);
+          else closePlayWizard();
+        });
+      }
+      if (playWizardBack) {
+        playWizardBack.addEventListener("click", () => {
+          if (playWizardStep > 1) applyPlayWizardStep(playWizardStep - 1);
+          if (playWizardBack) playWizardBack.focus();
+        });
+      }
+      if (playWizardSkip) playWizardSkip.addEventListener("click", closePlayWizard);
+      if (playWizardShowAgain) {
+        playWizardShowAgain.addEventListener("click", () => {
+          try {
+            localStorage.removeItem(PLAY_WIZARD_DONE_KEY);
+          } catch (_) {}
+          openPlayWizard();
+        });
+      }
+
       document.addEventListener("keydown", (e) => {
         if (e.key !== "Escape") return;
         if (hostWizardOverlay && !hostWizardOverlay.classList.contains("hidden")) {
           e.preventDefault();
           closeHostWizard();
+        }
+        if (playWizardOverlay && !playWizardOverlay.classList.contains("hidden")) {
+          e.preventDefault();
+          closePlayWizard();
         }
       });
 
@@ -3089,6 +3386,7 @@
         if (participantNamesEl) renderParticipantNameInputs();
         renderParticipantCards(null);
         if (typeof updateHostSteps === "function") updateHostSteps();
+        if (typeof updateHostJoinAsPlayerButton === "function") updateHostJoinAsPlayerButton();
       }
       numParticipantsInput.addEventListener("input", syncParticipantsFromInput);
       numParticipantsInput.addEventListener("change", syncParticipantsFromInput);

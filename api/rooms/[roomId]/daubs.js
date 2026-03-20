@@ -20,7 +20,7 @@ function getAuth(req) {
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Host-Id");
 
   if (req.method === "OPTIONS") {
     return res.status(204).end();
@@ -42,10 +42,11 @@ export default async function handler(req, res) {
 
   const auth = getAuth(req);
   const isPasswordProtected = !!(room.passwordHash && room.passwordSalt);
-  const isHost = auth && req.headers["x-host-id"] === room.hostId;
+  const hostHeader = req.headers["x-host-id"];
+  const isHostRequest = typeof hostHeader === "string" && hostHeader === room.hostId;
   const hasJoinToken = auth && auth.type === "joinToken" && auth.roomId === roomId;
 
-  if (isPasswordProtected && !isHost && !hasJoinToken) {
+  if (isPasswordProtected && !isHostRequest && !hasJoinToken) {
     return res.status(403).json({ error: "Password required" });
   }
 
@@ -68,6 +69,10 @@ export default async function handler(req, res) {
   }
   if (!Array.isArray(daubs)) {
     return res.status(400).json({ error: "Invalid daubs" });
+  }
+
+  if (deviceId === room.hostId && !isHostRequest) {
+    return res.status(403).json({ error: "Host authentication required for host player device id" });
   }
 
   room.claims = room.claims || {};
