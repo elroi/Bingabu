@@ -2,6 +2,7 @@
  * User stories:
  * - As a host with an online room, I want to open my own player card in another tab so I can daub while calling numbers.
  * - As the system, we require X-Host-Id when using hostId as deviceId so random clients cannot impersonate the host player slot.
+ * - sessionStorage is per tab; host credentials pass to the new tab via a short-lived localStorage handoff.
  */
 import { describe, it, expect, beforeEach } from "vitest";
 import { readFileSync } from "fs";
@@ -226,5 +227,15 @@ describe("Host join as player: UI markers", () => {
     expect(html).toMatch(/hostPlayer/);
     expect(html).toMatch(/bingabu-remote-hostId/);
     expect(html).toMatch(/X-Host-Id/i);
+  });
+
+  it("bingo.html writes localStorage handoff so a new tab can read hostId (sessionStorage is per-tab)", () => {
+    const html = readFileSync(join(__dirname, "bingo.html"), "utf8");
+    expect(html).toMatch(/bingabu-host-player-handoff/);
+  });
+
+  it("player.html consumes host-player handoff from localStorage when hostPlayer=1", () => {
+    const html = readFileSync(join(__dirname, "player.html"), "utf8");
+    expect(html).toMatch(/bingabu-host-player-handoff/);
   });
 });

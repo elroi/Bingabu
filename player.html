@@ -229,14 +229,36 @@
       const params = new URLSearchParams(window.location.search);
       const hostPlayer = params.get("hostPlayer") === "1";
       const REMOTE_HOST_ID_KEY = "bingabu-remote-hostId";
+      const HOST_PLAYER_HANDOFF_KEY = "bingabu-host-player-handoff";
       let roomId = params.get("room") || sessionStorage.getItem(JOIN_STORAGE.roomId);
       let slotIndex = parseInt(params.get("slot"), 10);
       if (Number.isNaN(slotIndex)) slotIndex = parseInt(sessionStorage.getItem(JOIN_STORAGE.slotIndex), 10);
       const joinToken = sessionStorage.getItem(JOIN_STORAGE.joinToken);
       let deviceId = sessionStorage.getItem(JOIN_STORAGE.deviceId);
+
+      function consumeHostPlayerHandoff() {
+        try {
+          const raw = localStorage.getItem(HOST_PLAYER_HANDOFF_KEY);
+          if (!raw) return null;
+          const h = JSON.parse(raw);
+          if (!h || typeof h !== "object") return null;
+          if (typeof h.expiresAt !== "number" || h.expiresAt < Date.now()) {
+            localStorage.removeItem(HOST_PLAYER_HANDOFF_KEY);
+            return null;
+          }
+          if (h.roomId !== roomId || Number(h.slot) !== slotIndex || !h.hostId) return null;
+          localStorage.removeItem(HOST_PLAYER_HANDOFF_KEY);
+          return String(h.hostId);
+        } catch (_) {
+          return null;
+        }
+      }
+
+      let hostPlayerHostId = null;
       if (hostPlayer) {
-        const hid = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
-        if (hid) deviceId = hid;
+        hostPlayerHostId = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+        if (!hostPlayerHostId) hostPlayerHostId = consumeHostPlayerHandoff();
+        if (hostPlayerHostId) deviceId = hostPlayerHostId;
       }
 
       const DAUBS_KEY = "bingabu-daubs";
@@ -269,9 +291,9 @@
 
       if (!roomId || (typeof slotIndex !== "number" || slotIndex < 0)) {
         document.getElementById("game-wrap").innerHTML = "<p>Missing room or player. <a href='join.html'>Join a game</a>.</p>";
-      } else if (hostPlayer && !sessionStorage.getItem(REMOTE_HOST_ID_KEY)) {
+      } else if (hostPlayer && !hostPlayerHostId) {
         document.getElementById("game-wrap").innerHTML =
-          "<p>Open this link from the same browser where you are hosting (or use <a href='join.html'>Join a game</a>).</p>";
+          "<p>Could not verify host session. Use <strong>Join as player</strong> again from your host tab, or <a href='join.html'>join the game</a> with the room code.</p>";
       } else {
         function getColumnClass(col) {
           return ["col-b", "col-i", "col-n", "col-g", "col-o"][col];
@@ -452,8 +474,8 @@
             daubsPushTimer = null;
             const headers = { "Content-Type": "application/json" };
             if (joinToken) headers["Authorization"] = "Bearer " + joinToken;
-            if (hostPlayer && sessionStorage.getItem(REMOTE_HOST_ID_KEY)) {
-              headers["X-Host-Id"] = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+            if (hostPlayer && hostPlayerHostId) {
+              headers["X-Host-Id"] = hostPlayerHostId;
             }
             fetch(`${getApiBase()}/api/rooms/${roomId}/daubs`, {
               method: "POST",
@@ -475,8 +497,8 @@
         async function fetchRoom() {
           const headers = {};
           if (joinToken) headers["Authorization"] = "Bearer " + joinToken;
-          if (hostPlayer && sessionStorage.getItem(REMOTE_HOST_ID_KEY)) {
-            headers["X-Host-Id"] = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+          if (hostPlayer && hostPlayerHostId) {
+            headers["X-Host-Id"] = hostPlayerHostId;
           }
           const statusEl = document.getElementById("status");
           try {
@@ -517,7 +539,7 @@
           }
           const qsParts = [];
           if (joinToken) qsParts.push("joinToken=" + encodeURIComponent(joinToken));
-          const streamHostId = hostPlayer ? sessionStorage.getItem(REMOTE_HOST_ID_KEY) : null;
+          const streamHostId = hostPlayer && hostPlayerHostId ? hostPlayerHostId : null;
           if (streamHostId) qsParts.push("hostId=" + encodeURIComponent(streamHostId));
           const qs = qsParts.length ? "?" + qsParts.join("&") : "";
           const url = getApiBase() + "/api/rooms/" + roomId + "/stream" + qs;

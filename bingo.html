@@ -2840,6 +2840,17 @@
             sessionStorage.setItem("bingabu-slot-index", String(slot));
             sessionStorage.setItem("bingabu-join-roomId", roomId);
           } catch (_) {}
+          try {
+            localStorage.setItem(
+              "bingabu-host-player-handoff",
+              JSON.stringify({
+                roomId,
+                hostId,
+                slot,
+                expiresAt: Date.now() + 5 * 60 * 1000,
+              })
+            );
+          } catch (_) {}
           const playerUrl = `${base}/player.html?room=${encodeURIComponent(roomId)}&slot=${slot}&hostPlayer=1`;
           window.open(playerUrl, "_blank", "noopener,noreferrer");
           refreshJoinedList();
