@@ -201,6 +201,9 @@ describe("i18n HTML wiring", () => {
     expect(bingo).toMatch(/data-i18n="bingo\.setup\.whoPlaying"/);
     expect(bingo).toMatch(/data-i18n="bingo\.leaderboard\.heading"/);
     expect(bingo).toMatch(/id="bingo-board"[^>]*dir="ltr"/);
+    expect(bingo).toMatch(
+      /html\[dir="rtl"\][\s\S]*?section-chevron[\s\S]*?rotate\(90deg\)/
+    );
   });
 
   it("index.html and join.html expose expected data-i18n keys", () => {

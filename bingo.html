@@ -1186,6 +1186,13 @@
       .participant-cards-section.cards-collapsed .section-chevron {
         transform: rotate(-90deg);
       }
+      /* RTL: collapsed chevron points left (like native <summary>), not right */
+      html[dir="rtl"] .setup-players-section.setup-players-collapsed .section-chevron,
+      html[dir="rtl"] .remote-play-details-section.remote-play-details-collapsed .section-chevron,
+      html[dir="rtl"] .advanced-controls-card.advanced-controls-collapsed .section-chevron,
+      html[dir="rtl"] .participant-cards-section.cards-collapsed .section-chevron {
+        transform: rotate(90deg);
+      }
       .participant-cards-section.cards-collapsed .participant-cards-grid {
         display: none;
       }
