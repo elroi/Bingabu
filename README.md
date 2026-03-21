@@ -41,7 +41,7 @@ A web app for running 75-ball Bingo: caller/organizer view with participant card
 
 - Open **`/admin-translations.html`** (same origin as the app). Use a long random **Bearer** token set in Vercel as **`BINGABU_ADMIN_LOCALES_TOKEN`** (Environment Variables → Production). Saving edits requires the same **Upstash Redis** vars as rooms: overrides are stored per locale under `bingabu:i18n:overrides:*`. The public site loads copy from **`GET /api/locales/{en|he}`**, which merges Redis overrides on top of the committed JSON in `locales/`. Repo JSON remains the source of truth for new keys; use git for bulk or structural changes.
 
-## Legal placeholders
+## Legal
 
-- **[privacy.html](privacy.html)** and **[terms.html](terms.html)** are placeholders. Replace with your real policies before a public launch.
+- **[privacy.html](privacy.html)** and **[terms.html](terms.html)** ship with a **Privacy Policy** and **Terms of Service** (English and Hebrew via `locales/*.json`). They describe Bingabu’s no-account multiplayer flow, hosting/subprocessors (e.g. Vercel, optional Redis/Sentry), retention, and casual-play disclaimers. **They are not a substitute for legal advice:** add your operator name, contact details, and jurisdiction-specific terms as needed, and have counsel review before commercial or regulated use.
 - **Prizes or money** in real-money or sweepstakes-style games can trigger gambling or promotion laws in your jurisdiction—get appropriate advice if you go beyond casual free play with friends.

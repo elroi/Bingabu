@@ -37,15 +37,47 @@
     <style>
       body {
         font-family: "Quicksand", sans-serif;
-        max-width: 40rem;
+        max-width: 42rem;
         margin: 2rem auto;
         padding: 0 max(1rem, env(safe-area-inset-right)) 0 max(1rem, env(safe-area-inset-left));
         padding-top: max(2rem, env(safe-area-inset-top));
         padding-bottom: max(2rem, env(safe-area-inset-bottom));
-        line-height: 1.5;
+        line-height: 1.55;
       }
       a {
         color: #4ecdc4;
+      }
+      .legal-meta {
+        color: #555;
+        font-size: 0.95rem;
+        margin-top: -0.25rem;
+      }
+      .legal-doc section {
+        margin-top: 1.35rem;
+      }
+      .legal-doc h2 {
+        font-size: 1.12rem;
+        margin: 0 0 0.5rem;
+      }
+      .legal-doc p {
+        margin: 0 0 0.65rem;
+      }
+      .legal-doc ul {
+        margin: 0 0 0.65rem;
+        padding-inline-start: 1.35rem;
+      }
+      .legal-doc li {
+        margin-bottom: 0.45rem;
+      }
+      .legal-footer {
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e8e8e8;
+        font-size: 0.9rem;
+        color: #555;
+      }
+      .legal-nav {
+        margin-top: 1.25rem;
       }
       @media (max-width: 600px) {
         body {
@@ -55,10 +87,75 @@
     </style>
   </head>
   <body>
-    <main>
+    <main class="legal-doc">
       <h1 data-i18n="privacy.heading"></h1>
-      <p data-i18n="privacy.body"></p>
+      <p class="legal-meta" data-i18n="privacy.meta.updated"></p>
+      <p data-i18n="privacy.intro.p1"></p>
+      <p data-i18n="privacy.intro.p2"></p>
+
+      <section aria-labelledby="privacy-s1">
+        <h2 id="privacy-s1" data-i18n="privacy.s1.title"></h2>
+        <p data-i18n="privacy.s1.intro"></p>
+        <ul>
+          <li data-i18n="privacy.s1.li1"></li>
+          <li data-i18n="privacy.s1.li2"></li>
+          <li data-i18n="privacy.s1.li3"></li>
+          <li data-i18n="privacy.s1.li4"></li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="privacy-s2">
+        <h2 id="privacy-s2" data-i18n="privacy.s2.title"></h2>
+        <p data-i18n="privacy.s2.p1"></p>
+        <p data-i18n="privacy.s2.p2"></p>
+      </section>
+
+      <section aria-labelledby="privacy-s3">
+        <h2 id="privacy-s3" data-i18n="privacy.s3.title"></h2>
+        <p data-i18n="privacy.s3.p1"></p>
+        <p data-i18n="privacy.s3.p2"></p>
+      </section>
+
+      <section aria-labelledby="privacy-s4">
+        <h2 id="privacy-s4" data-i18n="privacy.s4.title"></h2>
+        <p data-i18n="privacy.s4.p1"></p>
+        <p data-i18n="privacy.s4.p2"></p>
+      </section>
+
+      <section aria-labelledby="privacy-s5">
+        <h2 id="privacy-s5" data-i18n="privacy.s5.title"></h2>
+        <p data-i18n="privacy.s5.p1"></p>
+        <p data-i18n="privacy.s5.p2"></p>
+      </section>
+
+      <section aria-labelledby="privacy-s6">
+        <h2 id="privacy-s6" data-i18n="privacy.s6.title"></h2>
+        <p data-i18n="privacy.s6.p1"></p>
+      </section>
+
+      <section aria-labelledby="privacy-s7">
+        <h2 id="privacy-s7" data-i18n="privacy.s7.title"></h2>
+        <p data-i18n="privacy.s7.p1"></p>
+      </section>
+
+      <section aria-labelledby="privacy-s8">
+        <h2 id="privacy-s8" data-i18n="privacy.s8.title"></h2>
+        <p data-i18n="privacy.s8.p1"></p>
+      </section>
+
+      <section aria-labelledby="privacy-s9">
+        <h2 id="privacy-s9" data-i18n="privacy.s9.title"></h2>
+        <p data-i18n="privacy.s9.p1"></p>
+      </section>
+
+      <p class="legal-nav">
+        <a href="terms.html" data-i18n="privacy.link.termsLabel"></a>
+      </p>
       <p><a href="index.html" data-i18n="join.back"></a></p>
+
+      <footer class="legal-footer">
+        <p data-i18n="privacy.footer.note"></p>
+      </footer>
     </main>
     <script type="module">
       import { initI18n, t } from "./i18n.js";
