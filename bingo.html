@@ -581,13 +581,9 @@
       }
       .advanced-controls-content {
         margin-top: 16px;
-      }
-      .advanced-controls-card .hide-cards-setting,
-      .advanced-controls-card .mc-setting {
-        justify-content: flex-start;
-      }
-      .advanced-controls-card .mc-advanced {
-        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
       }
 
       .host-steps {
@@ -1087,23 +1083,30 @@
       .participant-player-block {
         margin-bottom: 10px;
       }
-      .hide-cards-setting {
+      .advanced-controls-option {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 8px;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 10px;
       }
-      .hide-cards-setting label {
+      .advanced-controls-option input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        margin: 0;
+        margin-top: 0.2em;
+        cursor: pointer;
+        accent-color: var(--secondary);
+      }
+      .advanced-controls-option label {
+        flex: 1;
+        min-width: 0;
         font-size: 0.9rem;
         color: var(--text);
         cursor: pointer;
       }
-      .hide-cards-setting input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-        accent-color: var(--secondary);
+      .advanced-controls-option--nested {
+        padding-inline-start: 1.25rem;
       }
 
       .mc-announcement {
@@ -1114,28 +1117,9 @@
         font-style: italic;
         text-align: center;
       }
-      .mc-setting {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 8px;
-      }
-      .mc-setting label {
-        font-size: 0.9rem;
-        color: var(--text);
-        cursor: pointer;
-      }
-      .mc-setting input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-        accent-color: var(--secondary);
-      }
-
       .mc-advanced {
-        margin-top: 12px;
-        text-align: left;
+        margin-top: 0;
+        text-align: start;
       }
       .mc-advanced-toggle {
         background: none;
@@ -1811,23 +1795,23 @@
     <section class="advanced-controls-card" id="advanced-controls-card">
       <h2 id="advanced-controls-header" class="advanced-controls-card-title" role="button" tabindex="0" aria-expanded="true" aria-controls="advanced-controls-content"><span data-i18n="bingo.settings.heading">Settings & options</span> <span class="section-chevron" aria-hidden="true">▼</span></h2>
       <div class="advanced-controls-content" id="advanced-controls-content">
-        <div class="hide-cards-setting">
+        <div class="advanced-controls-option">
           <input type="checkbox" id="hide-cards" />
           <label for="hide-cards" data-i18n="bingo.settings.hideCards">Hide cards (use your own)</label>
         </div>
-        <div class="manual-daub-setting">
+        <div class="advanced-controls-option">
           <input type="checkbox" id="manual-daub-only" data-i18n="bingo.settings.manualDaub" data-i18n-attr="aria-label" />
           <label for="manual-daub-only" data-i18n="bingo.settings.manualDaub">Players mark their own numbers (no auto-coloring)</label>
         </div>
-        <div class="manual-daub-auto-hint-setting hidden" id="manual-daub-auto-hint-wrap">
+        <div class="advanced-controls-option advanced-controls-option--nested hidden" id="manual-daub-auto-hint-wrap">
           <input type="checkbox" id="manual-daub-auto-hint" checked data-i18n="bingo.settings.hintFrame" data-i18n-attr="aria-label" />
           <label for="manual-daub-auto-hint" data-i18n="bingo.settings.hintFrame">Show hint on numbers to mark (manual daub)</label>
         </div>
-        <div class="mc-setting">
+        <div class="advanced-controls-option">
           <input type="checkbox" id="mc-announces" checked />
           <label for="mc-announces" data-i18n="bingo.settings.mcAnnounces">MC announces numbers</label>
         </div>
-        <div class="mc-setting">
+        <div class="advanced-controls-option">
           <input type="checkbox" id="mc-simple" />
           <label for="mc-simple" data-i18n="bingo.settings.mcSimple">Simple MC (numbers only)</label>
         </div>
