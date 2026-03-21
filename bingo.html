@@ -749,11 +749,11 @@
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
         scroll-margin-top: 100px;
       }
-      .host-wizard-show-again-wrap {
+      .wizard-show-again-wrap {
         text-align: center;
         margin: 12px 0 0 0;
       }
-      .host-setup-actions .host-wizard-show-again-wrap {
+      .host-setup-actions .wizard-show-again-wrap {
         margin-top: 12px;
       }
       .host-wizard-show-again {
@@ -1613,7 +1613,7 @@
       <span class="host-step" id="host-step-4" data-step="4" data-i18n="bingo.hostStep.4">4. Draw</span>
     </nav>
 
-    <div id="play-wizard-overlay" class="play-wizard-overlay hidden" role="region" data-i18n-attr="aria-label" data-i18n="bingo.playWizard.regionAria" aria-label="Play guide" aria-live="polite">
+    <div id="play-wizard-overlay" class="play-wizard-overlay hidden" role="dialog" aria-modal="false" aria-labelledby="play-wizard-title">
       <div class="play-wizard-modal">
         <p id="play-wizard-progress" class="play-wizard-progress">Step 1 of 5</p>
         <h2 id="play-wizard-title" class="play-wizard-title">Current number</h2>
@@ -1740,7 +1740,7 @@
       </section>
       <div class="host-setup-actions">
         <button type="button" id="host-start-game-btn" class="host-btn-primary" disabled data-i18n="bingo.startGame">Start the game</button>
-        <p class="host-wizard-show-again-wrap">
+        <p id="host-setup-wizard-show-again-wrap" class="wizard-show-again-wrap">
           <button type="button" id="host-wizard-show-again" class="host-wizard-show-again" data-i18n="index.wizard.showGuide">Show guide</button>
         </p>
       </div>
@@ -1755,7 +1755,7 @@
 
     <div class="controls-band">
     <div class="controls" id="play-wizard-draw-target">
-      <div id="current-number">--</div>
+      <div id="current-number" aria-live="polite" aria-atomic="true">--</div>
       <div class="mc-announcement" id="mc-announcement" aria-live="polite" dir="auto"></div>
       <div id="host-key-mapping-panel" class="host-key-mapping-panel hidden" aria-live="polite">
         <h3 class="host-key-mapping-title" data-i18n="bingo.hostKeyMapping.title">How each player sees the last call</h3>
@@ -1779,7 +1779,7 @@
         <div class="controls-actions">
           <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link" data-i18n="bingo.printCards">Print these cards</a>
         </div>
-        <p class="host-wizard-show-again-wrap play-wizard-show-again-wrap">
+        <p id="host-play-wizard-show-again-wrap" class="wizard-show-again-wrap play-wizard-show-again-wrap">
           <button type="button" id="play-wizard-show-again" class="host-wizard-show-again" data-i18n="index.wizard.showGuide">Show guide</button>
         </p>
       </div>
@@ -2008,7 +2008,9 @@
       const newGameBtn = document.getElementById("new-game-btn");
       const pushToPlayersBtn = document.getElementById("push-to-players-btn");
       const hostStepsNav = document.getElementById("host-steps");
-      const hostWizardShowAgainWrap = document.querySelector(".host-wizard-show-again-wrap");
+      const hostSetupWizardShowAgainWrap = document.getElementById(
+        "host-setup-wizard-show-again-wrap"
+      );
 
       const POINTS_PER_LINE = 10;
       // MC voice: defaults and optional random variation (advanced panel can override)
@@ -3115,7 +3117,8 @@
         if (hostSetupView) hostSetupView.classList.toggle("hidden", phase !== "setup");
         if (hostPlayView) hostPlayView.classList.toggle("hidden", phase !== "play");
         if (hostStepsNav) hostStepsNav.classList.toggle("hidden", phase !== "setup");
-        if (hostWizardShowAgainWrap) hostWizardShowAgainWrap.classList.toggle("hidden", phase !== "setup");
+        if (hostSetupWizardShowAgainWrap)
+          hostSetupWizardShowAgainWrap.classList.toggle("hidden", phase !== "setup");
         const firstVisitBanner = document.getElementById("first-visit-banner");
         if (firstVisitBanner) {
           try {
@@ -3126,13 +3129,6 @@
           }
         }
         if (phase === "setup") updateStartGameButton();
-        if (phase === "play") {
-          try {
-            if (!localStorage.getItem(PLAY_WIZARD_DONE_KEY)) {
-              requestAnimationFrame(() => requestAnimationFrame(openPlayWizard));
-            }
-          } catch (_) {}
-        }
         if (typeof updateHostJoinAsPlayerButton === "function") updateHostJoinAsPlayerButton();
       }
       function updateStartGameButton() {
@@ -3754,6 +3750,7 @@
       const playWizardShowAgain = document.getElementById("play-wizard-show-again");
       let playWizardStep = 1;
       let playWizardHighlightEl = null;
+      let playWizardReturnFocus = null;
 
       function removePlayWizardHighlight() {
         if (playWizardHighlightEl) {
@@ -3813,9 +3810,17 @@
         } catch (_) {}
         removePlayWizardHighlight();
         if (playWizardOverlay) playWizardOverlay.classList.add("hidden");
+        const toFocus = playWizardReturnFocus;
+        playWizardReturnFocus = null;
+        if (toFocus && typeof toFocus.focus === "function") {
+          try {
+            toFocus.focus();
+          } catch (_) {}
+        }
       }
 
       function openPlayWizard() {
+        playWizardReturnFocus = document.activeElement;
         playWizardStep = 1;
         if (playWizardOverlay) playWizardOverlay.classList.remove("hidden");
         applyPlayWizardStep(1);
@@ -3864,6 +3869,23 @@
         hostWizardOverlay.addEventListener("keydown", (e) => {
           if (e.key !== "Tab") return;
           const list = focusables();
+          if (list.length === 0) return;
+          const i = list.indexOf(document.activeElement);
+          if (i === -1) return;
+          e.preventDefault();
+          const next = e.shiftKey ? list[(i - 1 + list.length) % list.length] : list[(i + 1) % list.length];
+          if (next) next.focus();
+        });
+      }
+
+      if (playWizardOverlay) {
+        const playWizardFocusables = () =>
+          [playWizardBack, playWizardSkip, playWizardNext].filter(
+            (el) => el && !el.classList.contains("hidden") && !el.disabled
+          );
+        playWizardOverlay.addEventListener("keydown", (e) => {
+          if (e.key !== "Tab") return;
+          const list = playWizardFocusables();
           if (list.length === 0) return;
           const i = list.indexOf(document.activeElement);
           if (i === -1) return;

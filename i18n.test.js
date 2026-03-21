@@ -199,6 +199,13 @@ describe("locale files", () => {
     expect(he["bingo.controls.draw"]).toBe("הגרלה");
   });
 
+  it("player reconnecting status is localized in en and he", () => {
+    const en = readJson("en.json");
+    const he = readJson("he.json");
+    expect(en["player.status.reconnecting"]).toMatch(/Reconnecting/i);
+    expect(he["player.status.reconnecting"]).toMatch(/מתחבר/);
+  });
+
   it("Hebrew caller tooltips describe RTL keys (right/back = prev, left/space = draw)", () => {
     const he = readJson("he.json");
     expect(he["bingo.controls.prevTitle"]).toMatch(/חץ ימין/);

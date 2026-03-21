@@ -68,6 +68,7 @@
   "player.heading": "הכרטיס שלך",
   "player.titleWithName": "{name} – הכרטיס שלך",
   "player.statusMarked": "{count}/24 מסומנים",
+  "player.status.reconnecting": "מתחבר מחדש…",
   "player.bingoPrefix": "BINGABU!",
   "player.leave": "יציאה מהמשחק",
   "player.error.missing": "חדר או שחקן חסרים.",

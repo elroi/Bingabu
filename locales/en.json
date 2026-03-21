@@ -68,6 +68,7 @@
   "player.heading": "Your card",
   "player.titleWithName": "{name} – Your card",
   "player.statusMarked": "{count}/24 marked",
+  "player.status.reconnecting": "Reconnecting…",
   "player.bingoPrefix": "BINGABU!",
   "player.leave": "Leave game",
   "player.error.missing": "Missing room or player.",

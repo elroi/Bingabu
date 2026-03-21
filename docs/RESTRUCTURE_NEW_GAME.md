@@ -132,25 +132,13 @@ This makes the new game experience a single, linear flow (setup) followed by the
 
 ---
 
-## Is this optimal? (UX review)
+## UX follow-ups (historical → current)
 
-A few things are still not ideal:
+Earlier iterations mixed setup and play on one screen and showed setup-oriented UI (step strip, first-visit tips) after “Start the game,” which was confusing. **Current behavior:**
 
-1. **Top section in play view**  
-   In play view we show the step strip (1. Players → … → 5. Draw) and the first-visit banner. But the host has *already* done those steps—they clicked “Start the game.” So:
-   - The **step strip** describes setup, not “you are here” in the game. It adds noise. **Option:** Remove the step strip in play view and keep only logo + “New game” (or a single line like “Calling numbers”).
-   - The **first-visit banner** (“Set players, click Generate cards…”) appears *after* they’ve done that. **Option:** Don’t show the banner in play view at all; rely on setup view as the only guide, or show the banner only in *setup* view (and hide it once they click “Start the game”).
+- **Play vs setup chrome:** In **play** phase, the host step strip and first-visit banner are hidden; they appear only in **setup** (`applyPhase` in `bingo.html`).
+- **First-visit banner:** Shown only in setup when onboarding is not done; dismissed or cleared when the host completes onboarding (e.g. “Start the game”).
+- **Host setup wizard:** Can still open automatically on first visit in **setup** phase when onboarding is not done (`openHostWizard`).
+- **Play / calling wizard:** Explains the **calling** UI (current number, history, DRAW, board, participant cards). It does **not** auto-open when entering play; hosts open it with **Show guide** in the play controls when they want a tour.
 
-2. **Wizard overlay**  
-   The wizard opens only when phase is play and onboarding not done—so right after “Start the game” they get a modal that walks the same steps they just did. **Option:** Either open the wizard in *setup* view (guide before they act) or remove it and rely on the linear setup view as the guide.
-
-3. **Two “help” entry points**  
-   “Show guide again” (wizard) and the first-visit banner are two ways to get tips. **Option:** One entry point only, e.g. “Show guide again” that either re-opens the wizard or shows a short inline tip, and remove the persistent banner.
-
-**Recommended simplifications (implemented)**
-
-- **Play view top section:** Logo only (and “New game” in the controls). Step strip and first-visit banner are hidden in play view; they show only in setup view.
-- **First-visit banner:** Shown only in setup view when onboarding not done; hidden when they click “Start the game” (onboarding done), so they see it at most once on the setup screen.
-- **Wizard:** Opens in setup view when onboarding not done. “Show guide again” is shown only in setup view.
-
-Setup is now the only “guided” experience; play view is a minimal calling screen.
+Help entry points: **setup** uses the first-visit banner plus optional host wizard; **play** uses **Show guide** for the calling wizard only.

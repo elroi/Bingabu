@@ -623,7 +623,8 @@
             if (data.state) render(data.state);
           } catch (_) {
             failCount++;
-            if (statusEl) statusEl.textContent = failCount >= 2 ? "Reconnecting…" : "";
+            if (statusEl)
+              statusEl.textContent = failCount >= 2 ? t("player.status.reconnecting") : "";
           }
         }
 
