@@ -16,6 +16,7 @@ function readJson(name) {
 
 describe("second-pass UX: locales", () => {
   const keys = [
+    "a11y.skipToMain",
     "player.bingo.row",
     "player.bingo.col",
     "player.bingo.diagMain",
@@ -75,5 +76,39 @@ describe("second-pass UX: HTML contracts", () => {
     const html = readFileSync(join(repoRoot, "index.html"), "utf-8");
     expect(html).toMatch(/id="home-wizard-overlay"[^>]*role="dialog"/);
     expect(html).toMatch(/homeWizardReturnFocus/);
+  });
+
+  it("busy pages expose skip-to-main targeting #main-content", () => {
+    const pages = [
+      "bingo.html",
+      "join.html",
+      "player.html",
+      "spectator.html",
+      "cards.html",
+      "index.html",
+    ];
+    for (const name of pages) {
+      const html = readFileSync(join(repoRoot, name), "utf-8");
+      expect(html, name).toMatch(/href="#main-content"/);
+      expect(html, name).toMatch(/class="skip-to-main"/);
+      expect(html, name).toMatch(/data-i18n="a11y\.skipToMain"/);
+      expect(html, name).toMatch(/<main[^>]*id="main-content"/);
+    }
+  });
+
+  it("join.html closes QR scanner on Escape when overlay is open", () => {
+    const html = readFileSync(join(repoRoot, "join.html"), "utf-8");
+    expect(html).toMatch(/e\.key !== "Escape"/);
+    expect(html).toMatch(/closeQrScanner\(\)/);
+  });
+
+  it("player.html SSE resyncs on open, announces reconnect on error, and current-number is atomic", () => {
+    const html = readFileSync(join(repoRoot, "player.html"), "utf-8");
+    expect(html).toMatch(/eventSource\.onopen = \(\) => \{[\s\S]*fetchRoom\(\)/);
+    expect(html).toMatch(/eventSource\.onerror = \(\) => \{[\s\S]*player\.status\.reconnecting/);
+    expect(html).toMatch(
+      /id="current-number"[^>]*aria-live="polite"[^>]*aria-atomic="true"/
+    );
+    expect(html).toMatch(/function showBooted\(\)[\s\S]*\.focus\(\)/);
   });
 });

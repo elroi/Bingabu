@@ -252,6 +252,37 @@
         display: contents;
       }
 
+      .skip-to-main {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .skip-to-main:focus {
+        position: fixed;
+        left: max(12px, env(safe-area-inset-left));
+        top: max(12px, env(safe-area-inset-top));
+        z-index: 10000;
+        width: auto;
+        height: auto;
+        margin: 0;
+        padding: 12px 18px;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+        background: var(--secondary);
+        color: #fff;
+        font-weight: 700;
+        font-family: inherit;
+        text-decoration: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      }
       @media (max-width: 600px) {
         body {
           padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
@@ -263,11 +294,12 @@
     </style>
   </head>
   <body>
+    <a href="#main-content" class="skip-to-main" data-i18n="a11y.skipToMain">Skip to main content</a>
     <main id="main-content">
     <div id="game-wrap">
       <h1 id="player-title" data-i18n="player.heading"></h1>
       <div class="current-wrap">
-        <div id="current-number" class="current-number" aria-live="polite">--</div>
+        <div id="current-number" class="current-number" aria-live="polite" aria-atomic="true">--</div>
       </div>
       <div id="history-wrap" class="history-wrap"></div>
       <div id="card-wrap"></div>
@@ -687,6 +719,18 @@
         function showBooted() {
           document.getElementById("game-wrap").classList.add("hidden");
           document.getElementById("booted-wrap").classList.remove("hidden");
+          const bw = document.getElementById("booted-wrap");
+          const focusEl = bw && (bw.querySelector("a[href]") || bw.querySelector("h2"));
+          if (focusEl && typeof focusEl.focus === "function") {
+            try {
+              focusEl.setAttribute("tabindex", "-1");
+            } catch (_) {}
+            requestAnimationFrame(() => {
+              try {
+                focusEl.focus();
+              } catch (_) {}
+            });
+          }
         }
 
         let pollInterval;
@@ -743,9 +787,12 @@
             eventSource = new EventSource(url);
             eventSource.onopen = () => {
               reconnectDelayMs = SSE_RECONNECT_INITIAL_MS;
+              fetchRoom();
             };
             eventSource.onmessage = () => fetchRoom();
             eventSource.onerror = () => {
+              const statusEl = document.getElementById("status");
+              if (statusEl) statusEl.textContent = t("player.status.reconnecting");
               try {
                 eventSource.close();
               } catch (_) {}

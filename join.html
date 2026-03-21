@@ -229,6 +229,37 @@
         text-align: center;
         color: var(--text);
       }
+      .skip-to-main {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .skip-to-main:focus {
+        position: fixed;
+        left: max(12px, env(safe-area-inset-left));
+        top: max(12px, env(safe-area-inset-top));
+        z-index: 10000;
+        width: auto;
+        height: auto;
+        margin: 0;
+        padding: 12px 18px;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+        background: var(--secondary);
+        color: #fff;
+        font-weight: 700;
+        font-family: inherit;
+        text-decoration: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      }
       .slot-list {
         list-style: none;
         padding: 0;
@@ -369,6 +400,7 @@
     </style>
   </head>
   <body>
+    <a href="#main-content" class="skip-to-main" data-i18n="a11y.skipToMain">Skip to main content</a>
     <main id="main-content">
     <div class="join-page-content">
       <a href="index.html" id="nav-back" class="back-to-lobby" dir="ltr" data-i18n="join.back"></a>
@@ -703,6 +735,14 @@
       if (btnScanQr) btnScanQr.addEventListener("click", () => openQrScanner());
       if (btnQrCancel) btnQrCancel.addEventListener("click", () => closeQrScanner());
       if (btnQrSwitchCamera) btnQrSwitchCamera.addEventListener("click", () => switchQrCamera());
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        if (qrWrap && !qrWrap.classList.contains("hidden")) {
+          e.preventDefault();
+          closeQrScanner();
+        }
+      });
 
       if (qrWrap) {
         qrWrap.addEventListener("keydown", (e) => {

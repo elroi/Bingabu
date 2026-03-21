@@ -28,7 +28,11 @@ export function getRankedPlayers(players) {
   return sorted.map((p, i) => ({ ...p, rank: i + 1 }));
 }
 
-/** English defaults; override via getRankingPhrase(..., { phrases, standingsPickers, ordinal }). */
+/**
+ * English-only templates for MC callouts. Do **not** rely on these strings in a localized UI:
+ * pass locale-aware `phrases`, `standingsPickers`, and `ordinal` into {@link getRankingPhrase}
+ * (see `bingo.html` for the production wiring).
+ */
 export const defaultRankingPhrases = {
   newLeader: (name) => `New leader: ${name}!`,
   movesInto2nd: (name) => `${name} moves into 2nd!`,
@@ -55,6 +59,10 @@ const OCCASIONAL_STANDINGS_PROB = 0.18;
  *   ordinal?: (n: number) => string;
  * }} [options]
  * @returns {string}
+ *
+ * **i18n:** Without `options`, merged phrases and {@link defaultStandingsPickers} stay English
+ * (including ordinals via {@link getOrdinal}). Callers that surface text to users must supply
+ * localized `phrases`, `standingsPickers`, and `ordinal`.
  */
 export function getRankingPhrase(prevRanked, currRanked, options = {}) {
   if (!currRanked || currRanked.length === 0) return "";

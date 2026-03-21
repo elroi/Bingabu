@@ -354,6 +354,38 @@
         padding-left: 0;
       }
 
+      .skip-to-main {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .skip-to-main:focus {
+        position: fixed;
+        left: max(12px, env(safe-area-inset-left));
+        top: max(12px, env(safe-area-inset-top));
+        z-index: 10001;
+        width: auto;
+        height: auto;
+        margin: 0;
+        padding: 12px 18px;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+        background: var(--secondary);
+        color: #fff;
+        font-weight: 700;
+        font-family: inherit;
+        text-decoration: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      }
+
       @media (max-width: 600px) {
         body {
           padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
@@ -366,7 +398,8 @@
     </style>
   </head>
   <body>
-    <main>
+    <a href="#main-content" class="skip-to-main" data-i18n="a11y.skipToMain">Skip to main content</a>
+    <main id="main-content">
       <h1
         class="hero-title"
         dir="ltr"
