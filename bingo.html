@@ -1390,6 +1390,96 @@
         font-size: 1.1rem;
         color: #bdc3c7;
         transition: all 0.2s ease;
+        text-align: center;
+        padding: 2px;
+        overflow: hidden;
+      }
+
+      .number-cell-icons {
+        font-size: 1.65rem;
+        line-height: 1;
+      }
+
+      .number-cell-words {
+        font-size: 0.62rem;
+        line-height: 1.05;
+        font-weight: 800;
+        -webkit-hyphens: auto;
+        hyphens: auto;
+        overflow-wrap: anywhere;
+      }
+
+      .number-cell .number-cell-img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
+      .participant-card .card-cell.card-cell-icons {
+        font-size: 1.35rem;
+      }
+
+      .participant-card .card-cell.card-cell-words {
+        font-size: 0.55rem;
+        font-weight: 800;
+        line-height: 1.05;
+        -webkit-hyphens: auto;
+        hyphens: auto;
+        overflow-wrap: anywhere;
+      }
+
+      .participant-card .card-cell .card-cell-img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
+      .host-key-mapping-panel {
+        margin: 12px auto 0;
+        max-width: 520px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.06);
+        font-size: 0.9rem;
+      }
+
+      .host-key-mapping-title {
+        margin: 0 0 6px;
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+
+      .host-key-mapping-canonical {
+        margin: 0 0 8px;
+        font-weight: 600;
+      }
+
+      .host-key-mapping-list {
+        margin: 0;
+        padding-left: 1.2rem;
+      }
+
+      .participant-key-set-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+      }
+
+      .participant-key-set-row label {
+        font-size: 0.85rem;
+      }
+
+      .participant-key-set-row select {
+        min-height: 36px;
+        font-size: 0.9rem;
+      }
+
+      .display-key-set-hint {
+        font-size: 0.85rem;
+        opacity: 0.85;
+        margin: 4px 0 0;
       }
 
       .b-group .column-header {
@@ -1537,6 +1627,13 @@
           <label for="num-participants" data-i18n="bingo.setup.participantsLabel">Participants</label>
           <input type="number" id="num-participants" min="0" max="12" value="0" title="" />
         </div>
+        <div class="participant-setting participant-setting-above-fold">
+          <label for="display-key-set">Board style (caller board & default)</label>
+          <select id="display-key-set" aria-label="Board style for caller board and new players"></select>
+        </div>
+        <p id="display-key-set-hint" class="display-key-set-hint">
+          Same style for everyone unless you set a different one per player under Advanced participants settings. Changing this before the game starts resets per-player styles to match.
+        </p>
       </div>
       <section class="setup-players-section setup-players-in-controls setup-players-collapsed" id="setup-players-section" data-i18n-attr="aria-label" data-i18n="bingo.setup.advancedSectionAria" aria-label="Advanced participants settings">
         <h3 id="setup-players-header" role="button" tabindex="0" aria-expanded="false" aria-controls="setup-players-content"><span data-i18n="bingo.setup.advancedHeader">Advanced participants settings</span> <span class="section-chevron" aria-hidden="true">▼</span></h3>
@@ -1630,7 +1727,12 @@
     <div class="controls-band">
     <div class="controls" id="play-wizard-draw-target">
       <div id="current-number">--</div>
-        <div class="mc-announcement" id="mc-announcement" aria-live="polite" dir="auto"></div>
+      <div class="mc-announcement" id="mc-announcement" aria-live="polite" dir="auto"></div>
+      <div id="host-key-mapping-panel" class="host-key-mapping-panel hidden" aria-live="polite">
+        <h3 class="host-key-mapping-title">How each player sees the last call</h3>
+        <p id="host-key-mapping-canonical" class="host-key-mapping-canonical"></p>
+        <ul id="host-key-mapping-list" class="host-key-mapping-list"></ul>
+      </div>
       <div class="btn-group">
         <div class="main-btns">
           <button id="prev-btn" type="button" data-i18n-title="bingo.controls.prevTitle" title="Previous number (Left arrow key)">◀</button>
@@ -1742,6 +1844,19 @@
     <script type="module">
       import { initI18n, t, getLocale } from "./i18n.js";
       import { getOrdinal, getRankedPlayers, getRankingPhrase } from "./ranking.js";
+      import {
+        NUMBERS_KEY_SET_ID,
+        EN_WORDS_BEGINNER_ID,
+        ICONS_KIDS_V1_ID,
+        KEY_SET_OPTIONS,
+        normalizeKeySetId,
+        resolveDisplay,
+        fillCallerBoardCell,
+        normalizeDisplayKeySetBySlot,
+        getEffectiveKeySetIdForSlot,
+        getMappingRowsForBall,
+      } from "./keysets.js";
+      import { syncCallerBoardMarks } from "./hostBoard.js";
 
       await initI18n();
       document.title = t("bingo.pageTitle");
@@ -1808,6 +1923,7 @@
       const historyList = document.getElementById("history-list");
       const historyContainer = document.querySelector(".history-container");
       const numParticipantsInput = document.getElementById("num-participants");
+      const displayKeySetSelect = document.getElementById("display-key-set");
       const participantNamesEl = document.getElementById("participant-names");
       const participantNamesWrap = document.getElementById("participant-names-wrap");
       const participantCardsEl = document.getElementById("participant-cards");
@@ -1871,6 +1987,9 @@
       let participantNames = [];
       let participantQuirks = []; // { excludeStr: string, preferStr: string } per player
       let participantCards = [];
+      let displayKeySetId = NUMBERS_KEY_SET_ID;
+      /** @type {string[]} */
+      let displayKeySetBySlot = [];
       let hideCards = false;
       let manualDaubOnly = false;
       let manualDaubAutoHint = true;
@@ -1905,13 +2024,24 @@
         return mcVoice;
       }
 
+      function ensureDisplayKeySetBySlotLength() {
+        const def = normalizeKeySetId(displayKeySetId);
+        displayKeySetBySlot = displayKeySetBySlot.slice(0, numParticipants);
+        while (displayKeySetBySlot.length < numParticipants) {
+          displayKeySetBySlot.push(def);
+        }
+      }
+
       function getStateForApi() {
+        ensureDisplayKeySetBySlotLength();
         return {
           drawnSequence,
           numParticipants,
           participantNames: participantNames.slice(0, numParticipants),
           participantQuirks: participantQuirks.slice(0, numParticipants),
           participantCards,
+          displayKeySetId: normalizeKeySetId(displayKeySetId),
+          displayKeySetBySlot: displayKeySetBySlot.slice(0, numParticipants),
           hideCards,
           manualDaubOnly,
           manualDaubAutoHint,
@@ -2028,6 +2158,15 @@
           if (typeof data.mcRate === "number" && data.mcRate >= 0.5 && data.mcRate <= 2) mcRate = data.mcRate;
           if (typeof data.mcPitch === "number" && data.mcPitch >= 0.5 && data.mcPitch <= 2) mcPitch = data.mcPitch;
           if (typeof data.mcVariation === "boolean") mcVariation = data.mcVariation;
+          displayKeySetId = normalizeKeySetId(data.displayKeySetId);
+          displayKeySetBySlot = Array.isArray(data.displayKeySetBySlot)
+            ? data.displayKeySetBySlot.map((x) => normalizeKeySetId(x))
+            : [];
+          ensureDisplayKeySetBySlotLength();
+          if (displayKeySetSelect) {
+            displayKeySetSelect.value = displayKeySetId;
+            displayKeySetSelect.disabled = drawnSequence.length > 0;
+          }
           if (typeof speechSynthesis !== "undefined" && mcVoiceName) {
             const voices = speechSynthesis.getVoices();
             if (voices.length && !voices.some((v) => v.name === mcVoiceName)) mcVoiceName = "";
@@ -2122,6 +2261,7 @@
       function renderParticipantNameInputs() {
         if (!participantNamesEl) return;
         participantNamesEl.innerHTML = "";
+        ensureDisplayKeySetBySlotLength();
         for (let i = 0; i < numParticipants; i++) {
           const block = document.createElement("div");
           block.className = "participant-player-block";
@@ -2140,6 +2280,34 @@
             saveState();
           });
           block.appendChild(nameInp);
+
+          const keyRow = document.createElement("div");
+          keyRow.className = "participant-key-set-row";
+          const keyLabel = document.createElement("label");
+          keyLabel.setAttribute("for", `player-key-set-${i}`);
+          keyLabel.textContent = "Card style:";
+          const keySel = document.createElement("select");
+          keySel.id = `player-key-set-${i}`;
+          keySel.setAttribute("aria-label", `Display style for player ${i + 1}`);
+          KEY_SET_OPTIONS.forEach((opt) => {
+            const o = document.createElement("option");
+            o.value = opt.id;
+            o.textContent = opt.label;
+            keySel.appendChild(o);
+          });
+          const slotIdx = i;
+          keySel.value = normalizeKeySetId(displayKeySetBySlot[slotIdx] ?? displayKeySetId);
+          keySel.disabled = drawnSequence.length > 0;
+          keySel.addEventListener("change", () => {
+            displayKeySetBySlot[slotIdx] = normalizeKeySetId(keySel.value);
+            ensureDisplayKeySetBySlotLength();
+            saveState();
+            renderParticipantCards(drawnSequence[drawnSequence.length - 1]);
+            updateHostKeyMappingPanel();
+          });
+          keyRow.appendChild(keyLabel);
+          keyRow.appendChild(keySel);
+          block.appendChild(keyRow);
 
           const quirk = participantQuirks[i] || { excludeStr: "", preferStr: "" };
           const quirksRow = document.createElement("div");
@@ -2213,6 +2381,7 @@
 
       function buildBoard() {
         const letters = ["B", "I", "N", "G", "O"];
+        const k = normalizeKeySetId(displayKeySetId);
         letters.forEach((letter, index) => {
           const grid = document.getElementById(`grid-${letter}`);
           grid.innerHTML = "";
@@ -2221,10 +2390,13 @@
             const cell = document.createElement("div");
             cell.className = "number-cell";
             cell.id = `num-${i}`;
-            cell.innerText = i;
+            fillCallerBoardCell(cell, i, k);
             grid.appendChild(cell);
           }
         });
+        const boardRoot = document.getElementById("bingo-board");
+        const lastNum = drawnSequence[drawnSequence.length - 1];
+        syncCallerBoardMarks(boardRoot, drawnSequence, lastNum);
       }
 
       function initGame() {
@@ -2237,6 +2409,11 @@
         while (participantNames.length < numParticipants) participantNames.push("");
         participantQuirks = participantQuirks.slice(0, numParticipants);
         while (participantQuirks.length < numParticipants) participantQuirks.push({ excludeStr: "", preferStr: "" });
+        ensureDisplayKeySetBySlotLength();
+        if (displayKeySetSelect) {
+          displayKeySetSelect.value = normalizeKeySetId(displayKeySetId);
+          displayKeySetSelect.disabled = false;
+        }
         if (mcAnnouncementEl) mcAnnouncementEl.textContent = "";
         for (let i = 0; i < numParticipants; i++) {
           participantCards.push(generateOneCard(parseQuirk(participantQuirks[i])));
@@ -2255,9 +2432,9 @@
         return "O";
       }
 
-      function announceNumber(letter, num) {
+      function announceNumber(letter, ballId) {
         const drawIndex = drawnSequence.length - 1;
-        const parts = getMcPhraseParts(letter, num, drawIndex);
+        const parts = getMcPhraseParts(letter, ballId, drawIndex);
         const displayText = parts.display;
         const scorers = getPlayersWhoScoredOnLatestDraw();
         const pointsPhrase = getPointsAnnouncementPhrase(scorers);
@@ -2441,15 +2618,16 @@
         (l, n) => ({ display: l + " " + n + "! You know the drill!", intro: undefined }),
       ];
 
-      function getMcPhraseParts(letter, num, drawIndex) {
-        const numberPart = letter + " " + num + "!";
-        if (mcSimple) return { display: letter + " " + num, intro: undefined, number: numberPart };
+      function getMcPhraseParts(letter, ballId, drawIndex) {
+        const { text: callLabel, speech: speechCore } = resolveDisplay(ballId, displayKeySetId);
+        const numberPart = letter + " " + speechCore + "!";
+        if (mcSimple) return { display: letter + " " + callLabel, intro: undefined, number: numberPart };
         if (getLocale() === "he") {
           const i = drawIndex % 4;
-          const display = t(`bingo.mc.announceVariant${i}`, { letter, n: num });
+          const display = t(`bingo.mc.announceVariant${i}`, { letter, n: callLabel });
           return { display, intro: undefined, number: numberPart };
         }
-        const phrase = MC_PHRASES[drawIndex % MC_PHRASES.length](letter, num);
+        const phrase = MC_PHRASES[drawIndex % MC_PHRASES.length](letter, callLabel);
         return {
           display: phrase.display,
           intro: phrase.intro,
@@ -2457,8 +2635,8 @@
         };
       }
 
-      function getMcPhrase(letter, num, drawIndex) {
-        return getMcPhraseParts(letter, num, drawIndex).display;
+      function getMcPhrase(letter, ballId, drawIndex) {
+        return getMcPhraseParts(letter, ballId, drawIndex).display;
       }
 
       function getColumnClass(col) {
@@ -2594,6 +2772,7 @@
         participantCardsEl.innerHTML = "";
         if (participantCards.length === 0) return;
         const drawnSet = new Set(drawnSequence);
+        const slotKs = { displayKeySetId, displayKeySetBySlot, numParticipants };
         participantCards.forEach((card, index) => {
           const daubs = participantDaubs[String(index)] || [];
           const wrap = document.createElement("div");
@@ -2624,7 +2803,20 @@
                 cell.classList.add("free", "marked");
                 markedCount++;
               } else {
-                cell.textContent = val;
+                const ks = getEffectiveKeySetIdForSlot(slotKs, index);
+                const d = resolveDisplay(val, ks);
+                cell.textContent = "";
+                cell.classList.toggle("card-cell-icons", ks === ICONS_KIDS_V1_ID);
+                cell.classList.toggle("card-cell-words", ks === EN_WORDS_BEGINNER_ID);
+                if (d.image) {
+                  const img = document.createElement("img");
+                  img.src = d.image;
+                  img.alt = d.speech;
+                  img.className = "card-cell-img";
+                  cell.appendChild(img);
+                } else {
+                  cell.textContent = d.text;
+                }
                 const daubed = daubs.includes(`${row},${col}`);
                 const marked = drawnSet.has(val) || daubed;
                 if (marked) {
@@ -2657,14 +2849,42 @@
         });
       }
 
+      function updateHostKeyMappingPanel() {
+        const panel = document.getElementById("host-key-mapping-panel");
+        const canonicalEl = document.getElementById("host-key-mapping-canonical");
+        const listEl = document.getElementById("host-key-mapping-list");
+        if (!panel || !canonicalEl || !listEl) return;
+        const lastNum = drawnSequence[drawnSequence.length - 1];
+        if (!lastNum || numParticipants < 1) {
+          panel.classList.add("hidden");
+          return;
+        }
+        ensureDisplayKeySetBySlotLength();
+        const { canonical, rows } = getMappingRowsForBall(
+          { displayKeySetId, displayKeySetBySlot, numParticipants, participantNames },
+          lastNum
+        );
+        canonicalEl.textContent = "Canonical: " + canonical;
+        listEl.innerHTML = "";
+        rows.forEach((r) => {
+          const li = document.createElement("li");
+          const extra = r.speech !== r.label ? ` (say: ${r.speech})` : "";
+          li.textContent = `${r.name}: ${r.label}${extra}`;
+          listEl.appendChild(li);
+        });
+        panel.classList.remove("hidden");
+      }
+
       function updateUI() {
         const lastNum = drawnSequence[drawnSequence.length - 1];
 
         // Update Big Display
         if (lastNum) {
-          display.innerText = `${getLetter(lastNum)}-${lastNum}`;
+          const letter = getLetter(lastNum);
+          const d = resolveDisplay(lastNum, displayKeySetId);
+          display.innerText = `${letter}-${d.text}`;
           if (mcAnnouncementEl) {
-            const phrase = getMcPhrase(getLetter(lastNum), lastNum, drawnSequence.length - 1);
+            const phrase = getMcPhrase(letter, lastNum, drawnSequence.length - 1);
             const pointsPhrase = getPointsAnnouncementPhrase(getPlayersWhoScoredOnLatestDraw());
             mcAnnouncementEl.textContent = phrase + (pointsPhrase ? " " + pointsPhrase : "");
           }
@@ -2673,12 +2893,8 @@
           if (mcAnnouncementEl) mcAnnouncementEl.textContent = "";
         }
 
-        // Update Board Marks (main caller board only)
-        document.querySelectorAll("#bingo-board .number-cell").forEach((cell) => {
-          const val = parseInt(cell.innerText);
-          cell.classList.toggle("marked", drawnSequence.includes(val));
-          cell.classList.toggle("latest-draw", val === lastNum);
-        });
+        syncCallerBoardMarks(document.getElementById("bingo-board"), drawnSequence, lastNum);
+        updateHostKeyMappingPanel();
 
         // Update participant cards
         renderParticipantCards(lastNum);
@@ -2691,7 +2907,7 @@
         drawnSequence.forEach((num) => {
           const ball = document.createElement("div");
           ball.className = "history-ball";
-          ball.innerText = num;
+          ball.innerText = resolveDisplay(num, displayKeySetId).text;
           historyList.appendChild(ball);
         });
         historyContainer.scrollLeft = historyContainer.scrollWidth;
@@ -2706,6 +2922,10 @@
         } else {
           drawBtn.textContent = t("bingo.controls.draw");
           drawBtn.style.backgroundColor = "var(--secondary)";
+        }
+
+        if (displayKeySetSelect) {
+          displayKeySetSelect.disabled = drawnSequence.length > 0;
         }
 
         // Participants input: disabled mid-game with tooltip
@@ -3615,6 +3835,7 @@
         while (participantNames.length < n) participantNames.push("");
         participantQuirks = participantQuirks.slice(0, n);
         while (participantQuirks.length < n) participantQuirks.push({ excludeStr: "", preferStr: "" });
+        ensureDisplayKeySetBySlotLength();
         for (let i = 0; i < numParticipants; i++) {
           participantCards.push(generateOneCard(parseQuirk(participantQuirks[i])));
         }
@@ -3773,11 +3994,32 @@
         });
       }
 
-      buildBoard();
+      if (displayKeySetSelect) {
+        KEY_SET_OPTIONS.forEach((opt) => {
+          const o = document.createElement("option");
+          o.value = opt.id;
+          o.textContent = opt.label;
+          displayKeySetSelect.appendChild(o);
+        });
+        displayKeySetSelect.addEventListener("change", () => {
+          if (drawnSequence.length > 0) return;
+          displayKeySetId = normalizeKeySetId(displayKeySetSelect.value);
+          displayKeySetBySlot = displayKeySetBySlot.map(() => displayKeySetId);
+          ensureDisplayKeySetBySlotLength();
+          saveState();
+          buildBoard();
+          renderParticipantCards(drawnSequence[drawnSequence.length - 1]);
+          if (participantNamesEl) renderParticipantNameInputs();
+          updateUI();
+        });
+      }
+
       if (!loadState()) initGame();
       else {
         ensureParticipantNamesLength();
         ensureParticipantQuirksLength();
+        buildBoard();
+        if (displayKeySetSelect) displayKeySetSelect.value = normalizeKeySetId(displayKeySetId);
         if (participantNamesEl) renderParticipantNameInputs();
         updateUI();
       }

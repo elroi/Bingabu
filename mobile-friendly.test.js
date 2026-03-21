@@ -100,6 +100,11 @@ describe("Bingo host UX", () => {
     );
   });
 
+  it("bingo.html has Board style key set control in setup", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/id="display-key-set"/);
+  });
+
   it("bingo.html has Participants section before Play with friends section in DOM", () => {
     const html = readPage("bingo");
     const setupPlayersIndex = html.indexOf('id="setup-players-section"');

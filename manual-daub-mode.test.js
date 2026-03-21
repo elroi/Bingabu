@@ -67,6 +67,11 @@ describe("Manual daub mode: player", () => {
     expect(html).toMatch(/manualDaubOnly|state\.manualDaubOnly/);
   });
 
+  it("player.html resolves labels with getEffectiveKeySetIdForSlot", () => {
+    const html = readPage("player");
+    expect(html).toMatch(/getEffectiveKeySetIdForSlot/);
+  });
+
   it("player.html applies state.participantDaubs to localDaubs when present", () => {
     const html = readPage("player");
     expect(html).toMatch(/participantDaubs.*slotIndex|state\.participantDaubs/);
