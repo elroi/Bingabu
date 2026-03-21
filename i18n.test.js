@@ -204,4 +204,19 @@ describe("i18n HTML wiring", () => {
     expect(joinPage).toMatch(/data-i18n="join\.title"/);
     expect(joinPage).toMatch(/from ['"]\.\/i18n\.js['"]/);
   });
+
+  it("Latin wordmark stays LTR in RTL pages (flex order + dir on body)", () => {
+    const index = readFileSync(join(repoRoot, "index.html"), "utf-8");
+    const joinPage = readFileSync(join(repoRoot, "join.html"), "utf-8");
+    const bingo = readFileSync(join(repoRoot, "bingo.html"), "utf-8");
+    expect(index).toMatch(
+      /<h1[\s\S]*?class="hero-title"[\s\S]*?dir="ltr"[\s\S]*?>/
+    );
+    expect(joinPage).toMatch(
+      /<a[\s\S]*?id="nav-logo"[\s\S]*?dir="ltr"[\s\S]*?>/
+    );
+    expect(bingo).toMatch(
+      /<h1[\s\S]*?id="bingo-app-title"[\s\S]*?dir="ltr"[\s\S]*?>/
+    );
+  });
 });
