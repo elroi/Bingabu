@@ -2,21 +2,34 @@
  * Static locale JSON + optional Redis overrides (Upstash).
  * Public site reads merged strings via GET /api/locales/[locale].
  *
- * Static strings are bundled via import (not readFileSync): Vercel serverless
- * packages do not include ./locales unless every path is traced; imports are reliable.
+ * JSON is read from disk (not `import … assert { type: "json" }`): Vercel’s Node
+ * runtime rejects that syntax. `vercel.json` `includeFiles` ships `locales/**`
+ * into each API function bundle; we try `process.cwd()` then `__dirname`.
  */
 
+import { readFileSync, existsSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 import { mergeMessages } from "../../i18n.js";
 import { getKeyPrefix } from "./keyPrefix.js";
-import enJson from "../../locales/en.json" assert { type: "json" };
-import heJson from "../../locales/he.json" assert { type: "json" };
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export const SUPPORTED_LOCALES = ["en", "he"];
 
-const BUNDLED_STATIC = {
-  en: enJson,
-  he: heJson,
-};
+const staticLocaleCache = new Map();
+
+function resolveLocaleJsonPath(locale) {
+  const file = `${locale}.json`;
+  const candidates = [
+    join(process.cwd(), "locales", file),
+    join(__dirname, "..", "..", "locales", file),
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  return null;
+}
 
 const OVERRIDE_KEY = (locale) => `${getKeyPrefix()}i18n:overrides:${locale}`;
 
@@ -44,8 +57,24 @@ async function getRedis() {
 
 export function loadStaticLocale(locale) {
   if (!SUPPORTED_LOCALES.includes(locale)) return {};
-  const table = BUNDLED_STATIC[locale];
-  return table && typeof table === "object" ? { ...table } : {};
+  if (staticLocaleCache.has(locale)) {
+    return { ...staticLocaleCache.get(locale) };
+  }
+  const path = resolveLocaleJsonPath(locale);
+  if (!path) {
+    staticLocaleCache.set(locale, {});
+    return {};
+  }
+  try {
+    const parsed = JSON.parse(readFileSync(path, "utf8"));
+    const table =
+      parsed && typeof parsed === "object" ? { ...parsed } : {};
+    staticLocaleCache.set(locale, table);
+    return { ...table };
+  } catch (_) {
+    staticLocaleCache.set(locale, {});
+    return {};
+  }
 }
 
 export async function getOverrides(locale) {

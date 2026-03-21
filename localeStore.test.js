@@ -6,8 +6,16 @@
 import { describe, it, expect } from "vitest";
 import {
   computeOverrides,
+  loadStaticLocale,
   validateMergedComplete,
 } from "./api/_lib/localeStore.js";
+
+describe("loadStaticLocale", () => {
+  it("reads static en strings from repo locales/en.json", () => {
+    const en = loadStaticLocale("en");
+    expect(en["index.pageTitle"]).toMatch(/Bingabu/);
+  });
+});
 
 describe("computeOverrides", () => {
   it("records only keys that differ from static", () => {
