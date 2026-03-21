@@ -1,13 +1,31 @@
 import * as store from "../../lib/store.js";
-import { verifyPassword } from "../../lib/password.js";
-import { sign } from "../../lib/jwt.js";
+import { getKeyPrefix } from "../../lib/keyPrefix.js";
 import { getClientIp } from "../../lib/clientIp.js";
 import { rateLimitJoin, retryAfterSeconds } from "../../lib/rateLimit.js";
 
 function parsePath(url) {
   const path = (url || "").split("?")[0] || "";
   const parts = path.split("/").filter(Boolean);
-  return parts[parts.length - 2] || null; // .../rooms/ABC123/join -> ABC123
+  return parts[parts.length - 2] || null;
+}
+
+async function appendReport(roomId, entry) {
+  const creds =
+    typeof process !== "undefined" &&
+    (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL) &&
+    (process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN);
+  if (!creds) return;
+  try {
+    const { Redis } = await import("@upstash/redis");
+    const redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN,
+    });
+    const key = `${getKeyPrefix()}report:${roomId}`;
+    await redis.lpush(key, JSON.stringify(entry));
+    await redis.ltrim(key, 0, 99);
+    await redis.expire(key, 7 * 24 * 60 * 60);
+  } catch (_) {}
 }
 
 export default async function handler(req, res) {
@@ -40,27 +58,19 @@ export default async function handler(req, res) {
     return res.status(404).json({ error: "Room not found" });
   }
 
-  if (!room.passwordHash || !room.passwordSalt) {
-    return res.status(400).json({ error: "Room is not password-protected" });
-  }
-
-  let body;
+  let body = {};
   try {
     body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
   } catch (_) {
     return res.status(400).json({ error: "Invalid JSON" });
   }
 
-  const password = body.password != null ? String(body.password) : "";
-  if (!verifyPassword(password, room.passwordSalt, room.passwordHash)) {
-    return res.status(401).json({ error: "Wrong password" });
-  }
-
-  const joinToken = sign(roomId);
-  return res.status(200).json({
-    joinToken,
-    state: room.state,
-    claims: room.claims || {},
-    expiresAt: room.expiresAt,
+  const message = body.message != null ? String(body.message).slice(0, 2000) : "";
+  await appendReport(roomId, {
+    at: Date.now(),
+    ip,
+    message: message || "(no message)",
   });
+
+  return res.status(204).end();
 }

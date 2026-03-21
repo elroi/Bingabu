@@ -18,6 +18,7 @@ function roomResponse(room, includeState = true) {
     roomId: room.roomId,
     claims: room.claims || {},
     expiresAt: room.expiresAt,
+    joinLocked: !!room.joinLocked,
   };
   if (includeState) {
     out.state = room.state;
@@ -75,20 +76,34 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Invalid JSON" });
     }
 
-    const { state } = body;
-    if (!state || !Array.isArray(state.drawnSequence)) {
-      return res.status(400).json({ error: "Invalid state" });
-    }
-    const np = state.numParticipants;
-    if (typeof np !== "number" || np < 0 || np > 12) {
-      return res.status(400).json({ error: "Invalid state" });
-    }
-    const cards = state.participantCards;
-    if (!Array.isArray(cards) || cards.length !== np) {
-      return res.status(400).json({ error: "Invalid state" });
+    const { state, joinLocked } = body;
+    let updated = false;
+
+    if (state != null) {
+      if (!Array.isArray(state.drawnSequence)) {
+        return res.status(400).json({ error: "Invalid state" });
+      }
+      const np = state.numParticipants;
+      if (typeof np !== "number" || np < 0 || np > 12) {
+        return res.status(400).json({ error: "Invalid state" });
+      }
+      const cards = state.participantCards;
+      if (!Array.isArray(cards) || cards.length !== np) {
+        return res.status(400).json({ error: "Invalid state" });
+      }
+      room.state = state;
+      updated = true;
     }
 
-    room.state = state;
+    if (typeof joinLocked === "boolean") {
+      room.joinLocked = joinLocked;
+      updated = true;
+    }
+
+    if (!updated) {
+      return res.status(400).json({ error: "Invalid body: expected state and/or joinLocked" });
+    }
+
     room.updatedAt = Date.now();
     await store.set(roomId, room);
 

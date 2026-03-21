@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Translation admin – Bingabu</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0f1419;
+        --surface: #1a2332;
+        --border: #2d3a4f;
+        --text: #e7ecf3;
+        --muted: #8b9cb3;
+        --accent: #3d8bfd;
+        --good: #3ecf8e;
+        --warn: #f0c14c;
+        --bad: #f87171;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+        min-height: 100vh;
+        padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+          max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      }
+      a {
+        color: var(--accent);
+      }
+      header {
+        max-width: 1200px;
+        margin: 0 auto 24px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 12px 24px;
+        justify-content: space-between;
+      }
+      h1 {
+        font-size: 1.35rem;
+        font-weight: 600;
+        margin: 0;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 0;
+      }
+      .panel {
+        max-width: 1200px;
+        margin: 0 auto 20px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+      }
+      label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      input[type="password"],
+      input[type="text"] {
+        width: 100%;
+        max-width: 480px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.85rem;
+      }
+      button {
+        font-family: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: none;
+        background: var(--accent);
+        color: #fff;
+        margin-top: 12px;
+        margin-right: 8px;
+      }
+      button.secondary {
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid var(--border);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      #status {
+        margin-top: 12px;
+        font-size: 0.9rem;
+        min-height: 1.4em;
+      }
+      #status.ok {
+        color: var(--good);
+      }
+      #status.err {
+        color: var(--bad);
+      }
+      #status.warn {
+        color: var(--warn);
+      }
+      .table-wrap {
+        overflow-x: auto;
+        margin-top: 8px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      th,
+      td {
+        border-bottom: 1px solid var(--border);
+        padding: 10px 8px;
+        vertical-align: top;
+      }
+      th {
+        text-align: left;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .key {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.75rem;
+        color: var(--muted);
+        white-space: nowrap;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      textarea {
+        width: 100%;
+        min-height: 52px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        font-family: inherit;
+        font-size: 0.85rem;
+        resize: vertical;
+      }
+      textarea[dir="rtl"] {
+        font-family: system-ui, "Segoe UI", "Rubik", sans-serif;
+      }
+      .hidden {
+        display: none !important;
+      }
+      @media (max-width: 600px) {
+        th:nth-child(2),
+        td:nth-child(2) {
+          min-width: 140px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Translation admin</h1>
+        <p class="sub">Edit live copy for English and Hebrew. Saves override Redis so deploys keep repo JSON as baseline.</p>
+      </div>
+      <p class="sub"><a href="index.html">← Site home</a></p>
+    </header>
+
+    <div class="panel" id="auth-panel">
+      <label for="admin-token">Admin token (<code>BINGABU_ADMIN_LOCALES_TOKEN</code>)</label>
+      <input type="password" id="admin-token" autocomplete="off" placeholder="Paste token, then connect" />
+      <div>
+        <button type="button" id="btn-connect">Connect</button>
+        <button type="button" class="secondary" id="btn-clear-token">Clear saved token</button>
+      </div>
+      <p id="auth-hint" class="sub" style="margin-top: 12px">
+        Token is kept in <code>sessionStorage</code> for this tab only.
+      </p>
+    </div>
+
+    <div class="panel hidden" id="editor-panel">
+      <p id="redis-banner" class="sub"></p>
+      <div style="margin-top: 16px">
+        <button type="button" id="btn-reload">Reload from server</button>
+        <button type="button" id="btn-save">Save all changes</button>
+      </div>
+      <p id="status"></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>English</th>
+              <th>Hebrew</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script type="module">
+      const TOKEN_KEY = "bingabu-admin-locales-token";
+
+      function apiBase() {
+        return typeof location !== "undefined" && location.origin ? location.origin : "";
+      }
+
+      function getToken() {
+        const input = document.getElementById("admin-token");
+        return (input && input.value.trim()) || sessionStorage.getItem(TOKEN_KEY) || "";
+      }
+
+      function setStatus(el, text, kind) {
+        if (!el) return;
+        el.textContent = text || "";
+        el.className = kind ? kind : "";
+      }
+
+      let bundle = null;
+
+      async function apiGet(token) {
+        const res = await fetch(`${apiBase()}/api/admin-locales`, {
+          headers: { Authorization: "Bearer " + token },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        return data;
+      }
+
+      async function apiPut(token, body) {
+        const res = await fetch(`${apiBase()}/api/admin-locales`, {
+          method: "PUT",
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        return data;
+      }
+
+      function render() {
+        const tbody = document.getElementById("rows");
+        const banner = document.getElementById("redis-banner");
+        if (!bundle || !bundle.locales) return;
+        const en = bundle.locales.en && bundle.locales.en.merged;
+        const he = bundle.locales.he && bundle.locales.he.merged;
+        if (!en || !he) return;
+        const keys = Object.keys(en).sort();
+        tbody.innerHTML = "";
+        for (const key of keys) {
+          const tr = document.createElement("tr");
+          const tdKey = document.createElement("td");
+          tdKey.className = "key";
+          tdKey.title = key;
+          tdKey.textContent = key;
+          const tdEn = document.createElement("td");
+          const taEn = document.createElement("textarea");
+          taEn.dataset.locale = "en";
+          taEn.dataset.key = key;
+          taEn.value = en[key] != null ? String(en[key]) : "";
+          tdEn.appendChild(taEn);
+          const tdHe = document.createElement("td");
+          const taHe = document.createElement("textarea");
+          taHe.dataset.locale = "he";
+          taHe.dataset.key = key;
+          taHe.value = he[key] != null ? String(he[key]) : "";
+          taHe.setAttribute("dir", "rtl");
+          tdHe.appendChild(taHe);
+          tr.appendChild(tdKey);
+          tr.appendChild(tdEn);
+          tr.appendChild(tdHe);
+          tbody.appendChild(tr);
+        }
+        if (bundle.redis) {
+          banner.textContent = "Redis connected — saves persist as overrides on top of repo JSON.";
+          banner.style.color = "var(--good)";
+        } else {
+          banner.textContent =
+            "Redis not configured on this deployment — you can load strings, but Save will fail until UPSTASH_REDIS_* env vars are set.";
+          banner.style.color = "var(--warn)";
+        }
+      }
+
+      function collectMerged() {
+        const en = {};
+        const he = {};
+        document.querySelectorAll("textarea[data-locale]").forEach((ta) => {
+          const loc = ta.getAttribute("data-locale");
+          const key = ta.getAttribute("data-key");
+          if (!key) return;
+          if (loc === "en") en[key] = ta.value;
+          if (loc === "he") he[key] = ta.value;
+        });
+        return { en, he };
+      }
+
+      document.getElementById("btn-connect").addEventListener("click", async () => {
+        const status = document.getElementById("status");
+        const token = document.getElementById("admin-token").value.trim();
+        if (!token) {
+          setStatus(status, "Enter a token.", "err");
+          return;
+        }
+        sessionStorage.setItem(TOKEN_KEY, token);
+        setStatus(status, "Loading…", "");
+        try {
+          bundle = await apiGet(token);
+          document.getElementById("editor-panel").classList.remove("hidden");
+          render();
+          setStatus(status, "Loaded.", "ok");
+        } catch (e) {
+          setStatus(status, String(e.message || e), "err");
+        }
+      });
+
+      document.getElementById("btn-clear-token").addEventListener("click", () => {
+        sessionStorage.removeItem(TOKEN_KEY);
+        document.getElementById("admin-token").value = "";
+        document.getElementById("editor-panel").classList.add("hidden");
+        bundle = null;
+        setStatus(document.getElementById("status"), "Token cleared.", "");
+      });
+
+      document.getElementById("btn-reload").addEventListener("click", async () => {
+        const status = document.getElementById("status");
+        const token = getToken();
+        if (!token) {
+          setStatus(status, "Connect with token first.", "err");
+          return;
+        }
+        setStatus(status, "Reloading…", "");
+        try {
+          bundle = await apiGet(token);
+          render();
+          setStatus(status, "Reloaded.", "ok");
+        } catch (e) {
+          setStatus(status, String(e.message || e), "err");
+        }
+      });
+
+      document.getElementById("btn-save").addEventListener("click", async () => {
+        const status = document.getElementById("status");
+        const token = getToken();
+        if (!token) {
+          setStatus(status, "Connect with token first.", "err");
+          return;
+        }
+        const merged = collectMerged();
+        setStatus(status, "Saving…", "");
+        try {
+          await apiPut(token, { merged });
+          setStatus(status, "Saved. Overrides are live for /api/locales/* (short cache).", "ok");
+          bundle = await apiGet(token);
+          render();
+        } catch (e) {
+          setStatus(status, String(e.message || e), "err");
+        }
+      });
+
+      (function prefillToken() {
+        const saved = sessionStorage.getItem(TOKEN_KEY);
+        if (saved) document.getElementById("admin-token").value = saved;
+      })();
+    </script>
+  </body>
+</html>

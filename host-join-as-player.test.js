@@ -161,10 +161,13 @@ describe("Host join as player: API daubs", () => {
 
   beforeEach(async () => {
     await store.remove(roomId);
+    const state = validState(2);
+    // Cell (0,0) and (1,1) on makeCard() are 1 and 19 — daubs must match drawn numbers (server-validated).
+    state.drawnSequence = [1, 19];
     await store.set(roomId, {
       roomId,
       hostId,
-      state: validState(2),
+      state,
       claims: { "0": hostId },
       createdAt: Date.now(),
       expiresAt: null,
@@ -190,7 +193,7 @@ describe("Host join as player: API daubs", () => {
       method: "POST",
       url: `/api/rooms/${roomId}/daubs`,
       headers: { "x-host-id": "wrong", "content-type": "application/json" },
-      body: { slotIndex: 0, deviceId: hostId, daubs: ["0,0"] },
+      body: { slotIndex: 0, deviceId: hostId, daubs: ["0,0"] }, // 0,0 is 1 — in drawnSequence
     };
     const res = mockRes();
     await daubsHandler(req, res);

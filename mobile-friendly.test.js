@@ -7,7 +7,7 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const readPage = (name) =>
   readFileSync(join(__dirname, `${name}.html`), "utf-8");
 
-const PAGES = ["index", "join", "player", "bingo", "cards"];
+const PAGES = ["index", "join", "player", "bingo", "cards", "spectator", "privacy", "terms", "admin-translations"];
 
 describe("Mobile-friendly: viewport", () => {
   it.each(PAGES)("%s.html has viewport meta", (name) => {
@@ -159,5 +159,45 @@ describe("Bingo host UX", () => {
   it("bingo.html script uses host phase sessionStorage key", () => {
     const html = readPage("bingo");
     expect(html).toMatch(/bingabu-host-phase/);
+  });
+
+  it("bingo.html has play wizard with steps, Back, Next, Skip, Show guide", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/id="play-wizard-overlay"/);
+    expect(html).toMatch(/play-wizard-modal/);
+    expect(html).toMatch(/play-wizard-progress/);
+    expect(html).toMatch(/Step 1 of 5/);
+    expect(html).toMatch(/id="play-wizard-back"/);
+    expect(html).toMatch(/id="play-wizard-next"/);
+    expect(html).toMatch(/id="play-wizard-skip"/);
+    expect(html).toMatch(/Current number/);
+    expect(html).toMatch(/Call numbers/);
+    expect(html).toMatch(/id="play-wizard-draw-target"/);
+    expect(html).toMatch(/id="play-wizard-history-target"/);
+    expect(html).toMatch(/bingabu-play-wizard-done/);
+  });
+
+  it("index.html has home wizard overlay with modal, Skip, Got it, Host or join", () => {
+    const html = readPage("index");
+    expect(html).toMatch(/id="home-wizard-overlay"/);
+    expect(html).toMatch(/home-wizard-modal/);
+    expect(html).toMatch(/id="home-wizard-done"/);
+    expect(html).toMatch(/id="home-wizard-skip"/);
+    expect(html).toMatch(/data-i18n="index\.wizard\.title"/);
+    expect(html).toMatch(/data-i18n="index\.wizard\.done"/);
+  });
+
+  it("index.html home wizard has Show guide and onboarding key", () => {
+    const html = readPage("index");
+    expect(html).toMatch(/id="home-wizard-show-again"/);
+    expect(html).toMatch(/data-i18n="index\.wizard\.showGuide"/);
+    expect(html).toMatch(/bingabu-home-wizard-done/);
+  });
+});
+
+describe("Favicon", () => {
+  const FAVICON_PAGES = ["index", "join", "player", "bingo", "cards", "spectator", "privacy", "terms", "admin-translations"];
+  it.each(FAVICON_PAGES)("%s.html references favicon.svg", (name) => {
+    expect(readPage(name)).toMatch(/href="\/favicon\.svg"/);
   });
 });

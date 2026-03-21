@@ -2,10 +2,40 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <script>
+      (function () {
+        var SUPPORTED = ["en", "he"];
+        function norm(t) {
+          if (!t) return null;
+          var l = String(t).trim().toLowerCase();
+          if (SUPPORTED.indexOf(l) >= 0) return l;
+          var two = l.slice(0, 2);
+          if (SUPPORTED.indexOf(two) >= 0) return two;
+          return null;
+        }
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var loc = norm(params.get("lang"));
+          if (!loc) loc = norm(localStorage.getItem("bingabu-locale"));
+          if (!loc) {
+            var n = (navigator.language || "").toLowerCase();
+            if (n.indexOf("he") === 0) loc = "he";
+          }
+          if (!loc) loc = "en";
+          document.documentElement.lang = loc;
+          document.documentElement.dir = loc === "he" ? "rtl" : "ltr";
+        } catch (e) {}
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bingabu – Multiplayer bingo with friends</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link
       href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -197,6 +227,130 @@
         text-decoration: underline;
       }
 
+      .home-wizard-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        padding: 20px;
+        pointer-events: none;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .home-wizard-overlay.hidden {
+        display: none !important;
+      }
+      .home-wizard-modal {
+        position: fixed;
+        background: var(--bg);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        max-width: 380px;
+        width: 100%;
+        padding: 24px;
+        border: 2px solid var(--secondary);
+        pointer-events: auto;
+      }
+      .home-wizard-title {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1.25rem;
+        margin: 0 0 8px 0;
+      }
+      .home-wizard-body {
+        font-size: 1rem;
+        color: var(--text);
+        margin: 0 0 20px 0;
+        line-height: 1.5;
+      }
+      .home-wizard-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+      }
+      .home-wizard-actions .home-wizard-next,
+      .home-wizard-actions .home-wizard-skip {
+        font-family: "Fredoka One", cursive;
+        cursor: pointer;
+        padding: 10px 20px;
+        border-radius: 50px;
+        border: none;
+        font-size: 0.95rem;
+      }
+      .home-wizard-next {
+        background: var(--secondary);
+        color: white;
+      }
+      .home-wizard-skip {
+        background: transparent;
+        color: #636e72;
+      }
+      .home-wizard-skip:hover {
+        text-decoration: underline;
+      }
+      .home-wizard-highlight {
+        background: var(--bg);
+        color: var(--text);
+        border: 2px solid var(--secondary);
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        scroll-margin-top: 100px;
+      }
+      .home-wizard-show-again {
+        background: none;
+        border: none;
+        color: var(--secondary);
+        font-size: 0.9rem;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+      .home-wizard-show-again:hover {
+        text-decoration: none;
+      }
+
+      .lang-switch {
+        margin: 0 0 12px 0;
+        font-size: 0.9rem;
+      }
+      .lang-switch a {
+        color: var(--secondary);
+        text-decoration: none;
+      }
+      .lang-switch a:hover {
+        text-decoration: underline;
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      html[lang="he"] body {
+        font-family: "Rubik", "Quicksand", sans-serif;
+      }
+      html[lang="he"] .btn,
+      html[lang="he"] .home-wizard-title,
+      html[lang="he"] .how-it-works h2,
+      html[lang="he"] .home-wizard-actions .home-wizard-next,
+      html[lang="he"] .home-wizard-actions .home-wizard-skip,
+      html[lang="he"] .home-wizard-show-again {
+        font-family: "Rubik", sans-serif;
+      }
+      html[dir="rtl"] .how-it-works {
+        text-align: right;
+      }
+      html[dir="rtl"] .how-it-works ol {
+        padding-right: 22px;
+        padding-left: 0;
+      }
+
       @media (max-width: 600px) {
         body {
           padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
@@ -210,24 +364,164 @@
   </head>
   <body>
     <main>
-      <h1 class="hero-title" aria-label="Bingabu">
+      <h1
+        class="hero-title"
+        data-i18n="index.hero.aria"
+        data-i18n-attr="aria-label"
+        translate="no"
+      >
         <span class="letter">B</span><span class="letter">i</span><span class="letter">n</span><span class="letter">g</span><span class="letter">a</span><span class="letter">b</span><span class="letter">u</span>
       </h1>
-      <p class="tagline">Multiplayer bingo with friends. Draw numbers, share the link, play together.</p>
+      <p class="tagline" data-i18n="index.tagline"></p>
 
-      <div class="cta-group">
-        <a href="bingo.html" class="btn btn-primary">Host a game</a>
-        <a href="join.html" class="btn btn-secondary">Join with link</a>
+      <div class="cta-group" id="home-cta-group">
+        <a href="bingo.html" id="home-host-btn" class="btn btn-primary" data-i18n="index.cta.host"></a>
+        <a href="join.html" id="home-join-btn" class="btn btn-secondary" data-i18n="index.cta.join"></a>
       </div>
 
-      <section class="how-it-works" aria-label="How it works">
-        <h2>How it works</h2>
+      <section
+        class="how-it-works"
+        data-i18n="index.howItWorks.aria"
+        data-i18n-attr="aria-label"
+      >
+        <h2 data-i18n="index.howItWorks.heading"></h2>
         <ol>
-          <li><strong>Host</strong> creates a room on the game board and shares the link.</li>
-          <li><strong>Friends</strong> open the link and join with their name.</li>
-          <li><strong>Play</strong> — host draws numbers, everyone marks their cards.</li>
+          <li data-i18n="index.howItWorks.step1"></li>
+          <li data-i18n="index.howItWorks.step2"></li>
+          <li data-i18n="index.howItWorks.step3"></li>
         </ol>
       </section>
     </main>
+
+    <div
+      id="home-wizard-overlay"
+      class="home-wizard-overlay hidden"
+      role="region"
+      data-i18n="index.wizard.regionAria"
+      data-i18n-attr="aria-label"
+      aria-live="polite"
+    >
+      <div class="home-wizard-modal">
+        <h2 id="home-wizard-title" class="home-wizard-title" data-i18n="index.wizard.title"></h2>
+        <p id="home-wizard-body" class="home-wizard-body" data-i18n="index.wizard.body"></p>
+        <div class="home-wizard-actions">
+          <button type="button" id="home-wizard-skip" class="home-wizard-skip" data-i18n="index.wizard.skip"></button>
+          <button type="button" id="home-wizard-done" class="home-wizard-next" data-i18n="index.wizard.done"></button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p class="legal-links" style="text-align: center; margin: 0 0 12px 0; font-size: 0.9rem">
+        <a href="privacy.html" data-i18n="legal.privacy"></a>
+        <span aria-hidden="true"> · </span>
+        <a href="terms.html" data-i18n="legal.terms"></a>
+      </p>
+      <p class="lang-switch" id="lang-switch-wrap">
+        <span class="visually-hidden" data-i18n="index.lang.label"></span>
+        <a href="?lang=en" data-lang-link="en" data-i18n="index.lang.en"></a>
+        <span aria-hidden="true"> · </span>
+        <a href="?lang=he" data-lang-link="he" data-i18n="index.lang.he"></a>
+      </p>
+      <button type="button" id="home-wizard-show-again" class="home-wizard-show-again" data-i18n="index.wizard.showGuide"></button>
+    </footer>
+
+    <script type="module">
+      import { initI18n, t, setLocalePreference } from "./i18n.js";
+
+      await initI18n();
+      document.title = t("index.pageTitle");
+
+      document.querySelectorAll("[data-lang-link]").forEach((a) => {
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          setLocalePreference(a.getAttribute("data-lang-link"), true);
+        });
+      });
+
+      const HOME_ONBOARDING_KEY = "bingabu-home-wizard-done";
+      const CTA_GROUP_ID = "home-cta-group";
+      const overlay = document.getElementById("home-wizard-overlay");
+      const modal = document.querySelector(".home-wizard-modal");
+      const skipBtn = document.getElementById("home-wizard-skip");
+      const doneBtn = document.getElementById("home-wizard-done");
+      const showAgainBtn = document.getElementById("home-wizard-show-again");
+
+      let highlightEl = null;
+
+      function removeHighlight() {
+        if (highlightEl) {
+          highlightEl.classList.remove("home-wizard-highlight");
+          highlightEl = null;
+        }
+      }
+
+      function positionModal(targetEl) {
+        if (!modal || !targetEl) return;
+        const gap = 16;
+        const padding = 20;
+        const rect = targetEl.getBoundingClientRect();
+        const modalRect = modal.getBoundingClientRect();
+        const viewportW = window.innerWidth;
+        const viewportH = window.innerHeight;
+        let top = rect.bottom + gap;
+        let left = rect.left;
+        if (top + modalRect.height > viewportH - padding) top = Math.max(padding, rect.top - modalRect.height - gap);
+        if (left + modalRect.width > viewportW - padding) left = viewportW - padding - modalRect.width;
+        if (left < padding) left = padding;
+        modal.style.top = top + "px";
+        modal.style.left = left + "px";
+      }
+
+      function closeWizard() {
+        try {
+          localStorage.setItem(HOME_ONBOARDING_KEY, "1");
+        } catch (_) {}
+        removeHighlight();
+        if (overlay) overlay.classList.add("hidden");
+      }
+
+      function openWizard() {
+        if (overlay) overlay.classList.remove("hidden");
+        removeHighlight();
+        const target = document.getElementById(CTA_GROUP_ID);
+        if (target) {
+          highlightEl = target;
+          target.classList.add("home-wizard-highlight");
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+          requestAnimationFrame(function () {
+            positionModal(target);
+            if (doneBtn && typeof doneBtn.focus === "function") doneBtn.focus();
+          });
+        }
+      }
+
+      if (doneBtn) doneBtn.addEventListener("click", closeWizard);
+      if (skipBtn) skipBtn.addEventListener("click", closeWizard);
+      if (showAgainBtn) {
+        showAgainBtn.addEventListener("click", function () {
+          try {
+            localStorage.removeItem(HOME_ONBOARDING_KEY);
+          } catch (_) {}
+          openWizard();
+        });
+      }
+      document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        if (overlay && !overlay.classList.contains("hidden")) {
+          e.preventDefault();
+          closeWizard();
+        }
+      });
+
+      function maybeOpenWizard() {
+        if (localStorage.getItem(HOME_ONBOARDING_KEY)) return;
+        requestAnimationFrame(function () {
+          requestAnimationFrame(openWizard);
+        });
+      }
+      if (document.readyState === "complete") maybeOpenWizard();
+      else window.addEventListener("load", maybeOpenWizard);
+    </script>
   </body>
 </html>

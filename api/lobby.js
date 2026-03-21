@@ -1,3 +1,4 @@
+import "./lib/initObservability.js";
 import * as store from "./lib/store.js";
 
 const DEFAULT_LIMIT = 20;

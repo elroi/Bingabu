@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import * as store from "../lib/store.js";
 import { generateSalt, hashPassword } from "../lib/password.js";
+import { getClientIp } from "../lib/clientIp.js";
+import { rateLimitCreateRoom, retryAfterSeconds } from "../lib/rateLimit.js";
 
 const ROOM_ID_LENGTH = 6;
 const ROOM_ID_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous 0/O, 1/I
@@ -47,6 +49,13 @@ export default async function handler(req, res) {
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const ip = getClientIp(req);
+  const rl = await rateLimitCreateRoom(ip);
+  if (!rl.success) {
+    res.setHeader("Retry-After", String(retryAfterSeconds(rl.reset)));
+    return res.status(429).json({ error: "Too many requests" });
   }
 
   let body;

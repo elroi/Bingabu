@@ -1,5 +1,8 @@
 import * as store from "../../lib/store.js";
 import { verify } from "../../lib/jwt.js";
+import { getClientIp } from "../../lib/clientIp.js";
+import { rateLimitDaubs, retryAfterSeconds } from "../../lib/rateLimit.js";
+import { filterAllowedDaubs } from "../../lib/daubFilter.js";
 
 function parsePath(url) {
   const path = (url || "").split("?")[0] || "";
@@ -28,6 +31,13 @@ export default async function handler(req, res) {
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const ip = getClientIp(req);
+  const rl = await rateLimitDaubs(ip);
+  if (!rl.success) {
+    res.setHeader("Retry-After", String(retryAfterSeconds(rl.reset)));
+    return res.status(429).json({ error: "Too many requests" });
   }
 
   const roomId = parsePath(req.url);
@@ -82,7 +92,8 @@ export default async function handler(req, res) {
 
   room.state = room.state || {};
   room.state.participantDaubs = room.state.participantDaubs || {};
-  room.state.participantDaubs[String(slotIndex)] = daubs.map(String);
+  const filtered = filterAllowedDaubs(room.state, slotIndex, daubs);
+  room.state.participantDaubs[String(slotIndex)] = filtered;
   room.updatedAt = Date.now();
   await store.set(roomId, room);
 

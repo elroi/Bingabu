@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function () {
+        var SUPPORTED = ["en", "he"];
+        function norm(t) {
+          if (!t) return null;
+          var l = String(t).trim().toLowerCase();
+          if (SUPPORTED.indexOf(l) >= 0) return l;
+          var two = l.slice(0, 2);
+          if (SUPPORTED.indexOf(two) >= 0) return two;
+          return null;
+        }
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var loc = norm(params.get("lang"));
+          if (!loc) loc = norm(localStorage.getItem("bingabu-locale"));
+          if (!loc) {
+            var n = (navigator.language || "").toLowerCase();
+            if (n.indexOf("he") === 0) loc = "he";
+          }
+          if (!loc) loc = "en";
+          document.documentElement.lang = loc;
+          document.documentElement.dir = loc === "he" ? "rtl" : "ltr";
+        } catch (e) {}
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spectate – Bingabu</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #ff6b6b;
+        --secondary: #4ecdc4;
+        --accent: #ffe66d;
+        --bg: #f7f9fc;
+        --text: #2d3436;
+      }
+      body {
+        font-family: "Quicksand", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #wrap {
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+      }
+      h1 {
+        font-family: "Fredoka One", cursive;
+        color: var(--primary);
+        font-size: 1.4rem;
+        margin: 0 0 8px 0;
+      }
+      .sub {
+        font-size: 0.9rem;
+        color: #636e72;
+        margin-bottom: 20px;
+      }
+      .current-number {
+        font-family: "Fredoka One", cursive;
+        font-size: clamp(2rem, 10vw, 3rem);
+        margin-bottom: 16px;
+      }
+      .history-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+        min-height: 40px;
+      }
+      .history-ball {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: 2px solid #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.8rem;
+      }
+      .leave {
+        margin-top: 24px;
+        color: var(--secondary);
+        font-weight: 700;
+      }
+      .error {
+        color: var(--primary);
+        margin-top: 12px;
+      }
+      @media (max-width: 600px) {
+        body {
+          padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrap">
+      <h1 id="spec-title" data-i18n="spectator.heading"></h1>
+      <p class="sub" id="spec-sub" data-i18n="spectator.subtitle"></p>
+      <p id="spec-current-label" class="sub" data-i18n="spectator.currentLabel"></p>
+      <div id="current-number" class="current-number" aria-live="polite">--</div>
+      <p id="spec-history-label" class="sub" data-i18n="spectator.historyLabel"></p>
+      <div id="history-wrap" class="history-wrap" aria-label="Called numbers"></div>
+      <p id="err" class="error hidden" role="status" aria-live="polite"></p>
+      <a href="join.html" class="leave" id="spec-leave" data-i18n="spectator.leave"></a>
+      <p class="join-lang-switch" style="margin-top: 20px; font-size: 0.9rem">
+        <a href="?lang=en" data-lang-link="en" data-i18n="join.lang.en"></a>
+        <span aria-hidden="true"> · </span>
+        <a href="?lang=he" data-lang-link="he" data-i18n="join.lang.he"></a>
+      </p>
+    </div>
+    <script type="module">
+      import { initI18n, t, setLocalePreference } from "./i18n.js";
+      import { nextReconnectDelayMs, SSE_RECONNECT_INITIAL_MS } from "./streamReconnect.js";
+
+      await initI18n();
+      document.title = t("spectator.pageTitle");
+
+      document.querySelectorAll("[data-lang-link]").forEach((a) => {
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          setLocalePreference(a.getAttribute("data-lang-link"), true);
+        });
+      });
+
+      const JOIN_STORAGE = { roomId: "bingabu-join-roomId", joinToken: "bingabu-join-token" };
+
+      function getApiBase() {
+        return typeof window !== "undefined" && window.location && window.location.origin ? window.location.origin : "";
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      let roomId = params.get("room") || sessionStorage.getItem(JOIN_STORAGE.roomId);
+      const joinToken = sessionStorage.getItem(JOIN_STORAGE.joinToken);
+
+      function getLetter(num) {
+        if (num <= 15) return "B";
+        if (num <= 30) return "I";
+        if (num <= 45) return "N";
+        if (num <= 60) return "G";
+        return "O";
+      }
+
+      function render(state) {
+        const drawnSequence = (state && state.drawnSequence) || [];
+        const lastNum = drawnSequence[drawnSequence.length - 1];
+        const cur = document.getElementById("current-number");
+        const hist = document.getElementById("history-wrap");
+        if (cur) cur.textContent = lastNum ? `${getLetter(lastNum)}-${lastNum}` : "--";
+        if (hist) {
+          hist.innerHTML = "";
+          drawnSequence.slice(-20).forEach((n) => {
+            const ball = document.createElement("div");
+            ball.className = "history-ball";
+            ball.textContent = n;
+            hist.appendChild(ball);
+          });
+        }
+      }
+
+      async function fetchRoom() {
+        const errEl = document.getElementById("err");
+        if (errEl) {
+          errEl.classList.add("hidden");
+          errEl.textContent = "";
+        }
+        try {
+          const headers = {};
+          if (joinToken) headers["Authorization"] = "Bearer " + joinToken;
+          const res = await fetch(`${getApiBase()}/api/rooms/${roomId}`, { headers });
+          const data = await res.json().catch(() => ({}));
+          if (res.status === 404) {
+            if (errEl) {
+              errEl.textContent = t("spectator.error.roomGone");
+              errEl.classList.remove("hidden");
+            }
+            return;
+          }
+          if (data.passwordRequired) {
+            if (errEl) {
+              errEl.textContent = t("spectator.error.needJoin");
+              errEl.classList.remove("hidden");
+            }
+            return;
+          }
+          if (data.state) render(data.state);
+        } catch (_) {
+          if (errEl) {
+            errEl.textContent = t("join.error.network");
+            errEl.classList.remove("hidden");
+          }
+        }
+      }
+
+      let eventSource = null;
+      let reconnectDelayMs = SSE_RECONNECT_INITIAL_MS;
+
+      function connectStream() {
+        if (eventSource) {
+          try {
+            eventSource.close();
+          } catch (_) {}
+        }
+        const qs = joinToken ? "?joinToken=" + encodeURIComponent(joinToken) : "";
+        const url = `${getApiBase()}/api/rooms/${roomId}/stream${qs}`;
+        try {
+          eventSource = new EventSource(url);
+          eventSource.onopen = () => {
+            reconnectDelayMs = SSE_RECONNECT_INITIAL_MS;
+          };
+          eventSource.onmessage = () => fetchRoom();
+          eventSource.onerror = () => {
+            try {
+              eventSource.close();
+            } catch (_) {}
+            eventSource = null;
+            const wait = reconnectDelayMs;
+            reconnectDelayMs = nextReconnectDelayMs(reconnectDelayMs);
+            setTimeout(connectStream, wait);
+          };
+        } catch (_) {
+          eventSource = null;
+        }
+      }
+
+      if (!roomId) {
+        document.getElementById("wrap").innerHTML = `<p>${t("spectator.error.missingRoom")}</p><a href="join.html">${t("spectator.leave")}</a>`;
+      } else {
+        fetchRoom();
+        if (typeof EventSource !== "undefined") connectStream();
+        else setInterval(fetchRoom, 2000);
+      }
+
+      window.addEventListener("beforeunload", () => {
+        if (eventSource) try { eventSource.close(); } catch (_) {}
+      });
+    </script>
+  </body>
+</html>

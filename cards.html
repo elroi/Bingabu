@@ -2,8 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        var SUPPORTED = ["en", "he"];
+        function norm(t) {
+          if (!t) return null;
+          var l = String(t).trim().toLowerCase();
+          if (SUPPORTED.indexOf(l) >= 0) return l;
+          var two = l.slice(0, 2);
+          if (SUPPORTED.indexOf(two) >= 0) return two;
+          return null;
+        }
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var loc = norm(params.get("lang"));
+          if (!loc) loc = norm(localStorage.getItem("bingabu-locale"));
+          if (!loc) {
+            var n = (navigator.language || "").toLowerCase();
+            if (n.indexOf("he") === 0) loc = "he";
+          }
+          if (!loc) loc = "en";
+          document.documentElement.lang = loc;
+          document.documentElement.dir = loc === "he" ? "rtl" : "ltr";
+        } catch (e) {}
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Print cards – Bingabu</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link
       href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap"
       rel="stylesheet"
@@ -274,26 +300,34 @@
   </head>
   <body>
     <div class="no-print">
-      <h1>Print cards</h1>
-      <p id="subtitle">Same cards as your current game</p>
+      <h1 data-i18n="cards.heading"></h1>
+      <p id="subtitle" data-i18n="cards.subtitle"></p>
       <div class="actions" id="actions">
-        <button id="print-btn">Print</button>
-        <button id="refresh-btn">Refresh</button>
-        <a href="bingo.html" class="link-btn">Back to game</a>
+        <button id="print-btn" data-i18n="cards.print"></button>
+        <button id="refresh-btn" data-i18n="cards.refresh"></button>
+        <a href="bingo.html" class="link-btn" data-i18n="cards.back"></a>
       </div>
       <div class="ink-option">
         <input type="checkbox" id="ink-friendly" />
-        <label for="ink-friendly">Ink-friendly print (lighter, borders only)</label>
+        <label for="ink-friendly" data-i18n="cards.inkFriendly"></label>
       </div>
     </div>
 
     <div id="empty-state" class="empty-state hidden">
-      <p>No game in progress. Open the <a href="bingo.html">Bingabu game</a> and start or load a game, then return here to print the same cards.</p>
+      <p id="empty-state-msg"></p>
     </div>
 
     <div class="cards-container" id="cards-container"></div>
 
-    <script>
+    <script type="module">
+      import { initI18n, t } from "./i18n.js";
+
+      await initI18n();
+      document.title = t("cards.pageTitle");
+
+      const emptyMsg = document.getElementById("empty-state-msg");
+      if (emptyMsg) emptyMsg.innerHTML = t("cards.emptyHtml");
+
       const STORAGE_KEY = "bingo-manager-state";
       const cardsContainer = document.getElementById("cards-container");
       const emptyState = document.getElementById("empty-state");
@@ -345,7 +379,9 @@
           wrap.className = "participant-card-wrap";
           const title = document.createElement("div");
           title.className = "participant-card-title";
-          const name = (state.participantNames && state.participantNames[index] && state.participantNames[index].trim()) || `Player ${index + 1}`;
+          const name =
+            (state.participantNames && state.participantNames[index] && state.participantNames[index].trim()) ||
+            t("cards.playerN", { n: index + 1 });
           title.textContent = name;
           wrap.appendChild(title);
 

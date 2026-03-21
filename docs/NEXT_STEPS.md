@@ -22,8 +22,8 @@ Step-by-step guidance for deploy, spectator mode, accessibility, and polish.
    - Leave **Framework Preset** as “Other” (or “Vite” if it detects it; it doesn’t matter much).  
    - **Root Directory:** leave as `.`  
    - **Build and Output:**  
-     - Build Command: leave empty or `npm run build` if you add a build later.  
-     - Output Directory: leave empty or `.`  
+     - Build Command: `npm run build` (Vite → `dist/` + locale JSON copy).  
+     - Output Directory: `dist` (see `vercel.json`).  
    - Click **Deploy**.
 
 4. **Wait for the first deploy**  
@@ -40,6 +40,9 @@ Step-by-step guidance for deploy, spectator mode, accessibility, and polish.
 
 7. **Required for joining: Redis (Upstash)**  
    On Vercel, each request can run in a different serverless instance, so in-memory room data is not shared. Without Redis, the host creates a room in one instance and the joiner gets 404 in another. See **section 1b** below.
+
+8. **Preview vs production data**  
+   See **[ENVIRONMENTS.md](./ENVIRONMENTS.md)** for Redis key prefixes on Vercel Preview.
 
 ---
 
@@ -188,6 +191,12 @@ The app looks for **`UPSTASH_REDIS_REST_URL`** and **`UPSTASH_REDIS_REST_TOKEN`*
 - Right now the player view reconnects the EventSource after 1 second on close/error.  
 - To be gentler on the server: use **exponential backoff** (e.g. 1s, then 2s, then 4s, cap at e.g. 30s).  
 - In `player.html`, replace the fixed `setTimeout(connectStream, 1000)` with a variable like `let reconnectDelay = 1000`; on each reconnect failure increase it (e.g. `reconnectDelay = Math.min(reconnectDelay * 2, 30000)`) and pass it to `setTimeout(connectStream, reconnectDelay)`; on a successful connection you can reset `reconnectDelay = 1000`.
+
+---
+
+## Post-MVP (after launch)
+
+- **Translation / i18n** – Structured i18n for **home + join** (English / Hebrew) lives in `locales/*.json`, `i18n.js`, and [docs/I18N.md](./I18N.md). Extend the same pattern to player/bingo/cards when needed; keep **Bingabu** in Latin in non-English strings.
 
 ---
 

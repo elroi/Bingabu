@@ -5,10 +5,18 @@
 
 import fs from "fs";
 import path from "path";
+import { getKeyPrefix } from "./keyPrefix.js";
+import { captureException } from "./initObservability.js";
 
 const ROOM_TTL_SEC = 24 * 60 * 60; // 24 hours
-const ROOM_KEY_PREFIX = "bingabu:room:";
-const LOBBY_SET_KEY = "bingabu:lobby";
+
+function roomRedisKey(roomId) {
+  return `${getKeyPrefix()}room:${roomId}`;
+}
+
+function lobbyRedisKey() {
+  return `${getKeyPrefix()}lobby`;
+}
 
 const memory = globalThis.__bingabu_rooms ?? new Map();
 if (!globalThis.__bingabu_rooms) globalThis.__bingabu_rooms = memory;
@@ -81,7 +89,7 @@ async function get(roomId) {
   const redis = await getRedis();
   if (redis) {
     try {
-      const raw = await redis.get(ROOM_KEY_PREFIX + roomId);
+      const raw = await redis.get(roomRedisKey(roomId));
       if (raw == null) return null;
       const room = typeof raw === "string" ? JSON.parse(raw) : raw;
       if (room.expiresAt && Date.now() > room.expiresAt) {
@@ -89,7 +97,8 @@ async function get(roomId) {
         return null;
       }
       return room;
-    } catch (_) {
+    } catch (err) {
+      captureException(err, { where: "store.get.redis", roomId });
       return null;
     }
   }
@@ -115,10 +124,11 @@ async function set(roomId, room) {
   const redis = await getRedis();
   if (redis) {
     try {
-      await redis.set(ROOM_KEY_PREFIX + roomId, JSON.stringify(room), { ex: ROOM_TTL_SEC });
-      await redis.zadd(LOBBY_SET_KEY, { score, member: roomId });
+      await redis.set(roomRedisKey(roomId), JSON.stringify(room), { ex: ROOM_TTL_SEC });
+      await redis.zadd(lobbyRedisKey(), { score, member: roomId });
       return;
-    } catch (_) {
+    } catch (err) {
+      captureException(err, { where: "store.set.redis", roomId });
       // fall through to memory
     }
   }
@@ -130,10 +140,12 @@ async function remove(roomId) {
   const redis = await getRedis();
   if (redis) {
     try {
-      await redis.del(ROOM_KEY_PREFIX + roomId);
-      await redis.zrem(LOBBY_SET_KEY, roomId);
+      await redis.del(roomRedisKey(roomId));
+      await redis.zrem(lobbyRedisKey(), roomId);
       return;
-    } catch (_) {}
+    } catch (err) {
+      captureException(err, { where: "store.remove.redis", roomId });
+    }
   }
   memory.delete(roomId);
   if (typeof process !== "undefined" && process.env) saveToFile();
@@ -143,7 +155,7 @@ async function listRecent(limit = 20) {
   const redis = await getRedis();
   if (redis) {
     try {
-      const roomIds = await redis.zrange(LOBBY_SET_KEY, 0, limit - 1, { rev: true });
+      const roomIds = await redis.zrange(lobbyRedisKey(), 0, limit - 1, { rev: true });
       const rooms = [];
       for (const id of roomIds) {
         const room = await get(id);

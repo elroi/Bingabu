@@ -1,5 +1,7 @@
 import * as store from "../../lib/store.js";
 import { verify } from "../../lib/jwt.js";
+import { getClientIp } from "../../lib/clientIp.js";
+import { rateLimitClaim, retryAfterSeconds } from "../../lib/rateLimit.js";
 
 function parsePath(url) {
   const path = (url || "").split("?")[0] || "";
@@ -28,6 +30,13 @@ export default async function handler(req, res) {
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const ip = getClientIp(req);
+  const rl = await rateLimitClaim(ip);
+  if (!rl.success) {
+    res.setHeader("Retry-After", String(retryAfterSeconds(rl.reset)));
+    return res.status(429).json({ error: "Too many requests" });
   }
 
   const roomId = parsePath(req.url);
@@ -68,6 +77,14 @@ export default async function handler(req, res) {
 
   if (deviceId === room.hostId && !isHostRequest) {
     return res.status(403).json({ error: "Host authentication required for host player device id" });
+  }
+
+  if (room.joinLocked && !isHostRequest) {
+    room.claims = room.claims || {};
+    const existingClaim = room.claims[String(slotIndex)];
+    if (!existingClaim || existingClaim !== deviceId) {
+      return res.status(403).json({ error: "Joining is temporarily closed" });
+    }
   }
 
   room.claims = room.claims || {};

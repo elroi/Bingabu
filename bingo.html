@@ -2,8 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        var SUPPORTED = ["en", "he"];
+        function norm(t) {
+          if (!t) return null;
+          var l = String(t).trim().toLowerCase();
+          if (SUPPORTED.indexOf(l) >= 0) return l;
+          var two = l.slice(0, 2);
+          if (SUPPORTED.indexOf(two) >= 0) return two;
+          return null;
+        }
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var loc = norm(params.get("lang"));
+          if (!loc) loc = norm(localStorage.getItem("bingabu-locale"));
+          if (!loc) {
+            var n = (navigator.language || "").toLowerCase();
+            if (n.indexOf("he") === 0) loc = "he";
+          }
+          if (!loc) loc = "en";
+          document.documentElement.lang = loc;
+          document.documentElement.dir = loc === "he" ? "rtl" : "ltr";
+        } catch (e) {}
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bingabu</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link
       href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap"
       rel="stylesheet"
@@ -358,6 +384,29 @@
         background: #636e72;
         color: white;
         margin-top: 8px;
+      }
+      .remote-play-lock-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 12px 0;
+        font-size: 0.9rem;
+      }
+      .how-play-works {
+        margin-bottom: 12px;
+        border: 2px solid #eee;
+        border-radius: 12px;
+        padding: 8px 12px;
+        background: white;
+      }
+      .how-play-works-summary {
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .how-play-works-body {
+        margin: 8px 0 0 0;
+        font-size: 0.9rem;
+        color: #636e72;
       }
       .remote-play-code-label,
       .remote-play-joined-label {
@@ -1409,9 +1458,9 @@
   <body>
     <h1 id="bingo-app-title" class="home-link hero-title" tabindex="0" role="link" aria-label="Bingabu"><span class="letter">B</span><span class="letter">i</span><span class="letter">n</span><span class="letter">g</span><span class="letter">a</span><span class="letter">b</span><span class="letter">u</span></h1>
 
-    <div id="first-visit-banner" class="first-visit-banner hidden" role="region" aria-label="First-time host tip" aria-live="polite">
-      <p class="first-visit-banner-text">First time hosting? Set players, create the room if playing online, then <strong>Start the game</strong> and use <strong>DRAW</strong> to call numbers.</p>
-      <button type="button" id="first-visit-banner-dismiss" class="first-visit-banner-dismiss">Got it</button>
+    <div id="first-visit-banner" class="first-visit-banner hidden" role="region" data-i18n-attr="aria-label" data-i18n="bingo.banner.firstVisit.aria" aria-live="polite">
+      <p class="first-visit-banner-text" data-i18n="bingo.banner.firstVisit.body"></p>
+      <button type="button" id="first-visit-banner-dismiss" class="first-visit-banner-dismiss" data-i18n="bingo.banner.firstVisit.dismiss"></button>
     </div>
 
     <nav class="host-steps" id="host-steps" aria-label="Host steps">
@@ -1482,9 +1531,13 @@
         <p class="daub-mode-hint" id="daub-mode-hint">Numbers will color automatically when called.</p>
       </section>
       <section class="remote-play-section host-setup-block" id="remote-play-section" aria-label="Play with friends">
-        <h2 class="host-setup-heading remote-play-heading">Playing with friends online?</h2>
-        <p id="remote-play-api-unavailable" class="remote-play-api-unavailable hidden">Remote play needs the API. Run <code>npm run dev:api</code> to enable it.</p>
-        <p class="host-setup-subtitle remote-play-subtitle">Create an online room to play with others. Optional if you're playing in person.</p>
+        <h2 class="host-setup-heading remote-play-heading" data-i18n="bingo.remote.heading"></h2>
+        <p id="remote-play-api-unavailable" class="remote-play-api-unavailable hidden" data-i18n="bingo.remote.apiUnavailable"></p>
+        <p class="host-setup-subtitle remote-play-subtitle" data-i18n="bingo.remote.subtitle"></p>
+        <details class="how-play-works host-setup-block">
+          <summary class="how-play-works-summary" data-i18n="bingo.remote.howSummary"></summary>
+          <p class="how-play-works-body" data-i18n="bingo.remote.howBody"></p>
+        </details>
         <div id="remote-play-create" class="remote-play-create">
           <button type="button" id="remote-play-create-btn" class="remote-play-btn">Create an online game room</button>
         </div>
@@ -1524,6 +1577,10 @@
               <p class="remote-play-joined-label">Players joined</p>
               <ul id="remote-play-joined-list" class="remote-play-joined-list" aria-live="polite"></ul>
               <button type="button" id="sync-to-players-btn" class="remote-play-btn secondary" title="Push current state (including daubs) to players so their cards update.">Sync to players</button>
+              <div class="remote-play-lock-wrap">
+                <input type="checkbox" id="remote-play-lock-joins" data-i18n="bingo.remote.lockLabel" data-i18n-attr="aria-label" />
+                <label for="remote-play-lock-joins"><span data-i18n="bingo.remote.lockLabel"></span></label>
+              </div>
               <button type="button" id="host-join-as-player-btn-setup" class="remote-play-btn secondary host-join-as-player-btn" title="Open your player card in a new tab while you host here.">Join as player</button>
             </div>
           </div>
@@ -1657,7 +1714,11 @@
     </div>
 
     <script type="module">
+      import { initI18n, t } from "./i18n.js";
       import { getOrdinal, getRankedPlayers, getRankingPhrase } from "./ranking.js";
+
+      await initI18n();
+      document.title = t("bingo.pageTitle");
 
       const STORAGE_KEY = "bingo-manager-state";
       const drawBtn = document.getElementById("draw-btn");
@@ -1797,6 +1858,7 @@
       const REMOTE_HOST_ID_KEY = "bingabu-remote-hostId";
       const HOST_PHASE_KEY = "bingabu-host-phase";
       let stateDirtySinceLastPush = false;
+      let remoteJoinLocked = false;
 
       async function pushRoomStateIfHost() {
         try {
@@ -1807,7 +1869,7 @@
           const res = await fetch(`${base}/api/rooms/${roomId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json", "X-Host-Id": hostId },
-            body: JSON.stringify({ state: getStateForApi() }),
+            body: JSON.stringify({ state: getStateForApi(), joinLocked: remoteJoinLocked }),
           });
           if (!res.ok) return;
           stateDirtySinceLastPush = false;
@@ -2740,6 +2802,9 @@
       const remotePlayActiveDetailsEl = document.getElementById("remote-play-active-details");
 
       function showRemotePlayCreate() {
+        remoteJoinLocked = false;
+        const lockElReset = document.getElementById("remote-play-lock-joins");
+        if (lockElReset) lockElReset.checked = false;
         if (remotePlayCreateEl) remotePlayCreateEl.classList.remove("hidden");
         if (remotePlayActiveEl) remotePlayActiveEl.classList.add("hidden");
         if (remotePlayCreateOptionsEl) remotePlayCreateOptionsEl.classList.remove("hidden");
@@ -2886,6 +2951,11 @@
           }
           if (!res.ok) return;
           const data = await res.json();
+          if (typeof data.joinLocked === "boolean") {
+            remoteJoinLocked = data.joinLocked;
+            const lockEl = document.getElementById("remote-play-lock-joins");
+            if (lockEl) lockEl.checked = remoteJoinLocked;
+          }
           const claims = data.claims || {};
           const names = (data.state && data.state.participantNames) || [];
           const np = (data.state && data.state.numParticipants) || 0;
@@ -2968,6 +3038,9 @@
             sessionStorage.setItem(REMOTE_ROOM_ID_KEY, data.roomId);
             sessionStorage.setItem(REMOTE_HOST_ID_KEY, data.hostId);
             stateDirtySinceLastPush = false;
+            remoteJoinLocked = false;
+            const lockElNew = document.getElementById("remote-play-lock-joins");
+            if (lockElNew) lockElNew.checked = false;
             showRemotePlayActive(data.roomId, data.shareUrl, !!body.password);
             updateSyncToPlayersButton();
             updateHostJoinAsPlayerButton();
@@ -3020,6 +3093,13 @@
           pushRoomStateIfHost();
           syncToPlayersBtn.textContent = "Synced!";
           setTimeout(() => { syncToPlayersBtn.textContent = "Sync to players"; }, 1500);
+        });
+      }
+      const remotePlayLockJoinsEl = document.getElementById("remote-play-lock-joins");
+      if (remotePlayLockJoinsEl) {
+        remotePlayLockJoinsEl.addEventListener("change", () => {
+          remoteJoinLocked = remotePlayLockJoinsEl.checked;
+          pushRoomStateIfHost();
         });
       }
       if (endRoomBtn) {

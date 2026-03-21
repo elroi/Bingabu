@@ -2,8 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        var SUPPORTED = ["en", "he"];
+        function norm(t) {
+          if (!t) return null;
+          var l = String(t).trim().toLowerCase();
+          if (SUPPORTED.indexOf(l) >= 0) return l;
+          var two = l.slice(0, 2);
+          if (SUPPORTED.indexOf(two) >= 0) return two;
+          return null;
+        }
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var loc = norm(params.get("lang"));
+          if (!loc) loc = norm(localStorage.getItem("bingabu-locale"));
+          if (!loc) {
+            var n = (navigator.language || "").toLowerCase();
+            if (n.indexOf("he") === 0) loc = "he";
+          }
+          if (!loc) loc = "en";
+          document.documentElement.lang = loc;
+          document.documentElement.dir = loc === "he" ? "rtl" : "ltr";
+        } catch (e) {}
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Your card – Bingabu</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link
       href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap"
       rel="stylesheet"
@@ -190,6 +216,20 @@
         display: inline-block;
       }
       .hidden { display: none !important; }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .participant-card .card-row {
+        display: contents;
+      }
 
       @media (max-width: 600px) {
         body {
@@ -203,23 +243,29 @@
   </head>
   <body>
     <div id="game-wrap">
-      <h1 id="player-title">Your card</h1>
+      <h1 id="player-title" data-i18n="player.heading"></h1>
       <div class="current-wrap">
         <div id="current-number" class="current-number" aria-live="polite">--</div>
       </div>
       <div id="history-wrap" class="history-wrap"></div>
       <div id="card-wrap"></div>
-      <p id="bingo-msg" class="card-bingo hidden"></p>
+      <p id="bingo-msg" class="card-bingo hidden" aria-live="assertive" aria-atomic="true"></p>
       <p id="status" class="status" aria-live="polite"></p>
-      <p><a href="join.html" class="leave-link">Leave game</a></p>
+      <p><a href="join.html" class="leave-link" data-i18n="player.leave"></a></p>
     </div>
     <div id="booted-wrap" class="booted-wrap hidden">
-      <h2>You were removed from the game</h2>
-      <p>The host removed you from the room.</p>
-      <a href="join.html">Rejoin</a>
+      <h2 data-i18n="player.booted.title"></h2>
+      <p data-i18n="player.booted.body"></p>
+      <a href="join.html" data-i18n="player.booted.rejoin"></a>
     </div>
 
     <script type="module">
+      import { initI18n, t } from "./i18n.js";
+      import { nextReconnectDelayMs, SSE_RECONNECT_INITIAL_MS } from "./streamReconnect.js";
+
+      await initI18n();
+      document.title = t("player.pageTitle");
+
       const JOIN_STORAGE = { roomId: "bingabu-join-roomId", joinToken: "bingabu-join-token", deviceId: "bingabu-device-id", slotIndex: "bingabu-slot-index" };
 
       function getApiBase() {
@@ -290,10 +336,14 @@
       let lastSeenIndicatorPulseAt = 0;
 
       if (!roomId || (typeof slotIndex !== "number" || slotIndex < 0)) {
-        document.getElementById("game-wrap").innerHTML = "<p>Missing room or player. <a href='join.html'>Join a game</a>.</p>";
-      } else if (hostPlayer && !hostPlayerHostId) {
         document.getElementById("game-wrap").innerHTML =
-          "<p>Could not verify host session. Use <strong>Join as player</strong> again from your host tab, or <a href='join.html'>join the game</a> with the room code.</p>";
+          "<p>" +
+          t("player.error.missing") +
+          " <a href='join.html'>" +
+          t("player.error.missingLink") +
+          "</a>.</p>";
+      } else if (hostPlayer && !hostPlayerHostId) {
+        document.getElementById("game-wrap").innerHTML = "<p>" + t("player.error.hostSession") + "</p>";
       } else {
         function getColumnClass(col) {
           return ["col-b", "col-i", "col-n", "col-g", "col-o"][col];
@@ -372,7 +422,7 @@
           const names = state.participantNames || [];
           const name = (names[slotIndex] && names[slotIndex].trim()) || `Player ${slotIndex + 1}`;
 
-          if (titleEl) titleEl.textContent = name + " – Your card";
+          if (titleEl) titleEl.textContent = t("player.titleWithName", { name });
           if (currentEl) currentEl.textContent = lastNum ? `${getLetter(lastNum)}-${lastNum}` : "--";
 
           historyWrap.innerHTML = "";
@@ -383,11 +433,15 @@
             historyWrap.appendChild(ball);
           });
 
-          let grid = "";
+          let grid =
+            '<div class="participant-card" id="player-card" role="grid" aria-label="Your bingo card">';
+          grid += '<div class="card-row" role="row">';
           for (let c = 0; c < 5; c++) {
-            grid += `<div class="card-header-cell ${["b", "i", "n", "g", "o"][c]}">${["B", "I", "N", "G", "O"][c]}</div>`;
+            grid += `<div role="columnheader" class="card-header-cell ${["b", "i", "n", "g", "o"][c]}">${["B", "I", "N", "G", "O"][c]}</div>`;
           }
+          grid += "</div>";
           for (let row = 0; row < 5; row++) {
+            grid += '<div class="card-row" role="row">';
             for (let col = 0; col < 5; col++) {
               const val = card[row][col];
               const colClass = getColumnClass(col);
@@ -404,10 +458,12 @@
               if (latest) cls += " latest-draw";
               if (showGuidance) cls += " guidance";
               const dataAttrs = isFree ? "" : ` data-row="${row}" data-col="${col}" data-value="${val}"`;
-              grid += `<div class="${cls}"${dataAttrs}>${val}</div>`;
+              grid += `<div role="gridcell" class="${cls}"${dataAttrs}>${val}</div>`;
             }
+            grid += "</div>";
           }
-          wrap.innerHTML = `<div class="participant-card" id="player-card">${grid}</div>`;
+          grid += "</div>";
+          wrap.innerHTML = grid;
 
           const playerCard = document.getElementById("player-card");
           if (playerCard) {
@@ -447,7 +503,7 @@
           const bingoLines = manualDaubOnly ? getBingoLinesManual(card, drawnSet, localDaubs) : getBingoLines(card, drawnSet);
           if (bingoEl) {
             if (bingoLines.length > 0) {
-              bingoEl.textContent = "BINGABU! " + bingoLines.join(", ");
+              bingoEl.textContent = t("player.bingoPrefix") + " " + bingoLines.join(", ");
               bingoEl.classList.remove("hidden");
             } else {
               bingoEl.classList.add("hidden");
@@ -464,7 +520,7 @@
               for (let c = 0; c < 5; c++)
                 if (card[r][c] === "FREE" || drawnSet.has(card[r][c])) markedCount++;
           }
-          if (statusEl) statusEl.textContent = `${markedCount}/24 marked`;
+          if (statusEl) statusEl.textContent = t("player.statusMarked", { count: markedCount });
         }
 
         let daubsPushTimer = null;
@@ -493,6 +549,7 @@
         let pollInterval;
         let eventSource = null;
         let failCount = 0;
+        let reconnectDelayMs = SSE_RECONNECT_INITIAL_MS;
 
         async function fetchRoom() {
           const headers = {};
@@ -505,22 +562,17 @@
             const res = await fetch(`${getApiBase()}/api/rooms/${roomId}`, { headers });
             const data = await res.json().catch(() => ({}));
             failCount = 0;
-            // #region agent log
             const claims = data.claims || {};
             const myClaim = claims[String(slotIndex)];
-            if (typeof _log === "function") _log("player.html:fetchRoom", "fetch result", { roomId, slotIndex, hasDeviceId: !!deviceId, hasJoinToken: !!joinToken, resStatus: res.status, passwordRequired: !!data.passwordRequired, myClaim: myClaim != null ? String(myClaim).slice(0, 12) + "…" : null, claimMismatch: !!(deviceId && myClaim !== deviceId) }, "join");
-            // #endregion
             if (res.status === 404) {
-              if (statusEl) statusEl.textContent = "Room not found or expired.";
+              if (statusEl) statusEl.textContent = t("player.error.roomGone");
               return;
             }
             if (data.passwordRequired) {
-              if (typeof _log === "function") _log("player.html:fetchRoom", "showBooted reason", { reason: "passwordRequired" }, "join");
               showBooted();
               return;
             }
             if (deviceId && myClaim !== deviceId) {
-              if (typeof _log === "function") _log("player.html:fetchRoom", "showBooted reason", { reason: "claimMismatch", slotIndex, hasDeviceId: !!deviceId }, "join");
               showBooted();
               return;
             }
@@ -545,13 +597,18 @@
           const url = getApiBase() + "/api/rooms/" + roomId + "/stream" + qs;
           try {
             eventSource = new EventSource(url);
+            eventSource.onopen = () => {
+              reconnectDelayMs = SSE_RECONNECT_INITIAL_MS;
+            };
             eventSource.onmessage = () => fetchRoom();
             eventSource.onerror = () => {
               try {
                 eventSource.close();
               } catch (_) {}
               eventSource = null;
-              setTimeout(connectStream, 1000);
+              const wait = reconnectDelayMs;
+              reconnectDelayMs = nextReconnectDelayMs(reconnectDelayMs);
+              setTimeout(connectStream, wait);
             };
           } catch (_) {
             eventSource = null;
