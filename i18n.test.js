@@ -199,6 +199,20 @@ describe("locale files", () => {
     expect(he["bingo.controls.draw"]).toBe("הגרלה");
   });
 
+  it("Hebrew caller tooltips describe RTL keys (right/back = prev, left/space = draw)", () => {
+    const he = readJson("he.json");
+    expect(he["bingo.controls.prevTitle"]).toMatch(/חץ ימין/);
+    expect(he["bingo.controls.prevTitle"]).not.toMatch(/חץ שמאל/);
+    expect(he["bingo.controls.drawTitle"]).toMatch(/חץ שמאל/);
+    expect(he["bingo.controls.drawTitle"]).not.toMatch(/חץ ימין/);
+  });
+
+  it("English caller shortcuts mirror Hebrew structure (action · keys) with LTR mapping", () => {
+    const en = readJson("en.json");
+    expect(en["bingo.controls.prevShortcut"]).toMatch(/Previous.*Left arrow.*Backspace/s);
+    expect(en["bingo.controls.nextShortcut"]).toMatch(/Next.*Space.*Right arrow/s);
+  });
+
   it("Hebrew values keep product name as Latin Bingabu (not translated)", () => {
     const he = readJson("he.json");
     const brandKeys = [
@@ -229,12 +243,17 @@ describe("i18n HTML wiring", () => {
       /html\[dir="rtl"\][\s\S]*?section-chevron[\s\S]*?rotate\(90deg\)/
     );
     expect(bingo).toMatch(/setAttribute\(\s*["']data-locale["']/);
-    expect(bingo).not.toMatch(
-      /html\[data-locale="he"\][\s\S]*?\.main-btns[\s\S]*?row-reverse/
+    expect(bingo).toMatch(
+      /html\[dir="rtl"\][\s\S]*?\.main-btns[\s\S]*?flex-direction:\s*row-reverse/
     );
-    expect(bingo).not.toMatch(
-      /html\[data-locale="he"\][\s\S]*?\.shortcuts[\s\S]*?row-reverse/
+    expect(bingo).toMatch(
+      /html\[dir="rtl"\][\s\S]*?\.shortcuts[\s\S]*?direction:\s*rtl/
     );
+    expect(bingo).toMatch(
+      /\.shortcuts[\s\S]*?grid-template-columns:\s*1fr\s+2fr/
+    );
+    expect(bingo).toMatch(/function isRtlDocument/);
+    expect(bingo).toMatch(/prevBtn\.setAttribute\(\s*["']title["']/);
     expect(bingo).toMatch(
       /id="draw-btn"[^>]*data-i18n="bingo\.controls\.draw"[^>]*data-i18n-title="bingo\.controls\.drawTitle"/
     );

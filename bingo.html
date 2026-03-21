@@ -201,8 +201,12 @@
         align-items: center;
         gap: 10px;
         width: 100%;
-        /* LTR row keeps prev | draw in the same positions as English (keyboard: ← prev, space/→ draw). */
+        /* LTR: prev | draw (matches en: ← back, space/→ next). */
         direction: ltr;
+      }
+      /* RTL: draw (next) on the left, prev (back) on the right — matches rtl arrow semantics. */
+      html[dir="rtl"] .main-btns {
+        flex-direction: row-reverse;
       }
 
       button {
@@ -974,14 +978,22 @@
         font-family: "Fredoka One", cursive;
       }
 
+      /* Match .main-btns column widths (prev flex:1, draw flex:2) so hints sit under the right buttons; align-items centers lines (e.g. ◀ vs letters). */
       .shortcuts {
         font-size: 0.75rem;
         color: #b2bec3;
-        display: flex;
-        flex-direction: row;
-        gap: 15px;
-        /* Same order as English hints under the same buttons (prev | next). */
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 10px;
+        width: 100%;
+        align-items: center;
+        justify-items: center;
+        text-align: center;
+        line-height: 1.35;
         direction: ltr;
+      }
+      html[dir="rtl"] .shortcuts {
+        direction: rtl;
       }
 
       .participant-setting {
@@ -1211,8 +1223,14 @@
       html[dir="rtl"] .participant-cards-section.cards-collapsed .section-chevron {
         transform: rotate(90deg);
       }
-      html[data-locale="he"] #draw-btn {
+      html[dir="rtl"] #draw-btn {
         direction: rtl;
+      }
+      html[dir="rtl"] #prev-btn {
+        transform: scaleX(-1);
+      }
+      html[dir="rtl"] #prev-btn:active:not(:disabled) {
+        transform: translateY(4px) scaleX(-1);
       }
       .participant-cards-section.cards-collapsed .participant-cards-grid {
         display: none;
@@ -1437,7 +1455,7 @@
       }
 
       .host-key-mapping-panel {
-        margin: 12px auto 0;
+        margin: 12px auto 18px;
         max-width: 520px;
         padding: 10px 14px;
         border-radius: 10px;
@@ -1764,12 +1782,12 @@
       </div>
       <div class="btn-group">
         <div class="main-btns">
-          <button id="prev-btn" type="button" data-i18n-title="bingo.controls.prevTitle" title="Previous number (Left arrow key)">◀</button>
-          <button id="draw-btn" type="button" data-i18n="bingo.controls.draw" data-i18n-title="bingo.controls.drawTitle" title="Draw next number (Space or Right arrow key)">DRAW</button>
+          <button id="prev-btn" type="button" data-i18n-title="bingo.controls.prevTitle" title="Previous number — Left arrow or Backspace">◀</button>
+          <button id="draw-btn" type="button" data-i18n="bingo.controls.draw" data-i18n-title="bingo.controls.drawTitle" title="Draw next number — Space or Right arrow">DRAW</button>
         </div>
         <div class="shortcuts">
-          <span data-i18n="bingo.controls.prevShortcut">◀ Previous</span>
-          <span data-i18n="bingo.controls.nextShortcut">Space / Next ▶</span>
+          <span data-i18n="bingo.controls.prevShortcut">◀ Previous · Left arrow / Backspace</span>
+          <span data-i18n="bingo.controls.nextShortcut">Next · Space / Right arrow ▶</span>
         </div>
         <button type="button" id="new-game-btn" class="host-new-game-in-play" data-i18n="bingo.newGame">New game</button>
         <button type="button" id="push-to-players-btn" class="push-to-players-btn hidden" data-i18n="bingo.remote.pushToPlayersTitle" data-i18n-attr="title" title="Show players an indicator on numbers they should have marked."><span data-i18n="bingo.pushToPlayers">Push to players</span></button>
@@ -2973,12 +2991,15 @@
         prevBtn.disabled = drawnSequence.length === 0;
         if (pushToPlayersBtn) pushToPlayersBtn.classList.toggle("hidden", !manualDaubOnly);
 
+        prevBtn.setAttribute("title", t("bingo.controls.prevTitle"));
         if (drawnSequence.length === 75) {
           drawBtn.textContent = t("bingo.controls.finish");
           drawBtn.style.backgroundColor = "#636e72";
+          drawBtn.setAttribute("title", t("bingo.controls.finish"));
         } else {
           drawBtn.textContent = t("bingo.controls.draw");
           drawBtn.style.backgroundColor = "var(--secondary)";
+          drawBtn.setAttribute("title", t("bingo.controls.drawTitle"));
         }
 
         if (displayKeySetSelect) {
@@ -3053,14 +3074,41 @@
         updateUI();
       }
 
-      // Keyboard Logic
+      function canUseHostCallerKeys(e) {
+        if (getHostPhase() !== "play") return false;
+        const t = e.target;
+        if (!t || typeof t.tagName !== "string") return true;
+        const tag = t.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return false;
+        if (t.isContentEditable) return false;
+        if (typeof t.closest === "function" && t.closest("input, textarea, select, [contenteditable=true]"))
+          return false;
+        return true;
+      }
+
+      function isRtlDocument() {
+        return document.documentElement.getAttribute("dir") === "rtl";
+      }
+
+      // Keyboard: LTR — ← prev, space/→ draw. RTL — → or Backspace prev, ← or space draw.
       window.addEventListener("keydown", (e) => {
-        if (e.code === "Space" || e.code === "ArrowRight") {
-          e.preventDefault();
-          drawNumber();
-        } else if (e.code === "ArrowLeft") {
-          e.preventDefault();
-          prevNumber();
+        if (!canUseHostCallerKeys(e)) return;
+        if (isRtlDocument()) {
+          if (e.code === "ArrowRight" || e.code === "Backspace") {
+            e.preventDefault();
+            prevNumber();
+          } else if (e.code === "ArrowLeft" || e.code === "Space") {
+            e.preventDefault();
+            drawNumber();
+          }
+        } else {
+          if (e.code === "Space" || e.code === "ArrowRight") {
+            e.preventDefault();
+            drawNumber();
+          } else if (e.code === "ArrowLeft") {
+            e.preventDefault();
+            prevNumber();
+          }
         }
       });
 
