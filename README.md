@@ -12,7 +12,7 @@ A web app for running 75-ball Bingo: caller/organizer view with participant card
 - **`npm run build`** — Vite outputs hashed assets to **`dist/`** and copies `locales/*.json` into `dist/locales/`. Vercel uses `dist` as the static output directory (`vercel.json`).
 - **CI:** GitHub Actions runs `npm test` and `npm run build` on pushes and PRs (see `.github/workflows/ci.yml`).
 
-**Vercel Hobby:** Deployments are limited to **12 serverless functions**. Room sub-routes (`join`, `claim`, `daubs`, `boot`, `leave`, `report`, `stream`) are implemented as a **single function** at [`api/rooms/[roomId]/[action].js`](api/rooms/[roomId]/[action].js) (shared logic in [`api/lib/roomActionHandlers.js`](api/lib/roomActionHandlers.js)). Public URLs are unchanged (`/api/rooms/:id/claim`, etc.). Upgrade to Pro if you need more separate functions.
+**Vercel Hobby:** Deployments are limited to **12 serverless functions**. Room sub-routes (`join`, `claim`, `daubs`, `boot`, `leave`, `report`, `stream`) are implemented as a **single function** at [`api/rooms/[roomId]/[action].js`](api/rooms/[roomId]/[action].js) (shared logic in [`api/_lib/roomActionHandlers.js`](api/_lib/roomActionHandlers.js)). Shared server code lives under **`api/_lib/`** (underscore prefix so Vercel does not treat each file as its own function). Public URLs are unchanged (`/api/rooms/:id/claim`, etc.). Upgrade to Pro if you need more separate functions.
 
 ## Remote play (multi-device)
 
@@ -30,7 +30,7 @@ A web app for running 75-ball Bingo: caller/organizer view with participant card
 
 ## Observability (optional)
 
-- **`SENTRY_DSN`** — If set, API routes report Redis/store errors to Sentry via [`api/lib/initObservability.js`](api/lib/initObservability.js).
+- **`SENTRY_DSN`** — If set, API routes report Redis/store errors to Sentry via [`api/_lib/initObservability.js`](api/_lib/initObservability.js).
 
 ## Moderation hooks (no accounts)
 

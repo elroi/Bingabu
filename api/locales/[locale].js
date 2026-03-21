@@ -1,7 +1,7 @@
 import {
   SUPPORTED_LOCALES,
   getMergedLocale,
-} from "../lib/localeStore.js";
+} from "../_lib/localeStore.js";
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");

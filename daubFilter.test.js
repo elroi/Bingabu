@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { filterAllowedDaubs } from "./api/lib/daubFilter.js";
+import { filterAllowedDaubs } from "./api/_lib/daubFilter.js";
 
 describe("filterAllowedDaubs", () => {
   const card = [

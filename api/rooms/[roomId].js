@@ -1,5 +1,5 @@
-import * as store from "../lib/store.js";
-import { verify } from "../lib/jwt.js";
+import * as store from "../_lib/store.js";
+import { verify } from "../_lib/jwt.js";
 
 function getAuth(req) {
   const authHeader = req.headers.authorization;

@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeOverrides,
   validateMergedComplete,
-} from "./api/lib/localeStore.js";
+} from "./api/_lib/localeStore.js";
 
 describe("computeOverrides", () => {
   it("records only keys that differ from static", () => {

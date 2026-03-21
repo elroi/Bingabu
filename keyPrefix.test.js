@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getKeyPrefix } from "./api/lib/keyPrefix.js";
+import { getKeyPrefix } from "./api/_lib/keyPrefix.js";
 
 describe("getKeyPrefix", () => {
   it("returns default namespace when not preview", () => {

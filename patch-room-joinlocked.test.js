@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import * as store from "./api/lib/store.js";
+import * as store from "./api/_lib/store.js";
 import roomHandler from "./api/rooms/[roomId].js";
 
 function mockRes() {

@@ -1,8 +1,8 @@
 import crypto from "crypto";
-import * as store from "../lib/store.js";
-import { generateSalt, hashPassword } from "../lib/password.js";
-import { getClientIp } from "../lib/clientIp.js";
-import { rateLimitCreateRoom, retryAfterSeconds } from "../lib/rateLimit.js";
+import * as store from "../_lib/store.js";
+import { generateSalt, hashPassword } from "../_lib/password.js";
+import { getClientIp } from "../_lib/clientIp.js";
+import { rateLimitCreateRoom, retryAfterSeconds } from "../_lib/rateLimit.js";
 
 const ROOM_ID_LENGTH = 6;
 const ROOM_ID_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous 0/O, 1/I

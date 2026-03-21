@@ -2,7 +2,7 @@
  * Single serverless function for /api/rooms/:roomId/:action
  * (Vercel Hobby: max 12 functions — consolidates join, claim, daubs, boot, leave, report, stream).
  */
-import "../../lib/initObservability.js";
+import "../../_lib/initObservability.js";
 import {
   handleStream,
   handleJoin,
@@ -11,7 +11,7 @@ import {
   handleBoot,
   handleLeave,
   handleReport,
-} from "../../lib/roomActionHandlers.js";
+} from "../../_lib/roomActionHandlers.js";
 
 const POST_HANDLERS = {
   join: handleJoin,

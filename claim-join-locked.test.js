@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import * as store from "./api/lib/store.js";
-import { handleClaim } from "./api/lib/roomActionHandlers.js";
+import * as store from "./api/_lib/store.js";
+import { handleClaim } from "./api/_lib/roomActionHandlers.js";
 
 function mockRes() {
   const res = {

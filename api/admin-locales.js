@@ -8,7 +8,7 @@ import {
   validateMergedComplete,
   computeOverrides,
   redisConfigured,
-} from "./lib/localeStore.js";
+} from "./_lib/localeStore.js";
 
 function verifyAdminToken(req) {
   const secret = process.env.BINGABU_ADMIN_LOCALES_TOKEN;

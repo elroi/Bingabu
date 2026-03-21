@@ -8,8 +8,8 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { fileURLToPath } from "url";
-import * as store from "./api/lib/store.js";
-import { handleClaim, handleDaubs } from "./api/lib/roomActionHandlers.js";
+import * as store from "./api/_lib/store.js";
+import { handleClaim, handleDaubs } from "./api/_lib/roomActionHandlers.js";
 import roomActionRouter from "./api/rooms/[roomId]/[action].js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));

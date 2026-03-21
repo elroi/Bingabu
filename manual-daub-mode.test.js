@@ -86,7 +86,7 @@ describe("Manual daub mode: API daubs endpoint", () => {
   });
 
   it("roomActionHandlers exports handleDaubs", () => {
-    const path = join(__dirname, "api", "lib", "roomActionHandlers.js");
+    const path = join(__dirname, "api", "_lib", "roomActionHandlers.js");
     const content = readFileSync(path, "utf-8");
     expect(content).toMatch(/export\s+async\s+function\s+handleDaubs/);
   });

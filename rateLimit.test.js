@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { retryAfterSeconds } from "./api/lib/rateLimit.js";
+import { retryAfterSeconds } from "./api/_lib/rateLimit.js";
 
 describe("retryAfterSeconds", () => {
   it("returns at least 1", () => {
