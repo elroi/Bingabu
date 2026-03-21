@@ -218,6 +218,8 @@ describe("i18n HTML wiring", () => {
   it("bingo.html wires host setup and controls to locale keys", () => {
     const bingo = readFileSync(join(repoRoot, "bingo.html"), "utf-8");
     expect(bingo).toMatch(/data-i18n="bingo\.setup\.whoPlaying"/);
+    expect(bingo).toMatch(/data-i18n="bingo\.displayKeySet\.label"/);
+    expect(bingo).toMatch(/host-key-mapping-body/);
     expect(bingo).toMatch(/data-i18n="bingo\.leaderboard\.heading"/);
     expect(bingo).toMatch(/id="bingo-board"[^>]*dir="ltr"/);
     expect(bingo).toMatch(

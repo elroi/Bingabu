@@ -1461,9 +1461,15 @@
         font-weight: 600;
       }
 
+      .host-key-mapping-body {
+        direction: ltr;
+        unicode-bidi: isolate;
+        text-align: start;
+      }
+
       .host-key-mapping-list {
         margin: 0;
-        padding-left: 1.2rem;
+        padding-inline-start: 1.2rem;
       }
 
       .participant-key-set-row {
@@ -1635,10 +1641,15 @@
           <input type="number" id="num-participants" min="0" max="12" value="0" title="" />
         </div>
         <div class="participant-setting participant-setting-above-fold">
-          <label for="display-key-set">Board style (caller board & default)</label>
-          <select id="display-key-set" aria-label="Board style for caller board and new players"></select>
+          <label for="display-key-set" data-i18n="bingo.displayKeySet.label">Board style (caller board & default)</label>
+          <select
+            id="display-key-set"
+            data-i18n="bingo.displayKeySet.aria"
+            data-i18n-attr="aria-label"
+            aria-label="Board style for caller board and new players"
+          ></select>
         </div>
-        <p id="display-key-set-hint" class="display-key-set-hint">
+        <p id="display-key-set-hint" class="display-key-set-hint" data-i18n="bingo.displayKeySet.hint">
           Same style for everyone unless you set a different one per player under Advanced participants settings. Changing this before the game starts resets per-player styles to match.
         </p>
       </div>
@@ -1736,9 +1747,11 @@
       <div id="current-number">--</div>
       <div class="mc-announcement" id="mc-announcement" aria-live="polite" dir="auto"></div>
       <div id="host-key-mapping-panel" class="host-key-mapping-panel hidden" aria-live="polite">
-        <h3 class="host-key-mapping-title">How each player sees the last call</h3>
-        <p id="host-key-mapping-canonical" class="host-key-mapping-canonical"></p>
-        <ul id="host-key-mapping-list" class="host-key-mapping-list"></ul>
+        <h3 class="host-key-mapping-title" data-i18n="bingo.hostKeyMapping.title">How each player sees the last call</h3>
+        <div class="host-key-mapping-body">
+          <p id="host-key-mapping-canonical" class="host-key-mapping-canonical"></p>
+          <ul id="host-key-mapping-list" class="host-key-mapping-list"></ul>
+        </div>
       </div>
       <div class="btn-group">
         <div class="main-btns">
@@ -1868,6 +1881,13 @@
       await initI18n();
       document.documentElement.setAttribute("data-locale", getLocale());
       document.title = t("bingo.pageTitle");
+
+      function keySetOptionLabel(id) {
+        const k = normalizeKeySetId(id);
+        if (k === EN_WORDS_BEGINNER_ID) return t("bingo.keyset.enWordsBeginner");
+        if (k === ICONS_KIDS_V1_ID) return t("bingo.keyset.iconsKids");
+        return t("bingo.keyset.numbers");
+      }
 
       function leaderboardPlaceLabel(rank) {
         return getLocale() === "he" ? t("bingo.leaderboard.placeHe", { n: rank }) : getOrdinal(rank);
@@ -2293,14 +2313,14 @@
           keyRow.className = "participant-key-set-row";
           const keyLabel = document.createElement("label");
           keyLabel.setAttribute("for", `player-key-set-${i}`);
-          keyLabel.textContent = "Card style:";
+          keyLabel.textContent = t("bingo.participant.cardStyle");
           const keySel = document.createElement("select");
           keySel.id = `player-key-set-${i}`;
-          keySel.setAttribute("aria-label", `Display style for player ${i + 1}`);
+          keySel.setAttribute("aria-label", t("bingo.participant.displayStyleAria", { n: i + 1 }));
           KEY_SET_OPTIONS.forEach((opt) => {
             const o = document.createElement("option");
             o.value = opt.id;
-            o.textContent = opt.label;
+            o.textContent = keySetOptionLabel(opt.id);
             keySel.appendChild(o);
           });
           const slotIdx = i;
@@ -2872,12 +2892,18 @@
           { displayKeySetId, displayKeySetBySlot, numParticipants, participantNames },
           lastNum
         );
-        canonicalEl.textContent = "Canonical: " + canonical;
+        canonicalEl.textContent = t("bingo.hostKeyMapping.canonical", { text: canonical });
         listEl.innerHTML = "";
         rows.forEach((r) => {
           const li = document.createElement("li");
-          const extra = r.speech !== r.label ? ` (say: ${r.speech})` : "";
-          li.textContent = `${r.name}: ${r.label}${extra}`;
+          li.textContent =
+            r.speech !== r.label
+              ? t("bingo.hostKeyMapping.playerLineSpeech", {
+                  name: r.name,
+                  label: r.label,
+                  speech: r.speech,
+                })
+              : t("bingo.hostKeyMapping.playerLine", { name: r.name, label: r.label });
           listEl.appendChild(li);
         });
         panel.classList.remove("hidden");
@@ -4006,7 +4032,7 @@
         KEY_SET_OPTIONS.forEach((opt) => {
           const o = document.createElement("option");
           o.value = opt.id;
-          o.textContent = opt.label;
+          o.textContent = keySetOptionLabel(opt.id);
           displayKeySetSelect.appendChild(o);
         });
         displayKeySetSelect.addEventListener("change", () => {
