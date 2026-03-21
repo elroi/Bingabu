@@ -123,6 +123,18 @@ describe("applyI18n", () => {
     expect(root.querySelector("p").textContent).toBe("Hi");
     expect(root.querySelector("input").getAttribute("placeholder")).toBe("Ph");
   });
+
+  it("sets title from data-i18n-title, including with data-i18n on same node", () => {
+    const root = document.createElement("div");
+    root.innerHTML =
+      '<button type="button" data-i18n="label" data-i18n-title="tip">X</button><span data-i18n-title="onlyTip">◀</span>';
+    const t = createTranslator({ label: "Draw", tip: "Go", onlyTip: "Back" });
+    applyI18n(root, t);
+    const btn = root.querySelector("button");
+    expect(btn.textContent).toBe("Draw");
+    expect(btn.getAttribute("title")).toBe("Go");
+    expect(root.querySelector("span").getAttribute("title")).toBe("Back");
+  });
 });
 
 describe("initI18n", () => {
@@ -203,6 +215,18 @@ describe("i18n HTML wiring", () => {
     expect(bingo).toMatch(/id="bingo-board"[^>]*dir="ltr"/);
     expect(bingo).toMatch(
       /html\[dir="rtl"\][\s\S]*?section-chevron[\s\S]*?rotate\(90deg\)/
+    );
+    expect(bingo).toMatch(
+      /html\[dir="rtl"\][\s\S]*?\.main-btns[\s\S]*?#draw-btn[\s\S]*?order:\s*-1/
+    );
+    expect(bingo).toMatch(
+      /html\[dir="rtl"\][\s\S]*?\.shortcuts[\s\S]*?direction:\s*ltr/
+    );
+    expect(bingo).toMatch(
+      /id="draw-btn"[^>]*data-i18n="bingo\.controls\.draw"[^>]*data-i18n-title="bingo\.controls\.drawTitle"/
+    );
+    expect(bingo).toMatch(
+      /id="prev-btn"[^>]*data-i18n-title="bingo\.controls\.prevTitle"/
     );
   });
 

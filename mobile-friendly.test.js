@@ -58,6 +58,28 @@ describe("Mobile-friendly: touch targets (min 44px)", () => {
     const html = readPage("cards");
     expect(html).toMatch(/min-height:\s*44px/);
   });
+
+  it("cards.html .actions aligns items on the row axis so pills do not stretch tall", () => {
+    const html = readPage("cards");
+    expect(html).toMatch(/\.actions\s*\{[\s\S]*?align-items:\s*center/);
+  });
+});
+
+describe("Print cards legibility", () => {
+  it("cards.html @media print enlarges number cells (not FREE) for readable print", () => {
+    const html = readPage("cards");
+    expect(html).toMatch(
+      /@media print\s*\{[\s\S]*\.participant-card\s+\.card-cell:not\(\.free\)\s*\{[^}]*font-size:\s*1\.5rem/s
+    );
+  });
+
+  it("cards.html enlarges number cells on screen (before print styles) with responsive clamp", () => {
+    const html = readPage("cards");
+    const beforePrint = html.split("@media print")[0];
+    expect(beforePrint).toMatch(
+      /\.participant-card\s+\.card-cell:not\(\.free\)\s*\{[^}]*font-size:\s*clamp\(/s
+    );
+  });
 });
 
 describe("Mobile-friendly: bingo host responsive current number", () => {

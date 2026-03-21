@@ -197,6 +197,7 @@
 
       .main-btns {
         display: flex;
+        align-items: center;
         gap: 10px;
         width: 100%;
       }
@@ -210,9 +211,14 @@
 
       #draw-btn {
         flex: 2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         font-size: 1.2rem;
-        padding: 15px;
+        line-height: 1.2;
+        padding: 10px 18px;
         min-height: 44px;
+        box-sizing: border-box;
         border-radius: 50px;
         background-color: var(--secondary);
         color: white;
@@ -226,8 +232,14 @@
 
       #prev-btn {
         flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         font-size: 1.2rem;
-        padding: 15px;
+        line-height: 1;
+        padding: 10px 18px;
+        min-height: 44px;
+        box-sizing: border-box;
         border-radius: 50px;
         background-color: #fab1a0;
         color: white;
@@ -1193,6 +1205,13 @@
       html[dir="rtl"] .participant-cards-section.cards-collapsed .section-chevron {
         transform: rotate(90deg);
       }
+      /* RTL: primary draw at reading-start (right); DOM stays prev then draw for LTR */
+      html[dir="rtl"] .main-btns #draw-btn {
+        order: -1;
+      }
+      html[dir="rtl"] .shortcuts {
+        direction: ltr;
+      }
       .participant-cards-section.cards-collapsed .participant-cards-grid {
         display: none;
       }
@@ -1484,7 +1503,7 @@
       <div class="play-wizard-modal">
         <p id="play-wizard-progress" class="play-wizard-progress">Step 1 of 5</p>
         <h2 id="play-wizard-title" class="play-wizard-title">Current number</h2>
-        <p id="play-wizard-body" class="play-wizard-body">The last number called appears here.</p>
+        <p id="play-wizard-body" class="play-wizard-body" dir="auto">The last number called appears here.</p>
         <div class="play-wizard-actions">
           <button type="button" id="play-wizard-back" class="play-wizard-back" data-i18n="bingo.playWizard.back">Back</button>
           <div>
@@ -1499,7 +1518,7 @@
       <div class="host-wizard-modal">
         <p id="host-wizard-progress" class="host-wizard-progress">Step 1 of 4</p>
         <h2 id="host-wizard-title" class="host-wizard-title">Set players</h2>
-        <p id="host-wizard-body" class="host-wizard-body">Set the number of players and add their names below.</p>
+        <p id="host-wizard-body" class="host-wizard-body" dir="auto">Set the number of players and add their names below.</p>
         <div class="host-wizard-actions">
           <button type="button" id="host-wizard-back" class="host-wizard-back" data-i18n="bingo.hostWizard.back">Back</button>
           <div>
@@ -1614,8 +1633,8 @@
       <div class="mc-announcement" id="mc-announcement" aria-live="polite"></div>
       <div class="btn-group">
         <div class="main-btns">
-          <button id="prev-btn" data-i18n="bingo.controls.prevTitle" data-i18n-attr="title" title="Left Arrow">◀</button>
-          <button id="draw-btn" data-i18n="bingo.controls.drawTitle" data-i18n-attr="title" title="Space or Right Arrow"><span data-i18n="bingo.controls.draw">DRAW</span></button>
+          <button id="prev-btn" type="button" data-i18n-title="bingo.controls.prevTitle" title="Previous number (Left arrow key)">◀</button>
+          <button id="draw-btn" type="button" data-i18n="bingo.controls.draw" data-i18n-title="bingo.controls.drawTitle" title="Draw next number (Space or Right arrow key)">הגרלה</button>
         </div>
         <div class="shortcuts">
           <span data-i18n="bingo.controls.prevShortcut">◀ Previous</span>
