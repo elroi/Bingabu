@@ -192,6 +192,13 @@ describe("locale files", () => {
     expect(Object.keys(he).sort()).toEqual(Object.keys(en).sort());
   });
 
+  it("host draw control label is English in en.json and Hebrew in he.json", () => {
+    const en = readJson("en.json");
+    const he = readJson("he.json");
+    expect(en["bingo.controls.draw"]).toBe("DRAW");
+    expect(he["bingo.controls.draw"]).toBe("הגרלה");
+  });
+
   it("Hebrew values keep product name as Latin Bingabu (not translated)", () => {
     const he = readJson("he.json");
     const brandKeys = [

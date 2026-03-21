@@ -180,7 +180,7 @@
   "bingo.hostWizard.s3.body": "Share the room code or link with players so they can join.",
   "bingo.hostWizard.s4.title": "Draw",
   "bingo.hostWizard.s4.body": "Click Start the game, then use DRAW to call numbers. Have fun!",
-  "bingo.controls.draw": "הגרלה",
+  "bingo.controls.draw": "DRAW",
   "bingo.controls.prevTitle": "Previous number (Left arrow key)",
   "bingo.controls.drawTitle": "Draw next number (Space or Right arrow key)",
   "bingo.controls.prevShortcut": "◀ Previous",
