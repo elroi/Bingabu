@@ -1630,7 +1630,7 @@
     <div class="controls-band">
     <div class="controls" id="play-wizard-draw-target">
       <div id="current-number">--</div>
-      <div class="mc-announcement" id="mc-announcement" aria-live="polite"></div>
+        <div class="mc-announcement" id="mc-announcement" aria-live="polite" dir="auto"></div>
       <div class="btn-group">
         <div class="main-btns">
           <button id="prev-btn" type="button" data-i18n-title="bingo.controls.prevTitle" title="Previous number (Left arrow key)">◀</button>
@@ -2444,6 +2444,11 @@
       function getMcPhraseParts(letter, num, drawIndex) {
         const numberPart = letter + " " + num + "!";
         if (mcSimple) return { display: letter + " " + num, intro: undefined, number: numberPart };
+        if (getLocale() === "he") {
+          const i = drawIndex % 4;
+          const display = t(`bingo.mc.announceVariant${i}`, { letter, n: num });
+          return { display, intro: undefined, number: numberPart };
+        }
         const phrase = MC_PHRASES[drawIndex % MC_PHRASES.length](letter, num);
         return {
           display: phrase.display,
@@ -2696,10 +2701,10 @@
         if (pushToPlayersBtn) pushToPlayersBtn.classList.toggle("hidden", !manualDaubOnly);
 
         if (drawnSequence.length === 75) {
-          drawBtn.innerText = "FINISH!";
+          drawBtn.textContent = t("bingo.controls.finish");
           drawBtn.style.backgroundColor = "#636e72";
         } else {
-          drawBtn.innerText = "DRAW";
+          drawBtn.textContent = t("bingo.controls.draw");
           drawBtn.style.backgroundColor = "var(--secondary)";
         }
 

@@ -92,6 +92,14 @@ describe("Mobile-friendly: bingo host responsive current number", () => {
 });
 
 describe("Bingo host UX", () => {
+  it("bingo.html refreshes draw button label with t(bingo.controls.draw), not hardcoded DRAW", () => {
+    const html = readPage("bingo");
+    expect(html).not.toMatch(/drawBtn\.innerText\s*=\s*["']DRAW["']/);
+    expect(html).toMatch(
+      /drawBtn\.textContent\s*=\s*t\(\s*["']bingo\.controls\.draw["']\s*\)/
+    );
+  });
+
   it("bingo.html has Participants section before Play with friends section in DOM", () => {
     const html = readPage("bingo");
     const setupPlayersIndex = html.indexOf('id="setup-players-section"');
