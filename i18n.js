@@ -68,7 +68,14 @@ export function createTranslator(messages) {
 export function applyI18n(root, t) {
   const scope = root || document;
   if (!scope || !scope.querySelectorAll) return;
-  scope.querySelectorAll("[data-i18n]").forEach((el) => {
+  const seen = new Set();
+  function visit(el) {
+    if (!el || seen.has(el)) return;
+    seen.add(el);
+    const titleKey = el.getAttribute("data-i18n-title");
+    if (titleKey) {
+      el.setAttribute("title", t(titleKey));
+    }
     const key = el.getAttribute("data-i18n");
     if (!key) return;
     const attrList = el.getAttribute("data-i18n-attr");
@@ -79,7 +86,9 @@ export function applyI18n(root, t) {
     } else {
       el.textContent = t(key);
     }
-  });
+  }
+  scope.querySelectorAll("[data-i18n]").forEach(visit);
+  scope.querySelectorAll("[data-i18n-title]").forEach(visit);
 }
 
 let _messages = {};

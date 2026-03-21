@@ -335,8 +335,9 @@
       html[dir="rtl"] .join-page-content {
         text-align: right;
       }
+      /* Inline-start = right in RTL; flex-end was physical left (inline-end). */
       html[dir="rtl"] .back-to-lobby {
-        align-self: flex-end;
+        align-self: start;
       }
 
       @media (max-width: 600px) {
@@ -351,7 +352,7 @@
   </head>
   <body>
     <div class="join-page-content">
-      <a href="index.html" id="nav-back" class="back-to-lobby" data-i18n="join.back"></a>
+      <a href="index.html" id="nav-back" class="back-to-lobby" dir="ltr" data-i18n="join.back"></a>
       <a href="index.html" id="nav-logo" class="app-logo hidden" dir="ltr" translate="no">
         <span class="letter">B</span><span class="letter">i</span><span class="letter">n</span><span class="letter">g</span><span class="letter">a</span><span class="letter">b</span><span class="letter">u</span>
       </a>

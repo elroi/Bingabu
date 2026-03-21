@@ -197,6 +197,7 @@
 
       .main-btns {
         display: flex;
+        align-items: center;
         gap: 10px;
         width: 100%;
       }
@@ -210,9 +211,14 @@
 
       #draw-btn {
         flex: 2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         font-size: 1.2rem;
-        padding: 15px;
+        line-height: 1.2;
+        padding: 10px 18px;
         min-height: 44px;
+        box-sizing: border-box;
         border-radius: 50px;
         background-color: var(--secondary);
         color: white;
@@ -226,8 +232,14 @@
 
       #prev-btn {
         flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         font-size: 1.2rem;
-        padding: 15px;
+        line-height: 1;
+        padding: 10px 18px;
+        min-height: 44px;
+        box-sizing: border-box;
         border-radius: 50px;
         background-color: #fab1a0;
         color: white;
@@ -1186,6 +1198,20 @@
       .participant-cards-section.cards-collapsed .section-chevron {
         transform: rotate(-90deg);
       }
+      /* RTL: collapsed chevron points left (like native <summary>), not right */
+      html[dir="rtl"] .setup-players-section.setup-players-collapsed .section-chevron,
+      html[dir="rtl"] .remote-play-details-section.remote-play-details-collapsed .section-chevron,
+      html[dir="rtl"] .advanced-controls-card.advanced-controls-collapsed .section-chevron,
+      html[dir="rtl"] .participant-cards-section.cards-collapsed .section-chevron {
+        transform: rotate(90deg);
+      }
+      /* RTL: primary draw at reading-start (right); DOM stays prev then draw for LTR */
+      html[dir="rtl"] .main-btns #draw-btn {
+        order: -1;
+      }
+      html[dir="rtl"] .shortcuts {
+        direction: ltr;
+      }
       .participant-cards-section.cards-collapsed .participant-cards-grid {
         display: none;
       }
@@ -1463,26 +1489,26 @@
       <button type="button" id="first-visit-banner-dismiss" class="first-visit-banner-dismiss" data-i18n="bingo.banner.firstVisit.dismiss"></button>
     </div>
 
-    <nav class="host-steps" id="host-steps" aria-label="Host steps">
-      <span class="host-step" id="host-step-1" data-step="1">1. Players</span>
+    <nav class="host-steps" id="host-steps" data-i18n-attr="aria-label" data-i18n="bingo.nav.hostStepsAria" aria-label="Host steps">
+      <span class="host-step" id="host-step-1" data-step="1" data-i18n="bingo.hostStep.1">1. Players</span>
       <span class="host-step-arrow" aria-hidden="true">→</span>
-      <span class="host-step" id="host-step-2" data-step="2">2. Create room</span>
+      <span class="host-step" id="host-step-2" data-step="2" data-i18n="bingo.hostStep.2">2. Create room</span>
       <span class="host-step-arrow" aria-hidden="true">→</span>
-      <span class="host-step" id="host-step-3" data-step="3">3. Share</span>
+      <span class="host-step" id="host-step-3" data-step="3" data-i18n="bingo.hostStep.3">3. Share</span>
       <span class="host-step-arrow" aria-hidden="true">→</span>
-      <span class="host-step" id="host-step-4" data-step="4">4. Draw</span>
+      <span class="host-step" id="host-step-4" data-step="4" data-i18n="bingo.hostStep.4">4. Draw</span>
     </nav>
 
-    <div id="play-wizard-overlay" class="play-wizard-overlay hidden" role="region" aria-label="Play guide" aria-live="polite">
+    <div id="play-wizard-overlay" class="play-wizard-overlay hidden" role="region" data-i18n-attr="aria-label" data-i18n="bingo.playWizard.regionAria" aria-label="Play guide" aria-live="polite">
       <div class="play-wizard-modal">
         <p id="play-wizard-progress" class="play-wizard-progress">Step 1 of 5</p>
         <h2 id="play-wizard-title" class="play-wizard-title">Current number</h2>
-        <p id="play-wizard-body" class="play-wizard-body">The last number called appears here.</p>
+        <p id="play-wizard-body" class="play-wizard-body" dir="auto">The last number called appears here.</p>
         <div class="play-wizard-actions">
-          <button type="button" id="play-wizard-back" class="play-wizard-back">Back</button>
+          <button type="button" id="play-wizard-back" class="play-wizard-back" data-i18n="bingo.playWizard.back">Back</button>
           <div>
-            <button type="button" id="play-wizard-skip" class="play-wizard-skip">Skip</button>
-            <button type="button" id="play-wizard-next" class="play-wizard-next">Next</button>
+            <button type="button" id="play-wizard-skip" class="play-wizard-skip" data-i18n="bingo.playWizard.skip">Skip</button>
+            <button type="button" id="play-wizard-next" class="play-wizard-next" data-i18n="bingo.playWizard.next">Next</button>
           </div>
         </div>
       </div>
@@ -1492,12 +1518,12 @@
       <div class="host-wizard-modal">
         <p id="host-wizard-progress" class="host-wizard-progress">Step 1 of 4</p>
         <h2 id="host-wizard-title" class="host-wizard-title">Set players</h2>
-        <p id="host-wizard-body" class="host-wizard-body">Set the number of players and add their names below.</p>
+        <p id="host-wizard-body" class="host-wizard-body" dir="auto">Set the number of players and add their names below.</p>
         <div class="host-wizard-actions">
-          <button type="button" id="host-wizard-back" class="host-wizard-back">Back</button>
+          <button type="button" id="host-wizard-back" class="host-wizard-back" data-i18n="bingo.hostWizard.back">Back</button>
           <div>
-            <button type="button" id="host-wizard-skip" class="host-wizard-skip">Skip</button>
-            <button type="button" id="host-wizard-next" class="host-wizard-next">Next</button>
+            <button type="button" id="host-wizard-skip" class="host-wizard-skip" data-i18n="bingo.hostWizard.skip">Skip</button>
+            <button type="button" id="host-wizard-next" class="host-wizard-next" data-i18n="bingo.hostWizard.next">Next</button>
           </div>
         </div>
       </div>
@@ -1505,32 +1531,32 @@
 
     <div id="host-setup-view" class="host-setup-view">
       <div id="wizard-step-1-target" class="wizard-step-target">
-        <h2 id="host-setup-heading" class="host-setup-heading">Who's playing?</h2>
-        <p id="host-setup-subtitle" class="host-setup-subtitle">Specify how many players. Use the advanced options below for names and quirks if you like.</p>
+        <h2 id="host-setup-heading" class="host-setup-heading" data-i18n="bingo.setup.whoPlaying">Who's playing?</h2>
+        <p id="host-setup-subtitle" class="host-setup-subtitle" data-i18n="bingo.setup.whoPlayingSubtitle">Specify how many players. Use the advanced options below for names and quirks if you like.</p>
         <div class="participant-setting participant-setting-above-fold">
-          <label for="num-participants">Participants</label>
+          <label for="num-participants" data-i18n="bingo.setup.participantsLabel">Participants</label>
           <input type="number" id="num-participants" min="0" max="12" value="0" title="" />
         </div>
       </div>
-      <section class="setup-players-section setup-players-in-controls setup-players-collapsed" id="setup-players-section" aria-label="Advanced participants settings">
-        <h3 id="setup-players-header" role="button" tabindex="0" aria-expanded="false" aria-controls="setup-players-content">Advanced participants settings <span class="section-chevron" aria-hidden="true">▼</span></h3>
+      <section class="setup-players-section setup-players-in-controls setup-players-collapsed" id="setup-players-section" data-i18n-attr="aria-label" data-i18n="bingo.setup.advancedSectionAria" aria-label="Advanced participants settings">
+        <h3 id="setup-players-header" role="button" tabindex="0" aria-expanded="false" aria-controls="setup-players-content"><span data-i18n="bingo.setup.advancedHeader">Advanced participants settings</span> <span class="section-chevron" aria-hidden="true">▼</span></h3>
         <div class="setup-players-content" id="setup-players-content">
           <div class="participant-names-wrap" id="participant-names-wrap">
-            <label id="participant-names-label">Player names (you can change these anytime)</label>
+            <label id="participant-names-label" data-i18n="bingo.setup.participantNamesLabel">Player names (you can change these anytime)</label>
             <div class="participant-names" id="participant-names"></div>
           </div>
         </div>
       </section>
-      <section class="daub-mode-setup host-setup-block" id="daub-mode-setup" aria-label="Number marking">
-        <h2 class="host-setup-heading daub-mode-heading">Number marking</h2>
-        <p class="host-setup-subtitle daub-mode-subtitle">How should numbers be marked on player cards?</p>
-        <div class="daub-mode-toggle" role="group" aria-label="Auto or manual daub">
-          <button type="button" id="daub-mode-auto" class="daub-mode-btn" aria-pressed="true">Auto daub</button>
-          <button type="button" id="daub-mode-manual" class="daub-mode-btn" aria-pressed="false">Manual daub</button>
+      <section class="daub-mode-setup host-setup-block" id="daub-mode-setup" data-i18n-attr="aria-label" data-i18n="bingo.daub.sectionAria" aria-label="Number marking">
+        <h2 class="host-setup-heading daub-mode-heading" data-i18n="bingo.daub.heading">Number marking</h2>
+        <p class="host-setup-subtitle daub-mode-subtitle" data-i18n="bingo.daub.subtitle">How should numbers be marked on player cards?</p>
+        <div class="daub-mode-toggle" role="group" data-i18n-attr="aria-label" data-i18n="bingo.daub.toggleAria" aria-label="Auto or manual daub">
+          <button type="button" id="daub-mode-auto" class="daub-mode-btn" aria-pressed="true" data-i18n="bingo.daub.auto">Auto daub</button>
+          <button type="button" id="daub-mode-manual" class="daub-mode-btn" aria-pressed="false" data-i18n="bingo.daub.manual">Manual daub</button>
         </div>
-        <p class="daub-mode-hint" id="daub-mode-hint">Numbers will color automatically when called.</p>
+        <p class="daub-mode-hint" id="daub-mode-hint" data-i18n="bingo.daub.hintAuto">Numbers will color automatically when called.</p>
       </section>
-      <section class="remote-play-section host-setup-block" id="remote-play-section" aria-label="Play with friends">
+      <section class="remote-play-section host-setup-block" id="remote-play-section" data-i18n-attr="aria-label" data-i18n="bingo.remote.sectionAria" aria-label="Play with friends online">
         <h2 class="host-setup-heading remote-play-heading" data-i18n="bingo.remote.heading"></h2>
         <p id="remote-play-api-unavailable" class="remote-play-api-unavailable hidden" data-i18n="bingo.remote.apiUnavailable"></p>
         <p class="host-setup-subtitle remote-play-subtitle" data-i18n="bingo.remote.subtitle"></p>
@@ -1539,57 +1565,57 @@
           <p class="how-play-works-body" data-i18n="bingo.remote.howBody"></p>
         </details>
         <div id="remote-play-create" class="remote-play-create">
-          <button type="button" id="remote-play-create-btn" class="remote-play-btn">Create an online game room</button>
+          <button type="button" id="remote-play-create-btn" class="remote-play-btn" data-i18n="bingo.remote.createRoomBtn">Create an online game room</button>
         </div>
         <div id="remote-play-active" class="remote-play-active hidden">
           <div class="remote-play-above-fold">
-            <p class="remote-play-code-label">Room code</p>
+            <p class="remote-play-code-label" data-i18n="bingo.remote.roomCodeLabel">Room code</p>
             <p id="remote-play-code" class="remote-play-code" aria-live="polite"></p>
-            <button type="button" id="remote-play-end-btn" class="remote-play-btn end">End room</button>
+            <button type="button" id="remote-play-end-btn" class="remote-play-btn end" data-i18n="bingo.remote.endRoom">End room</button>
           </div>
         </div>
-        <section class="setup-players-section remote-play-details-section remote-play-details-collapsed" id="remote-play-details-section" aria-label="Online room details">
-          <h3 id="remote-play-details-header" role="button" tabindex="0" aria-expanded="false" aria-controls="remote-play-details-content">Online room details <span class="section-chevron" aria-hidden="true">▼</span></h3>
+        <section class="setup-players-section remote-play-details-section remote-play-details-collapsed" id="remote-play-details-section" data-i18n-attr="aria-label" data-i18n="bingo.remote.detailsSectionAria" aria-label="Online room details">
+          <h3 id="remote-play-details-header" role="button" tabindex="0" aria-expanded="false" aria-controls="remote-play-details-content"><span data-i18n="bingo.remote.detailsHeader">Online room details</span> <span class="section-chevron" aria-hidden="true">▼</span></h3>
           <div class="setup-players-content" id="remote-play-details-content">
             <div id="remote-play-create-options" class="remote-play-create-options">
               <div class="remote-play-password-wrap">
-                <input type="checkbox" id="remote-play-password-check" aria-label="Protect room with password" />
-                <label for="remote-play-password-check">Protect room with password</label>
+                <input type="checkbox" id="remote-play-password-check" data-i18n="bingo.remote.protectPassword" data-i18n-attr="aria-label" />
+                <label for="remote-play-password-check" data-i18n="bingo.remote.protectPassword">Protect room with password</label>
               </div>
-              <form id="remote-play-password-fields" class="remote-play-password-fields hidden" role="group" aria-label="Room password" onsubmit="return false;">
-                <input type="password" id="remote-play-password" placeholder="Room password" autocomplete="off" aria-label="Room password" />
-                <input type="password" id="remote-play-password-confirm" placeholder="Confirm password" autocomplete="off" aria-label="Confirm password" />
+              <form id="remote-play-password-fields" class="remote-play-password-fields hidden" role="group" data-i18n-attr="aria-label" data-i18n="bingo.remote.passwordFormAria" aria-label="Room password" onsubmit="return false;">
+                <input type="password" id="remote-play-password" data-i18n="bingo.remote.passwordPlaceholder" data-i18n-attr="placeholder aria-label" autocomplete="off" placeholder="Room password" aria-label="Room password" />
+                <input type="password" id="remote-play-password-confirm" autocomplete="off" placeholder="Confirm password" aria-label="Confirm password" />
               </form>
             </div>
             <div id="remote-play-active-details" class="remote-play-active-details hidden">
-              <p class="remote-play-join-hint">Players: open <strong id="remote-play-join-url"></strong> and enter the code above.</p>
+              <p class="remote-play-join-hint"><span data-i18n="bingo.remote.joinHintBefore">Players: open</span> <strong id="remote-play-join-url"></strong> <span data-i18n="bingo.remote.joinHintAfter">and enter the code above.</span></p>
               <div class="remote-play-copy-row">
-                <button type="button" id="remote-play-copy-code" class="remote-play-btn secondary" title="Players enter this code on the join page to join your room.">Copy room code</button>
-                <button type="button" id="remote-play-copy-join-page" class="remote-play-btn secondary" title="Share this URL so players know where to go to enter the room code.">Copy join page URL</button>
-                <button type="button" id="remote-play-copy-link" class="remote-play-btn secondary" title="Share this link to let people join this room directly without entering a code.">Copy direct game link</button>
+                <button type="button" id="remote-play-copy-code" class="remote-play-btn secondary" data-i18n="bingo.remote.copyCode">Copy room code</button>
+                <button type="button" id="remote-play-copy-join-page" class="remote-play-btn secondary" data-i18n="bingo.remote.copyJoin">Copy join page URL</button>
+                <button type="button" id="remote-play-copy-link" class="remote-play-btn secondary" data-i18n="bingo.remote.copyLink">Copy direct game link</button>
               </div>
               <div id="remote-play-qr-wrap" class="remote-play-qr-wrap hidden" aria-hidden="true">
-                <p class="remote-play-qr-label">Scan to join</p>
-                <img id="remote-play-qr" class="remote-play-qr" src="" alt="QR code to open the join page" referrerpolicy="no-referrer" />
-                <p class="remote-play-qr-fallback hidden" style="font-size:0.85rem; margin-top:8px;">Use the link above if the QR does not load.</p>
+                <p class="remote-play-qr-label" data-i18n="bingo.remote.scanToJoin">Scan to join</p>
+                <img id="remote-play-qr" class="remote-play-qr" src="" data-i18n="bingo.remote.qrAlt" data-i18n-attr="alt" alt="QR code to open the join page" referrerpolicy="no-referrer" />
+                <p class="remote-play-qr-fallback hidden" style="font-size:0.85rem; margin-top:8px;" data-i18n="bingo.remote.qrFallback">Use the link above if the QR does not load.</p>
               </div>
-              <p id="remote-play-password-reminder" class="remote-play-password-reminder hidden">Room is protected — share the password with players.</p>
-              <p class="remote-play-joined-label">Players joined</p>
+              <p id="remote-play-password-reminder" class="remote-play-password-reminder hidden" data-i18n="bingo.remote.passwordReminder">Room is protected — share the password with players.</p>
+              <p class="remote-play-joined-label" data-i18n="bingo.remote.joinedLabel">Players joined</p>
               <ul id="remote-play-joined-list" class="remote-play-joined-list" aria-live="polite"></ul>
-              <button type="button" id="sync-to-players-btn" class="remote-play-btn secondary" title="Push current state (including daubs) to players so their cards update.">Sync to players</button>
+              <button type="button" id="sync-to-players-btn" class="remote-play-btn secondary" data-i18n="bingo.remote.sync">Sync to players</button>
               <div class="remote-play-lock-wrap">
                 <input type="checkbox" id="remote-play-lock-joins" data-i18n="bingo.remote.lockLabel" data-i18n-attr="aria-label" />
                 <label for="remote-play-lock-joins"><span data-i18n="bingo.remote.lockLabel"></span></label>
               </div>
-              <button type="button" id="host-join-as-player-btn-setup" class="remote-play-btn secondary host-join-as-player-btn" title="Open your player card in a new tab while you host here.">Join as player</button>
+              <button type="button" id="host-join-as-player-btn-setup" class="remote-play-btn secondary host-join-as-player-btn" data-i18n="bingo.joinAsPlayer">Join as player</button>
             </div>
           </div>
         </section>
       </section>
       <div class="host-setup-actions">
-        <button type="button" id="host-start-game-btn" class="host-btn-primary" disabled>Start the game</button>
+        <button type="button" id="host-start-game-btn" class="host-btn-primary" disabled data-i18n="bingo.startGame">Start the game</button>
         <p class="host-wizard-show-again-wrap">
-          <button type="button" id="host-wizard-show-again" class="host-wizard-show-again">Show guide</button>
+          <button type="button" id="host-wizard-show-again" class="host-wizard-show-again" data-i18n="index.wizard.showGuide">Show guide</button>
         </p>
       </div>
     </div>
@@ -1604,87 +1630,87 @@
     <div class="controls-band">
     <div class="controls" id="play-wizard-draw-target">
       <div id="current-number">--</div>
-      <div class="mc-announcement" id="mc-announcement" aria-live="polite"></div>
+        <div class="mc-announcement" id="mc-announcement" aria-live="polite" dir="auto"></div>
       <div class="btn-group">
         <div class="main-btns">
-          <button id="prev-btn" title="Left Arrow">◀</button>
-          <button id="draw-btn" title="Space or Right Arrow">DRAW</button>
+          <button id="prev-btn" type="button" data-i18n-title="bingo.controls.prevTitle" title="Previous number (Left arrow key)">◀</button>
+          <button id="draw-btn" type="button" data-i18n="bingo.controls.draw" data-i18n-title="bingo.controls.drawTitle" title="Draw next number (Space or Right arrow key)">הגרלה</button>
         </div>
         <div class="shortcuts">
-          <span>◀ Previous</span>
-          <span>Space / Next ▶</span>
+          <span data-i18n="bingo.controls.prevShortcut">◀ Previous</span>
+          <span data-i18n="bingo.controls.nextShortcut">Space / Next ▶</span>
         </div>
-        <button type="button" id="new-game-btn" class="host-new-game-in-play">New game</button>
-        <button type="button" id="push-to-players-btn" class="push-to-players-btn hidden" title="Show players an indicator on numbers they should have marked.">Push to players</button>
-        <button type="button" id="host-join-as-player-btn" class="host-join-as-player-btn push-to-players-btn hidden" title="Open your player card in a new tab (same device). You stay on this page to call numbers.">Join as player</button>
+        <button type="button" id="new-game-btn" class="host-new-game-in-play" data-i18n="bingo.newGame">New game</button>
+        <button type="button" id="push-to-players-btn" class="push-to-players-btn hidden" data-i18n="bingo.remote.pushToPlayersTitle" data-i18n-attr="title" title="Show players an indicator on numbers they should have marked."><span data-i18n="bingo.pushToPlayers">Push to players</span></button>
+        <button type="button" id="host-join-as-player-btn" class="host-join-as-player-btn push-to-players-btn hidden" data-i18n="bingo.remote.hostJoinTitlePlay" data-i18n-attr="title" title="Open your player card in a new tab (same device). You stay on this page to call numbers."><span data-i18n="bingo.joinAsPlayer">Join as player</span></button>
         <div class="controls-actions">
-          <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link">Print these cards</a>
+          <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link" data-i18n="bingo.printCards">Print these cards</a>
         </div>
         <p class="host-wizard-show-again-wrap play-wizard-show-again-wrap">
-          <button type="button" id="play-wizard-show-again" class="host-wizard-show-again">Show guide</button>
+          <button type="button" id="play-wizard-show-again" class="host-wizard-show-again" data-i18n="index.wizard.showGuide">Show guide</button>
         </p>
       </div>
     </div>
 
     <section class="leaderboard-section" id="leaderboard-section">
-      <h2>Leaderboard</h2>
+      <h2 data-i18n="bingo.leaderboard.heading">Leaderboard</h2>
       <ul class="leaderboard-list" id="leaderboard-list"></ul>
       <div class="winner-declaration" id="winner-declaration"></div>
     </section>
     </div>
 
     <section class="advanced-controls-card" id="advanced-controls-card">
-      <h2 id="advanced-controls-header" class="advanced-controls-card-title" role="button" tabindex="0" aria-expanded="true" aria-controls="advanced-controls-content">Settings & options <span class="section-chevron" aria-hidden="true">▼</span></h2>
+      <h2 id="advanced-controls-header" class="advanced-controls-card-title" role="button" tabindex="0" aria-expanded="true" aria-controls="advanced-controls-content"><span data-i18n="bingo.settings.heading">Settings & options</span> <span class="section-chevron" aria-hidden="true">▼</span></h2>
       <div class="advanced-controls-content" id="advanced-controls-content">
         <div class="hide-cards-setting">
           <input type="checkbox" id="hide-cards" />
-          <label for="hide-cards">Hide cards (use your own)</label>
+          <label for="hide-cards" data-i18n="bingo.settings.hideCards">Hide cards (use your own)</label>
         </div>
         <div class="manual-daub-setting">
-          <input type="checkbox" id="manual-daub-only" aria-label="Players mark their own numbers" />
-          <label for="manual-daub-only">Players mark their own numbers (no auto-coloring)</label>
+          <input type="checkbox" id="manual-daub-only" data-i18n="bingo.settings.manualDaub" data-i18n-attr="aria-label" />
+          <label for="manual-daub-only" data-i18n="bingo.settings.manualDaub">Players mark their own numbers (no auto-coloring)</label>
         </div>
         <div class="manual-daub-auto-hint-setting hidden" id="manual-daub-auto-hint-wrap">
-          <input type="checkbox" id="manual-daub-auto-hint" checked aria-label="Show hint frame on numbers to mark" />
-          <label for="manual-daub-auto-hint">Show hint on numbers to mark (manual daub)</label>
+          <input type="checkbox" id="manual-daub-auto-hint" checked data-i18n="bingo.settings.hintFrame" data-i18n-attr="aria-label" />
+          <label for="manual-daub-auto-hint" data-i18n="bingo.settings.hintFrame">Show hint on numbers to mark (manual daub)</label>
         </div>
         <div class="mc-setting">
           <input type="checkbox" id="mc-announces" checked />
-          <label for="mc-announces">MC announces numbers</label>
+          <label for="mc-announces" data-i18n="bingo.settings.mcAnnounces">MC announces numbers</label>
         </div>
         <div class="mc-setting">
           <input type="checkbox" id="mc-simple" />
-          <label for="mc-simple">Simple MC (numbers only)</label>
+          <label for="mc-simple" data-i18n="bingo.settings.mcSimple">Simple MC (numbers only)</label>
         </div>
         <div class="mc-advanced">
-          <button type="button" class="mc-advanced-toggle" id="mc-advanced-toggle" aria-expanded="false" aria-controls="mc-advanced-content">Advanced voice settings</button>
-          <div class="mc-advanced-content" id="mc-advanced-content" role="region" aria-label="Advanced voice settings">
+          <button type="button" class="mc-advanced-toggle" id="mc-advanced-toggle" aria-expanded="false" aria-controls="mc-advanced-content" data-i18n="bingo.settings.mcAdvanced">Advanced voice settings</button>
+          <div class="mc-advanced-content" id="mc-advanced-content" role="region" data-i18n-attr="aria-label" data-i18n="bingo.settings.mcAdvancedAria" aria-label="Advanced voice settings">
             <div class="mc-advanced-row">
-              <label for="mc-voice-select">Voice</label>
-              <select id="mc-voice-select" aria-label="MC voice">
-                <option value="">Default (auto)</option>
+              <label for="mc-voice-select" data-i18n="bingo.settings.voice">Voice</label>
+              <select id="mc-voice-select" data-i18n="bingo.settings.voiceAria" data-i18n-attr="aria-label" aria-label="MC voice">
+                <option value="" data-i18n="bingo.settings.voiceDefault">Default (auto)</option>
               </select>
             </div>
             <div class="mc-advanced-row">
-              <label for="mc-rate">Speed</label>
-              <input type="range" id="mc-rate" min="0.5" max="2" step="0.05" value="0.93" aria-label="Speech speed" />
+              <label for="mc-rate" data-i18n="bingo.settings.speed">Speed</label>
+              <input type="range" id="mc-rate" min="0.5" max="2" step="0.05" value="0.93" data-i18n="bingo.settings.speedAria" data-i18n-attr="aria-label" aria-label="Speech speed" />
               <span class="mc-advanced-value" id="mc-rate-value" aria-live="polite">0.93</span>
             </div>
             <div class="mc-advanced-row">
-              <label for="mc-pitch">Pitch</label>
-              <input type="range" id="mc-pitch" min="0.5" max="2" step="0.05" value="1" aria-label="Speech pitch" />
+              <label for="mc-pitch" data-i18n="bingo.settings.pitch">Pitch</label>
+              <input type="range" id="mc-pitch" min="0.5" max="2" step="0.05" value="1" data-i18n="bingo.settings.pitchAria" data-i18n-attr="aria-label" aria-label="Speech pitch" />
               <span class="mc-advanced-value" id="mc-pitch-value" aria-live="polite">1</span>
             </div>
             <div class="mc-advanced-row">
-              <input type="checkbox" id="mc-variation" checked aria-label="Natural variation in speed and pitch" />
-              <label for="mc-variation">Natural variation</label>
+              <input type="checkbox" id="mc-variation" checked data-i18n="bingo.settings.naturalVariation" data-i18n-attr="aria-label" />
+              <label for="mc-variation" data-i18n="bingo.settings.naturalVariation">Natural variation</label>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="board" id="bingo-board">
+    <div class="board" id="bingo-board" dir="ltr">
       <div class="column-group b-group">
         <div class="column-header">B</div>
         <div class="num-grid" id="grid-B"></div>
@@ -1708,17 +1734,72 @@
     </div>
 
     <section class="participant-cards-section" id="participant-cards-section">
-      <h2 id="participant-cards-header" role="button" tabindex="0" aria-expanded="true" aria-controls="participant-cards">Participant cards <span class="section-chevron" aria-hidden="true">▼</span></h2>
+      <h2 id="participant-cards-header" role="button" tabindex="0" aria-expanded="true" aria-controls="participant-cards"><span data-i18n="bingo.participantCards.heading">Participant cards</span> <span class="section-chevron" aria-hidden="true">▼</span></h2>
       <div class="participant-cards-grid" id="participant-cards"></div>
     </section>
     </div>
 
     <script type="module">
-      import { initI18n, t } from "./i18n.js";
+      import { initI18n, t, getLocale } from "./i18n.js";
       import { getOrdinal, getRankedPlayers, getRankingPhrase } from "./ranking.js";
 
       await initI18n();
       document.title = t("bingo.pageTitle");
+
+      function leaderboardPlaceLabel(rank) {
+        return getLocale() === "he" ? t("bingo.leaderboard.placeHe", { n: rank }) : getOrdinal(rank);
+      }
+
+      function rankingPhrasesFromT() {
+        return {
+          newLeader: (name) => t("bingo.ranking.newLeader", { name }),
+          movesInto2nd: (name) => t("bingo.ranking.movesInto2nd", { name }),
+          movesInto3rd: (name) => t("bingo.ranking.movesInto3rd", { name }),
+          intoNth: (name, ordStr) => t("bingo.ranking.intoNth", { name, ord: ordStr }),
+        };
+      }
+
+      function standingsPickersFromT() {
+        return [
+          (top) =>
+            t("bingo.ranking.standings0", {
+              p1: top[0]?.name ?? "",
+              p2: top[1]?.name ?? "",
+              p3: top[2]?.name ?? "",
+            }),
+          (top) => t("bingo.ranking.standings1", { names: top.map((p) => p.name).join(", ") }),
+        ];
+      }
+
+      function formatBingoLineLabel(line) {
+        if (line.startsWith("Row ")) return t("bingo.line.row", { n: line.slice(4) });
+        if (line.startsWith("Col ")) return t("bingo.line.col", { letter: line.slice(4) });
+        if (line === "Diagonal \\") return t("bingo.line.diagBack");
+        if (line === "Diagonal /") return t("bingo.line.diagForward");
+        return line;
+      }
+
+      function hydrateRemotePlayChromeI18n() {
+        const pairs = [
+          ["remote-play-copy-code", "bingo.remote.copyCodeTitle"],
+          ["remote-play-copy-join-page", "bingo.remote.copyJoinTitle"],
+          ["remote-play-copy-link", "bingo.remote.copyLinkTitle"],
+        ];
+        for (const [id, key] of pairs) {
+          const el = document.getElementById(id);
+          if (el) el.title = t(key);
+        }
+        const joinSetup = document.getElementById("host-join-as-player-btn-setup");
+        if (joinSetup) joinSetup.title = t("bingo.remote.hostJoinTitle");
+        const joinPlay = document.getElementById("host-join-as-player-btn");
+        if (joinPlay) joinPlay.title = t("bingo.remote.hostJoinTitlePlay");
+        const pwdConf = document.getElementById("remote-play-password-confirm");
+        if (pwdConf) {
+          pwdConf.placeholder = t("bingo.remote.passwordConfirmPlaceholder");
+          pwdConf.setAttribute("aria-label", t("bingo.remote.passwordConfirmAria"));
+        }
+      }
+      hydrateRemotePlayChromeI18n();
 
       const STORAGE_KEY = "bingo-manager-state";
       const drawBtn = document.getElementById("draw-btn");
@@ -2046,9 +2127,9 @@
           block.className = "participant-player-block";
           const nameInp = document.createElement("input");
           nameInp.type = "text";
-          nameInp.placeholder = `Player ${i + 1}`;
+          nameInp.placeholder = t("bingo.participant.placeholder", { n: i + 1 });
           nameInp.value = participantNames[i] || "";
-          nameInp.setAttribute("aria-label", `Name for player ${i + 1}`);
+          nameInp.setAttribute("aria-label", t("bingo.participant.nameAria", { n: i + 1 }));
           const nameIdx = i;
           nameInp.addEventListener("input", () => {
             participantNames[nameIdx] = nameInp.value;
@@ -2064,30 +2145,30 @@
           const quirksRow = document.createElement("div");
           quirksRow.className = "participant-quirks-row";
           const excludeLabel = document.createElement("label");
-          excludeLabel.textContent = "Exclude:";
+          excludeLabel.textContent = t("bingo.participant.exclude");
           const excludeInp = document.createElement("input");
           excludeInp.type = "text";
-          excludeInp.placeholder = "e.g. 7, 13";
+          excludeInp.placeholder = t("bingo.participant.excludePlaceholder");
           excludeInp.value = quirk.excludeStr || "";
-          excludeInp.setAttribute("aria-label", `Exclude numbers for player ${i + 1}`);
+          excludeInp.setAttribute("aria-label", t("bingo.participant.excludeAria", { n: i + 1 }));
           const preferLabel = document.createElement("label");
-          preferLabel.textContent = "Prefer:";
+          preferLabel.textContent = t("bingo.participant.prefer");
           const preferInp = document.createElement("input");
           preferInp.type = "text";
-          preferInp.placeholder = "e.g. 11, 22, 33 or multiples of 11";
+          preferInp.placeholder = t("bingo.participant.preferPlaceholder");
           preferInp.value = quirk.preferStr || "";
-          preferInp.setAttribute("aria-label", `Prefer numbers for player ${i + 1}`);
+          preferInp.setAttribute("aria-label", t("bingo.participant.preferAria", { n: i + 1 }));
           const value = "multiples of 11";
           const presetPreferBtn = document.createElement("button");
           presetPreferBtn.type = "button";
           presetPreferBtn.className = "quirk-preset-btn";
-          presetPreferBtn.textContent = "Prefer ×11";
-          presetPreferBtn.title = "Set Prefer to multiples of 11 (11, 22, 33, 44, 55, 66)";
+          presetPreferBtn.textContent = t("bingo.participant.prefer11");
+          presetPreferBtn.title = t("bingo.participant.prefer11Title");
           const presetExcludeBtn = document.createElement("button");
           presetExcludeBtn.type = "button";
           presetExcludeBtn.className = "quirk-preset-btn";
-          presetExcludeBtn.textContent = "Exclude ×11";
-          presetExcludeBtn.title = "Set Exclude to multiples of 11";
+          presetExcludeBtn.textContent = t("bingo.participant.exclude11");
+          presetExcludeBtn.title = t("bingo.participant.exclude11Title");
           const quirkIdx = i;
           const saveQuirks = () => {
             participantQuirks[quirkIdx] = { excludeStr: excludeInp.value.trim(), preferStr: preferInp.value.trim() };
@@ -2110,8 +2191,8 @@
           const clearQuirksBtn = document.createElement("button");
           clearQuirksBtn.type = "button";
           clearQuirksBtn.className = "quirk-preset-btn";
-          clearQuirksBtn.textContent = "Clear quirks";
-          clearQuirksBtn.title = "Clear Exclude and Prefer for this player";
+          clearQuirksBtn.textContent = t("bingo.participant.clearQuirks");
+          clearQuirksBtn.title = t("bingo.participant.clearQuirksTitle");
           clearQuirksBtn.addEventListener("click", () => {
             excludeInp.value = "";
             preferInp.value = "";
@@ -2187,7 +2268,14 @@
         const currRankedFull = getRankedPlayersForDraw(new Set(drawnSequence), drawnSequence);
         const prevRanked = prevRankedFull.filter((p) => p.points > 0).map((p) => ({ name: p.name, rank: p.rank }));
         const currRanked = currRankedFull.filter((p) => p.points > 0).map((p) => ({ name: p.name, rank: p.rank }));
-        const rankingPhrase = !mcSimple ? getRankingPhrase(prevRanked, currRanked, { random: Math.random }) : "";
+        const rankingPhrase = !mcSimple
+          ? getRankingPhrase(prevRanked, currRanked, {
+              random: Math.random,
+              phrases: rankingPhrasesFromT(),
+              standingsPickers: standingsPickersFromT(),
+              ordinal: leaderboardPlaceLabel,
+            })
+          : "";
 
         const fullDisplay = displayText + (pointsPhrase ? " " + pointsPhrase : "") + (rankingPhrase ? " " + rankingPhrase : "");
         if (mcAnnouncementEl) mcAnnouncementEl.textContent = fullDisplay;
@@ -2356,6 +2444,11 @@
       function getMcPhraseParts(letter, num, drawIndex) {
         const numberPart = letter + " " + num + "!";
         if (mcSimple) return { display: letter + " " + num, intro: undefined, number: numberPart };
+        if (getLocale() === "he") {
+          const i = drawIndex % 4;
+          const display = t(`bingo.mc.announceVariant${i}`, { letter, n: num });
+          return { display, intro: undefined, number: numberPart };
+        }
         const phrase = MC_PHRASES[drawIndex % MC_PHRASES.length](letter, num);
         return {
           display: phrase.display,
@@ -2410,7 +2503,8 @@
           const linesBefore = getBingoLines(participantCards[i], drawnSetBefore).length;
           const linesAfter = getBingoLines(participantCards[i], drawnSetAfter).length;
           if (linesAfter > linesBefore) {
-            const name = (participantNames[i] && participantNames[i].trim()) || "Player " + (i + 1);
+            const name =
+              (participantNames[i] && participantNames[i].trim()) || t("bingo.playerN", { n: i + 1 });
             names.push(name);
           }
         }
@@ -2419,12 +2513,13 @@
 
       function getPointsAnnouncementPhrase(scorerNames) {
         if (!scorerNames || scorerNames.length === 0) return "";
-        if (scorerNames.length === 1) return "Points for " + scorerNames[0] + "!";
-        if (scorerNames.length === 2) return "Points for " + scorerNames[0] + " and " + scorerNames[1] + "!";
+        if (scorerNames.length === 1) return t("bingo.points.one", { name: scorerNames[0] });
+        if (scorerNames.length === 2) return t("bingo.points.two", { a: scorerNames[0], b: scorerNames[1] });
         const showCount = 2;
         const first = scorerNames.slice(0, showCount).join(", ");
         const rest = scorerNames.length - showCount;
-        return "Points for " + first + ", and " + rest + " other" + (rest === 1 ? "" : "s") + "!";
+        if (rest === 1) return t("bingo.points.manyOne", { first });
+        return t("bingo.points.many", { first, rest: String(rest) });
       }
 
       function getRankedPlayersForDraw(drawnSet, drawnSequence) {
@@ -2433,7 +2528,9 @@
           const lines = getBingoLines(card, drawnSet);
           const points = lines.length * POINTS_PER_LINE;
           const firstBingoAt = getFirstBingoDrawIndex(card, drawnSequence);
-          const name = (participantNames[index] && participantNames[index].trim()) || `Player ${index + 1}`;
+          const name =
+            (participantNames[index] && participantNames[index].trim()) ||
+            t("bingo.playerN", { n: index + 1 });
           return { index, name, points, firstBingoAt };
         });
         return getRankedPlayers(players);
@@ -2452,13 +2549,13 @@
           li.className = "leaderboard-item" + (p.rank <= 3 ? " place-" + p.rank : "");
           const badge = document.createElement("span");
           badge.className = "place-badge";
-          badge.textContent = getOrdinal(p.rank);
+          badge.textContent = leaderboardPlaceLabel(p.rank);
           const name = document.createElement("span");
           name.className = "player-name";
           name.textContent = p.name;
           const pts = document.createElement("span");
           pts.className = "player-points";
-          pts.textContent = p.points + " pts";
+          pts.textContent = t("bingo.leaderboard.pts", { n: p.points });
           li.appendChild(badge);
           li.appendChild(name);
           li.appendChild(pts);
@@ -2468,9 +2565,27 @@
         const withBingo = ranked.filter((p) => p.points > 0);
         if (withBingo.length > 0) {
           const parts = [];
-          if (withBingo[0]) parts.push("1st: " + withBingo[0].name);
-          if (withBingo[1]) parts.push("2nd: " + withBingo[1].name);
-          if (withBingo[2]) parts.push("3rd: " + withBingo[2].name);
+          if (withBingo[0])
+            parts.push(
+              t("bingo.leaderboard.winnerLine", {
+                rank: leaderboardPlaceLabel(1),
+                name: withBingo[0].name,
+              })
+            );
+          if (withBingo[1])
+            parts.push(
+              t("bingo.leaderboard.winnerLine", {
+                rank: leaderboardPlaceLabel(2),
+                name: withBingo[1].name,
+              })
+            );
+          if (withBingo[2])
+            parts.push(
+              t("bingo.leaderboard.winnerLine", {
+                rank: leaderboardPlaceLabel(3),
+                name: withBingo[2].name,
+              })
+            );
           winnerDeclaration.textContent = parts.join("  ·  ");
         }
       }
@@ -2485,11 +2600,14 @@
           wrap.className = "participant-card-wrap";
           const title = document.createElement("div");
           title.className = "participant-card-title";
-          title.textContent = (participantNames[index] && participantNames[index].trim()) || `Player ${index + 1}`;
+          title.textContent =
+            (participantNames[index] && participantNames[index].trim()) ||
+            t("bingo.playerN", { n: index + 1 });
           wrap.appendChild(title);
           let markedCount = 0;
           const grid = document.createElement("div");
           grid.className = "participant-card";
+          grid.setAttribute("dir", "ltr");
           for (let c = 0; c < 5; c++) {
             const h = document.createElement("div");
             h.className = `card-header-cell ${["b", "i", "n", "g", "o"][c]}`;
@@ -2502,7 +2620,7 @@
               const cell = document.createElement("div");
               cell.className = "card-cell " + getColumnClass(col);
               if (val === "FREE") {
-                cell.textContent = "FREE";
+                cell.textContent = t("bingo.card.free");
                 cell.classList.add("free", "marked");
                 markedCount++;
               } else {
@@ -2524,14 +2642,15 @@
           wrap.appendChild(grid);
           const progress = document.createElement("div");
           progress.className = "participant-card-progress";
-          progress.textContent = `${markedCount}/24`;
+          progress.textContent = t("bingo.card.progress", { marked: markedCount });
           wrap.appendChild(progress);
           const bingoLines = getBingoLines(card, drawnSet);
           if (bingoLines.length > 0) {
             wrap.classList.add("has-bingo");
             const bingoEl = document.createElement("div");
             bingoEl.className = "participant-card-bingo";
-            bingoEl.textContent = "BINGABU! " + bingoLines.join(", ");
+            bingoEl.textContent =
+              t("player.bingoPrefix") + " " + bingoLines.map(formatBingoLineLabel).join(", ");
             wrap.appendChild(bingoEl);
           }
           participantCardsEl.appendChild(wrap);
@@ -2582,17 +2701,17 @@
         if (pushToPlayersBtn) pushToPlayersBtn.classList.toggle("hidden", !manualDaubOnly);
 
         if (drawnSequence.length === 75) {
-          drawBtn.innerText = "FINISH!";
+          drawBtn.textContent = t("bingo.controls.finish");
           drawBtn.style.backgroundColor = "#636e72";
         } else {
-          drawBtn.innerText = "DRAW";
+          drawBtn.textContent = t("bingo.controls.draw");
           drawBtn.style.backgroundColor = "var(--secondary)";
         }
 
         // Participants input: disabled mid-game with tooltip
         const isMidGame = drawnSequence.length > 0;
         numParticipantsInput.disabled = isMidGame;
-        numParticipantsInput.title = isMidGame ? "Changing participants mid-game is disabled" : "";
+        numParticipantsInput.title = isMidGame ? t("bingo.setup.participantsMidGameTitle") : "";
         // Name inputs stay editable during the game so players can correct or change names
         if (participantNamesWrap) {
           participantNamesWrap.querySelectorAll("input").forEach((inp) => {
@@ -2727,7 +2846,7 @@
       if (newGameBtn) {
         newGameBtn.addEventListener("click", () => {
           const inMidGame = drawnSequence.length > 0;
-          if (inMidGame && !confirm("Start a new game? Current game will be lost.")) return;
+          if (inMidGame && !confirm(t("bingo.confirm.newGame"))) return;
           try {
             localStorage.removeItem(STORAGE_KEY);
           } catch (_) {}
@@ -2741,8 +2860,11 @@
           indicatorPulseAt = Date.now();
           saveState();
           pushRoomStateIfHost();
-          pushToPlayersBtn.textContent = "Sent!";
-          setTimeout(() => { pushToPlayersBtn.textContent = "Push to players"; }, 1500);
+          const pushLbl = pushToPlayersBtn.querySelector("span");
+          if (pushLbl) pushLbl.textContent = t("bingo.pushToPlayers.sent");
+          setTimeout(() => {
+            if (pushLbl) pushLbl.textContent = t("bingo.pushToPlayers");
+          }, 1500);
         });
       }
       document.querySelectorAll(".host-join-as-player-btn").forEach((btn) => {
@@ -2863,12 +2985,12 @@
           });
           const data = await res.json().catch(() => ({}));
           if (res.status === 404 || res.status === 410) {
-            alert("Room no longer exists. Create a new room if needed.");
+            alert(t("bingo.alert.roomGone"));
             return;
           }
           const np = (data.state && data.state.numParticipants) || numParticipants;
           if (!np || np < 1) {
-            alert("Add at least one player in setup before joining as a player.");
+            alert(t("bingo.alert.addPlayerFirst"));
             return;
           }
           const claims = data.claims || {};
@@ -2888,7 +3010,7 @@
             }
           }
           if (slot < 0) {
-            alert("All player slots are taken. Remove a player or add more participants in a new game.");
+            alert(t("bingo.alert.slotsFull"));
             return;
           }
           const claimRes = await fetch(`${base}/api/rooms/${roomId}/claim`, {
@@ -2898,7 +3020,7 @@
           });
           const claimData = await claimRes.json().catch(() => ({}));
           if (!claimRes.ok) {
-            alert(claimData.error || "Could not join as player.");
+            alert(claimData.error || t("bingo.alert.joinFailed"));
             return;
           }
           try {
@@ -2920,7 +3042,7 @@
           window.open(playerUrl, "_blank", "noopener,noreferrer");
           refreshJoinedList();
         } catch (_) {
-          alert("Network error. Try again.");
+          alert(t("bingo.alert.network"));
         }
       }
 
@@ -2966,14 +3088,16 @@
           remotePlayJoinedList.innerHTML = "";
           for (let i = 0; i < np; i++) {
             const li = document.createElement("li");
-            const name = (names[i] && names[i].trim()) || `Player ${i + 1}`;
+            const name = (names[i] && names[i].trim()) || t("bingo.playerN", { n: i + 1 });
             const claimed = Object.prototype.hasOwnProperty.call(claims, String(i));
-            li.textContent = claimed ? `${name} ✓` : `${name} – waiting…`;
+            li.textContent = claimed
+              ? t("bingo.remote.joinedReady", { name })
+              : t("bingo.remote.joinedWaiting", { name });
             if (claimed) {
               const bootBtn = document.createElement("button");
               bootBtn.type = "button";
               bootBtn.className = "boot-btn";
-              bootBtn.textContent = "Remove";
+              bootBtn.textContent = t("bingo.remote.remove");
               bootBtn.addEventListener("click", () => bootPlayer(i));
               li.appendChild(bootBtn);
             }
@@ -2986,7 +3110,7 @@
         const roomId = sessionStorage.getItem(REMOTE_ROOM_ID_KEY);
         const hostId = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
         if (!roomId || !hostId) return;
-        if (!confirm("Remove this player from the room?")) return;
+        if (!confirm(t("bingo.alert.bootPlayer"))) return;
         try {
           const res = await fetch(`${getApiBase()}/api/rooms/${roomId}/boot`, {
             method: "POST",
@@ -3013,12 +3137,12 @@
       if (createRoomBtn) {
         createRoomBtn.addEventListener("click", async () => {
           if (participantCards.length === 0 && drawnSequence.length === 0) {
-            if (!confirm("Set participants and start a new game first. Create room anyway with current setup?")) return;
+            if (!confirm(t("bingo.confirm.createRoomAnyway"))) return;
           }
           const password = remotePlayPasswordCheck && remotePlayPasswordCheck.checked ? document.getElementById("remote-play-password").value : undefined;
           const confirmVal = remotePlayPasswordCheck && remotePlayPasswordCheck.checked ? document.getElementById("remote-play-password-confirm").value : undefined;
           if (password !== undefined && password !== confirmVal) {
-            alert("Passwords do not match.");
+            alert(t("bingo.alert.passwordMismatch"));
             return;
           }
           createRoomBtn.disabled = true;
@@ -3032,7 +3156,7 @@
             });
             const data = await res.json();
             if (!res.ok) {
-              alert(data.error || "Failed to create room");
+              alert(data.error || t("bingo.alert.createRoomFailed"));
               return;
             }
             sessionStorage.setItem(REMOTE_ROOM_ID_KEY, data.roomId);
@@ -3057,7 +3181,12 @@
         copyCodeBtn.addEventListener("click", () => {
           const code = remotePlayCodeEl.textContent;
           if (code && navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(code).then(() => { copyCodeBtn.textContent = "Copied!"; setTimeout(() => { copyCodeBtn.textContent = "Copy room code"; }, 1500); });
+            navigator.clipboard.writeText(code).then(() => {
+              copyCodeBtn.textContent = t("bingo.remote.copied");
+              setTimeout(() => {
+                copyCodeBtn.textContent = t("bingo.remote.copyCode");
+              }, 1500);
+            });
           }
         });
       }
@@ -3065,7 +3194,12 @@
         copyJoinPageBtn.addEventListener("click", () => {
           const joinPageUrl = getApiBase() + "/join";
           if (joinPageUrl && navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(joinPageUrl).then(() => { copyJoinPageBtn.textContent = "Copied!"; setTimeout(() => { copyJoinPageBtn.textContent = "Copy join page URL"; }, 1500); });
+            navigator.clipboard.writeText(joinPageUrl).then(() => {
+              copyJoinPageBtn.textContent = t("bingo.remote.copied");
+              setTimeout(() => {
+                copyJoinPageBtn.textContent = t("bingo.remote.copyJoin");
+              }, 1500);
+            });
           }
         });
       }
@@ -3073,7 +3207,12 @@
         copyLinkBtn.addEventListener("click", () => {
           const url = window._bingabuShareUrl || (getApiBase() + "/bingo.html?join=" + sessionStorage.getItem(REMOTE_ROOM_ID_KEY));
           if (url && navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(() => { copyLinkBtn.textContent = "Copied!"; setTimeout(() => { copyLinkBtn.textContent = "Copy direct game link"; }, 1500); });
+            navigator.clipboard.writeText(url).then(() => {
+              copyLinkBtn.textContent = t("bingo.remote.copied");
+              setTimeout(() => {
+                copyLinkBtn.textContent = t("bingo.remote.copyLink");
+              }, 1500);
+            });
           }
         });
       }
@@ -3083,16 +3222,18 @@
         if (syncToPlayersBtn) {
           syncToPlayersBtn.disabled = !roomId || !hostId || !stateDirtySinceLastPush;
           syncToPlayersBtn.title = stateDirtySinceLastPush
-            ? "Push current state (including daubs) to players so their cards update."
-            : "No changes to sync; button enables when you change settings or after a draw.";
+            ? t("bingo.remote.syncTitleDirty")
+            : t("bingo.remote.syncTitleClean");
         }
         updateHostJoinAsPlayerButton();
       }
       if (syncToPlayersBtn) {
         syncToPlayersBtn.addEventListener("click", () => {
           pushRoomStateIfHost();
-          syncToPlayersBtn.textContent = "Synced!";
-          setTimeout(() => { syncToPlayersBtn.textContent = "Sync to players"; }, 1500);
+          syncToPlayersBtn.textContent = t("bingo.remote.synced");
+          setTimeout(() => {
+            syncToPlayersBtn.textContent = t("bingo.remote.sync");
+          }, 1500);
         });
       }
       const remotePlayLockJoinsEl = document.getElementById("remote-play-lock-joins");
@@ -3115,7 +3256,7 @@
       if (bingoAppTitle) {
         function goHome() {
           const inMidGame = drawnSequence.length > 0;
-          if (inMidGame && !confirm("End your current game and go home?")) return;
+          if (inMidGame && !confirm(t("bingo.confirm.goHome"))) return;
           try {
             localStorage.removeItem(STORAGE_KEY);
             sessionStorage.removeItem(HOST_PHASE_KEY);
@@ -3151,10 +3292,10 @@
       }
 
       const HOST_WIZARD_STEPS = [
-        { title: "Set players", body: "Set the number of players and add their names below.", highlight: "#wizard-step-1-target", focus: "#num-participants" },
-        { title: "Create room", body: "To play with friends remotely, create a room. Optional if you're playing in person.", highlight: "#remote-play-section", focus: "#remote-play-create-btn" },
-        { title: "Share", body: "Share the room code or link with players so they can join.", highlight: "#remote-play-section", focus: "#remote-play-copy-code" },
-        { title: "Draw", body: "Click Start the game, then use DRAW to call numbers. Have fun!", highlight: "#host-start-game-btn", focus: "#host-start-game-btn" },
+        { titleKey: "bingo.hostWizard.s1.title", bodyKey: "bingo.hostWizard.s1.body", highlight: "#wizard-step-1-target", focus: "#num-participants" },
+        { titleKey: "bingo.hostWizard.s2.title", bodyKey: "bingo.hostWizard.s2.body", highlight: "#remote-play-section", focus: "#remote-play-create-btn" },
+        { titleKey: "bingo.hostWizard.s3.title", bodyKey: "bingo.hostWizard.s3.body", highlight: "#remote-play-section", focus: "#remote-play-copy-code" },
+        { titleKey: "bingo.hostWizard.s4.title", bodyKey: "bingo.hostWizard.s4.body", highlight: "#host-start-game-btn", focus: "#host-start-game-btn" },
       ];
       const hostWizardOverlay = document.getElementById("host-wizard-overlay");
       const hostWizardModal = document.querySelector(".host-wizard-modal");
@@ -3209,9 +3350,10 @@
       function applyWizardStep(step) {
         hostWizardStep = step;
         const config = HOST_WIZARD_STEPS[step - 1];
-        if (hostWizardTitle) hostWizardTitle.textContent = config.title;
-        if (hostWizardBody) hostWizardBody.textContent = config.body;
-        if (hostWizardProgress) hostWizardProgress.textContent = `Step ${step} of 4`;
+        if (hostWizardTitle) hostWizardTitle.textContent = t(config.titleKey);
+        if (hostWizardBody) hostWizardBody.textContent = t(config.bodyKey);
+        if (hostWizardProgress)
+          hostWizardProgress.textContent = t("bingo.hostWizard.progress", { step, total: 4 });
         removeWizardHighlight();
         const target = document.querySelector(config.highlight);
         if (target) {
@@ -3222,7 +3364,7 @@
         if (hostWizardBack) hostWizardBack.classList.toggle("hidden", step === 1);
         if (hostWizardSkip) hostWizardSkip.classList.toggle("hidden", HOST_WIZARD_STEPS.length <= 1);
         if (hostWizardNext) {
-          hostWizardNext.textContent = step === 4 ? "Done" : "Next";
+          hostWizardNext.textContent = step === 4 ? t("bingo.hostWizard.done") : t("bingo.hostWizard.next");
           hostWizardNext.disabled = false; /* always clickable so user can advance or edit page then Next */
         }
         if (target) {
@@ -3286,11 +3428,11 @@
       }
 
       const PLAY_WIZARD_STEPS = [
-        { title: "Current number", body: "The last number called appears here.", highlight: "#current-number", focus: "#current-number" },
-        { title: "History", body: "All called numbers are listed here.", highlight: "#play-wizard-history-target", focus: "#history-list" },
-        { title: "Call numbers", body: "Click DRAW to call the next number. Use Previous to go back.", highlight: "#play-wizard-draw-target", focus: "#draw-btn" },
-        { title: "Call sheet", body: "This is your call sheet. Mark numbers as you call them.", highlight: "#bingo-board", focus: "#bingo-board" },
-        { title: "Players' cards", body: "Players' cards appear here. Ready? Click Done to start calling.", highlight: "#participant-cards-section", focus: "#draw-btn" },
+        { titleKey: "bingo.playWizard.s1.title", bodyKey: "bingo.playWizard.s1.body", highlight: "#current-number", focus: "#current-number" },
+        { titleKey: "bingo.playWizard.s2.title", bodyKey: "bingo.playWizard.s2.body", highlight: "#play-wizard-history-target", focus: "#history-list" },
+        { titleKey: "bingo.playWizard.s3.title", bodyKey: "bingo.playWizard.s3.body", highlight: "#play-wizard-draw-target", focus: "#draw-btn" },
+        { titleKey: "bingo.playWizard.s4.title", bodyKey: "bingo.playWizard.s4.body", highlight: "#bingo-board", focus: "#bingo-board" },
+        { titleKey: "bingo.playWizard.s5.title", bodyKey: "bingo.playWizard.s5.body", highlight: "#participant-cards-section", focus: "#draw-btn" },
       ];
       const playWizardOverlay = document.getElementById("play-wizard-overlay");
       const playWizardModal = document.querySelector(".play-wizard-modal");
@@ -3331,9 +3473,10 @@
       function applyPlayWizardStep(step) {
         playWizardStep = step;
         const config = PLAY_WIZARD_STEPS[step - 1];
-        if (playWizardTitle) playWizardTitle.textContent = config.title;
-        if (playWizardBody) playWizardBody.textContent = config.body;
-        if (playWizardProgress) playWizardProgress.textContent = `Step ${step} of 5`;
+        if (playWizardTitle) playWizardTitle.textContent = t(config.titleKey);
+        if (playWizardBody) playWizardBody.textContent = t(config.bodyKey);
+        if (playWizardProgress)
+          playWizardProgress.textContent = t("bingo.playWizard.progress", { step, total: 5 });
         removePlayWizardHighlight();
         const target = document.querySelector(config.highlight);
         if (target) {
@@ -3344,7 +3487,7 @@
         if (playWizardBack) playWizardBack.classList.toggle("hidden", step === 1);
         if (playWizardSkip) playWizardSkip.classList.toggle("hidden", PLAY_WIZARD_STEPS.length <= 1);
         if (playWizardNext) {
-          playWizardNext.textContent = step === 5 ? "Done" : "Next";
+          playWizardNext.textContent = step === 5 ? t("bingo.playWizard.done") : t("bingo.playWizard.next");
         }
         if (target) {
           requestAnimationFrame(() => {
@@ -3493,7 +3636,10 @@
       function applyDaubModeUI() {
         if (daubModeAutoBtn) daubModeAutoBtn.setAttribute("aria-pressed", String(!manualDaubOnly));
         if (daubModeManualBtn) daubModeManualBtn.setAttribute("aria-pressed", String(manualDaubOnly));
-        if (daubModeHint) daubModeHint.textContent = manualDaubOnly ? "Players tap to mark numbers when called." : "Numbers will color automatically when called.";
+        if (daubModeHint)
+          daubModeHint.textContent = manualDaubOnly
+            ? t("bingo.daub.hintManual")
+            : t("bingo.daub.hintAuto");
         if (manualDaubOnlyCheckbox) manualDaubOnlyCheckbox.checked = manualDaubOnly;
         if (manualDaubAutoHintWrap) manualDaubAutoHintWrap.classList.toggle("hidden", !manualDaubOnly);
         if (manualDaubAutoHintCheckbox) manualDaubAutoHintCheckbox.checked = manualDaubAutoHint;
@@ -3544,7 +3690,7 @@
         mcVoiceSelect.innerHTML = "";
         const defaultOpt = document.createElement("option");
         defaultOpt.value = "";
-        defaultOpt.textContent = "Default (auto)";
+        defaultOpt.textContent = t("bingo.settings.voiceDefault");
         mcVoiceSelect.appendChild(defaultOpt);
         voices.forEach((v) => {
           const opt = document.createElement("option");
