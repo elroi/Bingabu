@@ -3220,6 +3220,7 @@
           target.scrollIntoView({ behavior: "smooth", block: "center" });
         }
         if (hostWizardBack) hostWizardBack.classList.toggle("hidden", step === 1);
+        if (hostWizardSkip) hostWizardSkip.classList.toggle("hidden", HOST_WIZARD_STEPS.length <= 1);
         if (hostWizardNext) {
           hostWizardNext.textContent = step === 4 ? "Done" : "Next";
           hostWizardNext.disabled = false; /* always clickable so user can advance or edit page then Next */
@@ -3341,6 +3342,7 @@
           target.scrollIntoView({ behavior: "smooth", block: "center" });
         }
         if (playWizardBack) playWizardBack.classList.toggle("hidden", step === 1);
+        if (playWizardSkip) playWizardSkip.classList.toggle("hidden", PLAY_WIZARD_STEPS.length <= 1);
         if (playWizardNext) {
           playWizardNext.textContent = step === 5 ? "Done" : "Next";
         }

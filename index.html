@@ -270,6 +270,9 @@
         gap: 10px;
         justify-content: space-between;
       }
+      .home-wizard-actions:has(#home-wizard-skip.hidden) {
+        justify-content: flex-end;
+      }
       .home-wizard-actions .home-wizard-next,
       .home-wizard-actions .home-wizard-skip {
         font-family: "Fredoka One", cursive;
@@ -405,7 +408,7 @@
         <h2 id="home-wizard-title" class="home-wizard-title" data-i18n="index.wizard.title"></h2>
         <p id="home-wizard-body" class="home-wizard-body" data-i18n="index.wizard.body"></p>
         <div class="home-wizard-actions">
-          <button type="button" id="home-wizard-skip" class="home-wizard-skip" data-i18n="index.wizard.skip"></button>
+          <button type="button" id="home-wizard-skip" class="home-wizard-skip hidden" data-i18n="index.wizard.skip"></button>
           <button type="button" id="home-wizard-done" class="home-wizard-next" data-i18n="index.wizard.done"></button>
         </div>
       </div>

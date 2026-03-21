@@ -177,14 +177,24 @@ describe("Bingo host UX", () => {
     expect(html).toMatch(/bingabu-play-wizard-done/);
   });
 
-  it("index.html has home wizard overlay with modal, Skip, Got it, Host or join", () => {
+  it("index.html has home wizard overlay with modal, hidden Skip, Got it, Host or join", () => {
     const html = readPage("index");
     expect(html).toMatch(/id="home-wizard-overlay"/);
     expect(html).toMatch(/home-wizard-modal/);
     expect(html).toMatch(/id="home-wizard-done"/);
-    expect(html).toMatch(/id="home-wizard-skip"/);
+    expect(html).toMatch(/id="home-wizard-skip"[^>]*class="[^"]*\bhidden\b/);
     expect(html).toMatch(/data-i18n="index\.wizard\.title"/);
     expect(html).toMatch(/data-i18n="index\.wizard\.done"/);
+  });
+
+  it("bingo.html host and play wizards hide Skip when the step list has only one step", () => {
+    const html = readPage("bingo");
+    expect(html).toContain(
+      'hostWizardSkip.classList.toggle("hidden", HOST_WIZARD_STEPS.length <= 1)'
+    );
+    expect(html).toContain(
+      'playWizardSkip.classList.toggle("hidden", PLAY_WIZARD_STEPS.length <= 1)'
+    );
   });
 
   it("index.html home wizard has Show guide and onboarding key", () => {
