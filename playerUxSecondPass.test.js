@@ -24,6 +24,10 @@ describe("second-pass UX: locales", () => {
     "player.card.aria",
     "player.card.free",
     "player.card.colB",
+    "player.card.colI",
+    "player.card.colN",
+    "player.card.colG",
+    "player.card.colO",
     "player.error.hostSessionJoinLink",
     "player.error.hostSessionHostLink",
     "spectator.history.aria",
@@ -110,5 +114,15 @@ describe("second-pass UX: HTML contracts", () => {
       /id="current-number"[^>]*aria-live="polite"[^>]*aria-atomic="true"/
     );
     expect(html).toMatch(/function showBooted\(\)[\s\S]*\.focus\(\)/);
+  });
+
+  it("cards.html localizes print column headers and FREE via player.card keys (T2)", () => {
+    const html = readFileSync(join(repoRoot, "cards.html"), "utf-8");
+    expect(html).toMatch(/PRINT_COLUMN_KEYS/);
+    expect(html).toMatch(/player\.card\.colB/);
+    expect(html).toMatch(/player\.card\.colO/);
+    expect(html).toMatch(/val === "FREE"[\s\S]*t\("player\.card\.free"\)/);
+    expect(html).not.toMatch(/h\.textContent = \["B", "I", "N", "G", "O"\]/);
+    expect(html).not.toMatch(/cell\.textContent = "FREE"/);
   });
 });
