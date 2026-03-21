@@ -201,11 +201,8 @@
         align-items: center;
         gap: 10px;
         width: 100%;
+        /* LTR row keeps prev | draw in the same positions as English (keyboard: ← prev, space/→ draw). */
         direction: ltr;
-      }
-      /* Mechanical mirror for Hebrew: DOM stays prev then draw (good for LTR + screen readers). */
-      html[data-locale="he"] .main-btns {
-        flex-direction: row-reverse;
       }
 
       button {
@@ -983,10 +980,8 @@
         display: flex;
         flex-direction: row;
         gap: 15px;
+        /* Same order as English hints under the same buttons (prev | next). */
         direction: ltr;
-      }
-      html[data-locale="he"] .shortcuts {
-        flex-direction: row-reverse;
       }
 
       .participant-setting {
