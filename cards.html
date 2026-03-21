@@ -209,6 +209,20 @@
       .participant-card .card-header-cell.g { color: var(--g-col); }
       .participant-card .card-header-cell.o { color: var(--o-col); }
 
+      .participant-card .card-cell.card-cell-icons {
+        font-size: 1.1rem;
+      }
+      .participant-card .card-cell.card-cell-words {
+        font-size: 0.45rem;
+        line-height: 1.05;
+        overflow-wrap: anywhere;
+      }
+      .participant-card .card-cell .card-cell-img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
       .participant-card .card-cell {
         aspect-ratio: 1;
         display: flex;
@@ -321,6 +335,12 @@
 
     <script type="module">
       import { initI18n, t } from "./i18n.js";
+      import {
+        EN_WORDS_BEGINNER_ID,
+        ICONS_KIDS_V1_ID,
+        resolveDisplay,
+        getEffectiveKeySetIdForSlot,
+      } from "./keysets.js";
 
       await initI18n();
       document.title = t("cards.pageTitle");
@@ -374,6 +394,13 @@
         cardsContainer.classList.remove("hidden");
         printBtn.disabled = false;
 
+        const np = state.numParticipants ?? state.participantCards.length;
+        const slotKs = {
+          displayKeySetId: state.displayKeySetId,
+          displayKeySetBySlot: state.displayKeySetBySlot,
+          numParticipants: np,
+        };
+
         state.participantCards.forEach((card, index) => {
           const wrap = document.createElement("div");
           wrap.className = "participant-card-wrap";
@@ -387,6 +414,7 @@
 
           const grid = document.createElement("div");
           grid.className = "participant-card";
+          const ks = getEffectiveKeySetIdForSlot(slotKs, index);
           for (let c = 0; c < 5; c++) {
             const h = document.createElement("div");
             h.className = `card-header-cell ${["b", "i", "n", "g", "o"][c]}`;
@@ -402,7 +430,18 @@
                 cell.textContent = "FREE";
                 cell.classList.add("free");
               } else {
-                cell.textContent = val;
+                const d = resolveDisplay(val, ks);
+                cell.classList.toggle("card-cell-icons", ks === ICONS_KIDS_V1_ID);
+                cell.classList.toggle("card-cell-words", ks === EN_WORDS_BEGINNER_ID);
+                if (d.image) {
+                  const img = document.createElement("img");
+                  img.src = d.image;
+                  img.alt = d.speech;
+                  img.className = "card-cell-img";
+                  cell.appendChild(img);
+                } else {
+                  cell.textContent = d.text;
+                }
               }
               grid.appendChild(cell);
             }

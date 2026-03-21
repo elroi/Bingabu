@@ -93,6 +93,9 @@
         font-weight: bold;
         font-size: 0.8rem;
       }
+      .history-ball.history-ball-emoji {
+        font-size: 1.1rem;
+      }
       .leave {
         margin-top: 24px;
         color: var(--secondary);
@@ -128,6 +131,7 @@
     <script type="module">
       import { initI18n, t, setLocalePreference } from "./i18n.js";
       import { nextReconnectDelayMs, SSE_RECONNECT_INITIAL_MS } from "./streamReconnect.js";
+      import { ICONS_KIDS_V1_ID, resolveDisplay, normalizeKeySetId } from "./keysets.js";
 
       await initI18n();
       document.title = t("spectator.pageTitle");
@@ -162,13 +166,23 @@
         const lastNum = drawnSequence[drawnSequence.length - 1];
         const cur = document.getElementById("current-number");
         const hist = document.getElementById("history-wrap");
-        if (cur) cur.textContent = lastNum ? `${getLetter(lastNum)}-${lastNum}` : "--";
+        const ks = normalizeKeySetId(state && state.displayKeySetId);
+        if (cur) {
+          if (lastNum) {
+            const d = resolveDisplay(lastNum, ks);
+            cur.textContent = `${getLetter(lastNum)}-${d.text}`;
+          } else {
+            cur.textContent = "--";
+          }
+        }
         if (hist) {
           hist.innerHTML = "";
           drawnSequence.slice(-20).forEach((n) => {
             const ball = document.createElement("div");
             ball.className = "history-ball";
-            ball.textContent = n;
+            const dn = resolveDisplay(n, ks);
+            ball.textContent = dn.text;
+            if (ks === ICONS_KIDS_V1_ID) ball.classList.add("history-ball-emoji");
             hist.appendChild(ball);
           });
         }

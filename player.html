@@ -170,6 +170,22 @@
       .participant-card .card-cell:not(.free):active {
         opacity: 0.9;
       }
+      .participant-card .card-cell.card-cell-icons {
+        font-size: clamp(1rem, 5.5vw, 1.35rem);
+      }
+      .participant-card .card-cell.card-cell-words {
+        font-size: clamp(0.45rem, 2.8vw, 0.65rem);
+        line-height: 1.05;
+        overflow-wrap: anywhere;
+      }
+      .participant-card .card-cell .card-cell-img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+      .history-ball.history-ball-emoji {
+        font-size: 1.1rem;
+      }
       .card-bingo {
         font-family: "Fredoka One", cursive;
         color: var(--primary);
@@ -262,6 +278,12 @@
     <script type="module">
       import { initI18n, t } from "./i18n.js";
       import { nextReconnectDelayMs, SSE_RECONNECT_INITIAL_MS } from "./streamReconnect.js";
+      import {
+        EN_WORDS_BEGINNER_ID,
+        ICONS_KIDS_V1_ID,
+        resolveDisplay,
+        getEffectiveKeySetIdForSlot,
+      } from "./keysets.js";
 
       await initI18n();
       document.title = t("player.pageTitle");
@@ -421,15 +443,26 @@
           const lastNum = drawnSequence[drawnSequence.length - 1];
           const names = state.participantNames || [];
           const name = (names[slotIndex] && names[slotIndex].trim()) || `Player ${slotIndex + 1}`;
+          const myKeySet = getEffectiveKeySetIdForSlot(state, slotIndex);
 
           if (titleEl) titleEl.textContent = t("player.titleWithName", { name });
-          if (currentEl) currentEl.textContent = lastNum ? `${getLetter(lastNum)}-${lastNum}` : "--";
+          if (currentEl) {
+            if (lastNum) {
+              const letter = getLetter(lastNum);
+              const d = resolveDisplay(lastNum, myKeySet);
+              currentEl.textContent = `${letter}-${d.text}`;
+            } else {
+              currentEl.textContent = "--";
+            }
+          }
 
           historyWrap.innerHTML = "";
           drawnSequence.slice(-15).forEach((n) => {
             const ball = document.createElement("div");
             ball.className = "history-ball";
-            ball.textContent = n;
+            const dn = resolveDisplay(n, myKeySet);
+            ball.textContent = dn.text;
+            if (myKeySet === ICONS_KIDS_V1_ID) ball.classList.add("history-ball-emoji");
             historyWrap.appendChild(ball);
           });
 
@@ -457,8 +490,19 @@
               else if (marked) cls += " marked";
               if (latest) cls += " latest-draw";
               if (showGuidance) cls += " guidance";
+              let inner = "";
+              if (!isFree) {
+                const d = resolveDisplay(val, myKeySet);
+                if (d.image) {
+                  inner = `<img class="card-cell-img" src="${d.image.replace(/"/g, "&quot;")}" alt="${d.speech.replace(/"/g, "&quot;")}" />`;
+                } else {
+                  inner = d.text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+                }
+                if (myKeySet === ICONS_KIDS_V1_ID) cls += " card-cell-icons";
+                if (myKeySet === EN_WORDS_BEGINNER_ID) cls += " card-cell-words";
+              }
               const dataAttrs = isFree ? "" : ` data-row="${row}" data-col="${col}" data-value="${val}"`;
-              grid += `<div role="gridcell" class="${cls}"${dataAttrs}>${val}</div>`;
+              grid += `<div role="gridcell" class="${cls}"${dataAttrs}>${isFree ? "FREE" : inner}</div>`;
             }
             grid += "</div>";
           }
