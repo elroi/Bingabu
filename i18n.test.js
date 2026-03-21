@@ -220,6 +220,9 @@ describe("i18n HTML wiring", () => {
     expect(bingo).toMatch(/data-i18n="bingo\.setup\.whoPlaying"/);
     expect(bingo).toMatch(/data-i18n="bingo\.displayKeySet\.label"/);
     expect(bingo).toMatch(/host-key-mapping-body/);
+    expect(bingo).toMatch(
+      /html\[data-locale="he"\][\s\S]*?\.host-key-mapping-body[\s\S]*?direction:\s*rtl/
+    );
     expect(bingo).toMatch(/data-i18n="bingo\.leaderboard\.heading"/);
     expect(bingo).toMatch(/id="bingo-board"[^>]*dir="ltr"/);
     expect(bingo).toMatch(
