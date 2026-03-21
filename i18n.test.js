@@ -196,6 +196,13 @@ describe("locale files", () => {
 });
 
 describe("i18n HTML wiring", () => {
+  it("bingo.html wires host setup and controls to locale keys", () => {
+    const bingo = readFileSync(join(repoRoot, "bingo.html"), "utf-8");
+    expect(bingo).toMatch(/data-i18n="bingo\.setup\.whoPlaying"/);
+    expect(bingo).toMatch(/data-i18n="bingo\.leaderboard\.heading"/);
+    expect(bingo).toMatch(/id="bingo-board"[^>]*dir="ltr"/);
+  });
+
   it("index.html and join.html expose expected data-i18n keys", () => {
     const index = readFileSync(join(repoRoot, "index.html"), "utf-8");
     const joinPage = readFileSync(join(repoRoot, "join.html"), "utf-8");

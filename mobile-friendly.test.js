@@ -79,11 +79,10 @@ describe("Bingo host UX", () => {
     expect(setupPlayersIndex).toBeLessThan(remotePlayIndex);
   });
 
-  it("bingo.html remote-play subtitle mentions create room and playing with others", () => {
+  it("bingo.html remote-play subtitle is wired for i18n", () => {
     const html = readPage("bingo");
-    expect(html).toMatch(/remote-play-subtitle|host-setup-subtitle/);
-    expect(html).toMatch(/create.*room|Create an online room/);
-    expect(html).toMatch(/play with others|playing in person/);
+    expect(html).toMatch(/class="[^"]*remote-play-subtitle/);
+    expect(html).toMatch(/data-i18n="bingo\.remote\.subtitle"/);
   });
 
   it("bingo.html participants section appears before Play with friends (remote-play) in DOM", () => {
@@ -171,7 +170,7 @@ describe("Bingo host UX", () => {
     expect(html).toMatch(/id="play-wizard-next"/);
     expect(html).toMatch(/id="play-wizard-skip"/);
     expect(html).toMatch(/Current number/);
-    expect(html).toMatch(/Call numbers/);
+    expect(html).toMatch(/bingo\.playWizard\.s3\.title/);
     expect(html).toMatch(/id="play-wizard-draw-target"/);
     expect(html).toMatch(/id="play-wizard-history-target"/);
     expect(html).toMatch(/bingabu-play-wizard-done/);
