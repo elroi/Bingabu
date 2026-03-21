@@ -79,5 +79,11 @@ The following were addressed on branch `fix/ux-review-followups` (host `#current
 ## Verification
 
 - `npm test` — run before release (repo standard).  
-- Manual: `?lang=he` on player + spectator; manual daub on desktop with Tab (expect current failure until K1).  
-- Manual: airplane mode mid-game on spectator to observe silent retry (S2).
+- Manual: `?lang=he` on player + spectator; manual daub on desktop with Tab / arrows + Enter (K1).  
+- Manual: airplane mode mid-game on spectator to confirm reconnect copy (S2).
+
+---
+
+## Second-pass remediation (implemented in repo)
+
+Items **I1, I2, K1, S1, S2, M1, M2, L1, E1, C1, C3** from the table above are implemented (see `player.html`, `spectator.html`, `join.html`, `index.html`, `bingo.html`, `cards.html`, `locales/*.json`, and `playerUxSecondPass.test.js`). **C2** (sticky host controls / section density) remains a product decision and was not changed.

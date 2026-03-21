@@ -400,9 +400,9 @@
     <div
       id="home-wizard-overlay"
       class="home-wizard-overlay hidden"
-      role="region"
-      data-i18n="index.wizard.regionAria"
-      data-i18n-attr="aria-label"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="home-wizard-title"
       aria-live="polite"
     >
       <div class="home-wizard-modal">
@@ -452,6 +452,7 @@
       const showAgainBtn = document.getElementById("home-wizard-show-again");
 
       let highlightEl = null;
+      let homeWizardReturnFocus = null;
 
       function removeHighlight() {
         if (highlightEl) {
@@ -483,9 +484,17 @@
         } catch (_) {}
         removeHighlight();
         if (overlay) overlay.classList.add("hidden");
+        const ref = homeWizardReturnFocus;
+        homeWizardReturnFocus = null;
+        if (ref && typeof ref.focus === "function") {
+          try {
+            ref.focus();
+          } catch (_) {}
+        }
       }
 
       function openWizard() {
+        homeWizardReturnFocus = document.activeElement;
         if (overlay) overlay.classList.remove("hidden");
         removeHighlight();
         const target = document.getElementById(CTA_GROUP_ID);
@@ -517,6 +526,21 @@
           closeWizard();
         }
       });
+
+      if (overlay) {
+        overlay.addEventListener("keydown", function (e) {
+          if (e.key !== "Tab" || overlay.classList.contains("hidden")) return;
+          const list = [skipBtn, doneBtn].filter(
+            (el) => el && !el.classList.contains("hidden")
+          );
+          if (list.length === 0) return;
+          const i = list.indexOf(document.activeElement);
+          if (i === -1) return;
+          e.preventDefault();
+          const next = e.shiftKey ? list[(i - 1 + list.length) % list.length] : list[(i + 1) % list.length];
+          if (next) next.focus();
+        });
+      }
 
       function maybeOpenWizard() {
         if (localStorage.getItem(HOME_ONBOARDING_KEY)) return;

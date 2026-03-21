@@ -113,13 +113,20 @@
     </style>
   </head>
   <body>
+    <main id="main-content">
     <div id="wrap">
       <h1 id="spec-title" data-i18n="spectator.heading"></h1>
       <p class="sub" id="spec-sub" data-i18n="spectator.subtitle"></p>
       <p id="spec-current-label" class="sub" data-i18n="spectator.currentLabel"></p>
       <div id="current-number" class="current-number" aria-live="polite">--</div>
       <p id="spec-history-label" class="sub" data-i18n="spectator.historyLabel"></p>
-      <div id="history-wrap" class="history-wrap" aria-label="Called numbers"></div>
+      <div
+        id="history-wrap"
+        class="history-wrap"
+        data-i18n="spectator.history.aria"
+        data-i18n-attr="aria-label"
+      ></div>
+      <p id="spec-stream-status" class="sub hidden" role="status" aria-live="polite"></p>
       <p id="err" class="error hidden" role="status" aria-live="polite"></p>
       <a href="join.html" class="leave" id="spec-leave" data-i18n="spectator.leave"></a>
       <p class="join-lang-switch" style="margin-top: 20px; font-size: 0.9rem">
@@ -128,6 +135,7 @@
         <a href="?lang=he" data-lang-link="he" data-i18n="join.lang.he"></a>
       </p>
     </div>
+    </main>
     <script type="module">
       import { initI18n, t, setLocalePreference } from "./i18n.js";
       import { nextReconnectDelayMs, SSE_RECONNECT_INITIAL_MS } from "./streamReconnect.js";
@@ -177,14 +185,28 @@
         }
         if (hist) {
           hist.innerHTML = "";
+          hist.setAttribute("role", "list");
           drawnSequence.slice(-20).forEach((n) => {
             const ball = document.createElement("div");
             ball.className = "history-ball";
+            ball.setAttribute("role", "listitem");
             const dn = resolveDisplay(n, ks);
             ball.textContent = dn.text;
             if (ks === ICONS_KIDS_V1_ID) ball.classList.add("history-ball-emoji");
             hist.appendChild(ball);
           });
+        }
+      }
+
+      function setStreamReconnecting(show) {
+        const st = document.getElementById("spec-stream-status");
+        if (!st) return;
+        if (show) {
+          st.textContent = t("spectator.status.reconnecting");
+          st.classList.remove("hidden");
+        } else {
+          st.textContent = "";
+          st.classList.add("hidden");
         }
       }
 
@@ -194,6 +216,7 @@
           errEl.classList.add("hidden");
           errEl.textContent = "";
         }
+        setStreamReconnecting(false);
         try {
           const headers = {};
           if (joinToken) headers["Authorization"] = "Bearer " + joinToken;
@@ -237,9 +260,11 @@
           eventSource = new EventSource(url);
           eventSource.onopen = () => {
             reconnectDelayMs = SSE_RECONNECT_INITIAL_MS;
+            setStreamReconnecting(false);
           };
           eventSource.onmessage = () => fetchRoom();
           eventSource.onerror = () => {
+            setStreamReconnecting(true);
             try {
               eventSource.close();
             } catch (_) {}

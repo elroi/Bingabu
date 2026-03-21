@@ -1,0 +1,79 @@
+/**
+ * As a maintainer, I want second-pass UX fixes reflected in markup and locales
+ * so regressions are caught in CI.
+ */
+import { describe, it, expect } from "vitest";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const repoRoot = join(__dirname);
+
+function readJson(name) {
+  return JSON.parse(readFileSync(join(repoRoot, "locales", name), "utf-8"));
+}
+
+describe("second-pass UX: locales", () => {
+  const keys = [
+    "player.bingo.row",
+    "player.bingo.col",
+    "player.bingo.diagMain",
+    "player.bingo.diagAnti",
+    "player.card.aria",
+    "player.card.free",
+    "player.card.colB",
+    "player.error.hostSessionJoinLink",
+    "player.error.hostSessionHostLink",
+    "spectator.history.aria",
+    "spectator.status.reconnecting",
+    "join.qr.dialogTitle",
+  ];
+
+  it.each(keys)("%s exists in en and he", (k) => {
+    const en = readJson("en.json");
+    const he = readJson("he.json");
+    expect(String(en[k]).trim().length, `en ${k}`).toBeGreaterThan(0);
+    expect(String(he[k]).trim().length, `he ${k}`).toBeGreaterThan(0);
+  });
+});
+
+describe("second-pass UX: HTML contracts", () => {
+  it("player.html uses main landmark and keyboard-friendly card attributes", () => {
+    const html = readFileSync(join(repoRoot, "player.html"), "utf-8");
+    expect(html).toMatch(/<main[^>]*id="main-content"/);
+    expect(html).toMatch(/getBingoLines/);
+    expect(html).toMatch(/player\.bingo\.row/);
+    expect(html).toMatch(/aria-pressed=/);
+    expect(html).toMatch(/toggleDaubFromCell/);
+  });
+
+  it("spectator.html has main, stream status, and i18n history aria", () => {
+    const html = readFileSync(join(repoRoot, "spectator.html"), "utf-8");
+    expect(html).toMatch(/<main[^>]*id="main-content"/);
+    expect(html).toMatch(/id="spec-stream-status"/);
+    expect(html).toMatch(/spectator\.history\.aria/);
+    expect(html).toMatch(/setStreamReconnecting/);
+  });
+
+  it("join.html QR overlay is a labelled dialog inside main", () => {
+    const html = readFileSync(join(repoRoot, "join.html"), "utf-8");
+    expect(html).toMatch(/<main[^>]*id="main-content"/);
+    expect(html).toMatch(/id="qr-scanner-wrap"[^>]*role="dialog"/);
+    expect(html).toMatch(/aria-labelledby="qr-scanner-title"/);
+    expect(html).toMatch(/id="qr-scanner-title"/);
+  });
+
+  it("bingo.html and cards.html include main#main-content", () => {
+    const bingo = readFileSync(join(repoRoot, "bingo.html"), "utf-8");
+    const cards = readFileSync(join(repoRoot, "cards.html"), "utf-8");
+    expect(bingo).toMatch(/<main[^>]*id="main-content"/);
+    expect(cards).toMatch(/<main[^>]*id="main-content"/);
+  });
+
+  it("index.html home wizard uses dialog role", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf-8");
+    expect(html).toMatch(/id="home-wizard-overlay"[^>]*role="dialog"/);
+    expect(html).toMatch(/homeWizardReturnFocus/);
+  });
+});

@@ -32,4 +32,8 @@ describe("host caller board (bingo.html) accessibility", () => {
     expect(bingoHtml).toContain('id="host-setup-wizard-show-again-wrap"');
     expect(bingoHtml).toContain('id="host-play-wizard-show-again-wrap"');
   });
+
+  it("wraps primary content in a main landmark", () => {
+    expect(bingoHtml).toMatch(/<main[^>]*id="main-content"/);
+  });
 });

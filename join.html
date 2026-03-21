@@ -211,6 +211,24 @@
         color: var(--primary);
         font-size: 0.9rem;
       }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .qr-scanner-title {
+        margin: 0 0 12px 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        text-align: center;
+        color: var(--text);
+      }
       .slot-list {
         list-style: none;
         padding: 0;
@@ -351,6 +369,7 @@
     </style>
   </head>
   <body>
+    <main id="main-content">
     <div class="join-page-content">
       <a href="index.html" id="nav-back" class="back-to-lobby" dir="ltr" data-i18n="join.back"></a>
       <a href="index.html" id="nav-logo" class="app-logo hidden" dir="ltr" translate="no">
@@ -409,10 +428,11 @@
     <div
       id="qr-scanner-wrap"
       class="hidden"
+      role="dialog"
       aria-modal="true"
-      data-i18n="join.qr.modal.aria"
-      data-i18n-attr="aria-label"
+      aria-labelledby="qr-scanner-title"
     >
+      <h2 id="qr-scanner-title" class="qr-scanner-title" data-i18n="join.qr.dialogTitle"></h2>
       <div id="qr-reader" class="qr-reader-container"></div>
       <div class="qr-scanner-actions">
         <button type="button" id="btn-qr-switch-camera" class="btn-qr-secondary hidden" data-i18n="join.qr.switchCamera"></button>
@@ -420,6 +440,7 @@
       </div>
       <p id="qr-scanner-error" class="hidden" aria-live="polite"></p>
     </div>
+    </main>
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script type="module">
@@ -509,7 +530,10 @@
           return;
         }
         const btn = document.getElementById("btn-code");
-        if (btn) btn.disabled = true;
+        if (btn) {
+          btn.disabled = true;
+          btn.setAttribute("aria-busy", "true");
+        }
         try {
           const res = await fetch(`${getApiBase()}/api/rooms/${code}`);
           const data = await res.json().catch(() => ({}));
@@ -537,7 +561,10 @@
           renderSlotList(state, data.claims || {});
           showStep("step-pick");
         } finally {
-          if (btn) btn.disabled = false;
+          if (btn) {
+            btn.disabled = false;
+            btn.removeAttribute("aria-busy");
+          }
         }
       }
 
@@ -560,6 +587,7 @@
       let qrScanner = null;
       let qrCameras = [];
       let qrCameraIndex = 0;
+      let qrDialogReturnFocus = null;
       const qrWrap = document.getElementById("qr-scanner-wrap");
       const qrReaderEl = document.getElementById("qr-reader");
       const qrScannerError = document.getElementById("qr-scanner-error");
@@ -567,27 +595,36 @@
       const btnQrCancel = document.getElementById("btn-qr-cancel");
       const btnQrSwitchCamera = document.getElementById("btn-qr-switch-camera");
 
+      function restoreQrDialogFocus() {
+        const el = qrDialogReturnFocus;
+        qrDialogReturnFocus = null;
+        if (el && typeof el.focus === "function") {
+          try {
+            el.focus();
+          } catch (_) {}
+        }
+      }
+
       function closeQrScanner() {
-        if (qrScanner) {
-          qrScanner.stop().catch(() => {}).finally(() => {
-            if (qrReaderEl) qrReaderEl.innerHTML = "";
-            qrScanner = null;
-            qrCameras = [];
-            if (qrWrap) qrWrap.classList.add("hidden");
-            if (qrScannerError) {
-              qrScannerError.classList.add("hidden");
-              qrScannerError.textContent = "";
-            }
-            if (btnQrSwitchCamera) btnQrSwitchCamera.classList.add("hidden");
-          });
-        } else {
+        const finish = () => {
           if (qrReaderEl) qrReaderEl.innerHTML = "";
+          qrScanner = null;
+          qrCameras = [];
           if (qrWrap) qrWrap.classList.add("hidden");
           if (qrScannerError) {
             qrScannerError.classList.add("hidden");
             qrScannerError.textContent = "";
           }
           if (btnQrSwitchCamera) btnQrSwitchCamera.classList.add("hidden");
+          restoreQrDialogFocus();
+        };
+        if (qrScanner) {
+          qrScanner
+            .stop()
+            .catch(() => {})
+            .finally(finish);
+        } else {
+          finish();
         }
       }
 
@@ -605,6 +642,7 @@
 
       async function openQrScanner() {
         if (!qrReaderEl || !qrWrap) return;
+        qrDialogReturnFocus = document.activeElement;
         if (qrScanner) {
           qrScanner.stop().catch(() => {});
           qrScanner = null;
@@ -614,6 +652,9 @@
         qrScannerError.classList.add("hidden");
         qrScannerError.textContent = "";
         if (btnQrSwitchCamera) btnQrSwitchCamera.classList.add("hidden");
+        requestAnimationFrame(() => {
+          if (btnQrCancel && typeof btnQrCancel.focus === "function") btnQrCancel.focus();
+        });
         const Html5Qrcode = window.Html5Qrcode;
         if (!Html5Qrcode) {
           qrScannerError.textContent = t("join.qr.failLoad");
@@ -663,12 +704,28 @@
       if (btnQrCancel) btnQrCancel.addEventListener("click", () => closeQrScanner());
       if (btnQrSwitchCamera) btnQrSwitchCamera.addEventListener("click", () => switchQrCamera());
 
+      if (qrWrap) {
+        qrWrap.addEventListener("keydown", (e) => {
+          if (e.key !== "Tab" || qrWrap.classList.contains("hidden")) return;
+          const list = [btnQrSwitchCamera, btnQrCancel].filter(
+            (el) => el && !el.classList.contains("hidden")
+          );
+          if (list.length === 0) return;
+          const i = list.indexOf(document.activeElement);
+          if (i === -1) return;
+          e.preventDefault();
+          const next = e.shiftKey ? list[(i - 1 + list.length) % list.length] : list[(i + 1) % list.length];
+          if (next) next.focus();
+        });
+      }
+
       document.getElementById("btn-password").addEventListener("click", async () => {
         const roomId = sessionStorage.getItem(JOIN_STORAGE.roomId);
         const password = document.getElementById("room-password").value;
         showError("password-error", "");
         const btn = document.getElementById("btn-password");
         btn.disabled = true;
+        btn.setAttribute("aria-busy", "true");
         try {
           const res = await fetch(`${getApiBase()}/api/rooms/${roomId}/join`, {
             method: "POST",
@@ -692,6 +749,7 @@
           showStep("step-pick");
         } finally {
           btn.disabled = false;
+          btn.removeAttribute("aria-busy");
         }
       });
 
@@ -712,7 +770,7 @@
             const btn = document.createElement("button");
             btn.type = "button";
             btn.textContent = t("join.btn.joinAsPlayer");
-            btn.addEventListener("click", () => claimSlot(i));
+            btn.addEventListener("click", () => claimSlot(i, btn));
             li.appendChild(btn);
           }
           list.appendChild(li);
@@ -728,11 +786,15 @@
         });
       }
 
-      async function claimSlot(slotIndex) {
+      async function claimSlot(slotIndex, slotBtn) {
         const roomId = sessionStorage.getItem(JOIN_STORAGE.roomId);
         const joinToken = sessionStorage.getItem(JOIN_STORAGE.joinToken);
         const deviceId = getDeviceId();
         showError("pick-error", "");
+        if (slotBtn) {
+          slotBtn.disabled = true;
+          slotBtn.setAttribute("aria-busy", "true");
+        }
         try {
           const headers = { "Content-Type": "application/json" };
           if (joinToken) headers["Authorization"] = "Bearer " + joinToken;
@@ -751,6 +813,11 @@
           window.location.replace(`player.html?room=${encodeURIComponent(roomId)}&slot=${slotIndex}`);
         } catch (e) {
           showError("pick-error", t("join.error.network"));
+        } finally {
+          if (slotBtn) {
+            slotBtn.disabled = false;
+            slotBtn.removeAttribute("aria-busy");
+          }
         }
       }
     </script>
