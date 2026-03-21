@@ -16,8 +16,25 @@ const pages = [
   "admin-translations.html",
 ];
 
+/** Injected into every built HTML page; Vercel serves `/_vercel/insights/*` once Web Analytics is enabled. */
+const vercelWebAnalyticsSnippet = `
+    <script>
+      window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>`;
+
+function injectVercelWebAnalytics() {
+  return {
+    name: "inject-vercel-web-analytics",
+    transformIndexHtml(html) {
+      return html.replace("</body>", `${vercelWebAnalyticsSnippet}\n  </body>`);
+    },
+  };
+}
+
 export default defineConfig({
   root: __dirname,
+  plugins: [injectVercelWebAnalytics()],
   build: {
     target: "es2022",
     outDir: "dist",
