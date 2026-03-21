@@ -6,11 +6,73 @@ This document accumulates **audit passes** over time. The **latest pass** is alw
 
 ---
 
-## Third pass — 2025-03-21
+## Fourth pass — 2025-03-21
+
+**Method:** Targeted source sweep on `fix/ux-review-followups` after **T1–T7** and **T2** (print i18n): parity checks for live regions, motion, legal/admin surfaces, locale affordances, and mobile meta. Vitest contracts unchanged for this doc-only pass.
+
+**Git:** This section committed as documentation only.
+
+### Executive summary (pass 4)
+
+1. **Spectator live region parity:** [`spectator.html`](../spectator.html) **`#current-number`** is `aria-live="polite"` but still lacks **`aria-atomic="true"`**, unlike host and player—SR announcements of the current call may be less consistent.
+2. **Reduced motion:** No **`prefers-reduced-motion`** handling surfaced in HTML/CSS; **index** hero letter pop, **bingo** animations, and similar motion may be uncomfortable for vestibular-sensitive users.
+3. **Legal + admin surfaces:** [`privacy.html`](../privacy.html) and [`terms.html`](../terms.html) use `<main class="legal-doc">` **without** `id="main-content"` or a **skip** link—fine for short pages but weaker consistency with game flows. [`admin-translations.html`](../admin-translations.html) has **no `<main>`** landmark (internal tool, low traffic).
+4. **Host MC announcer string:** [`bingo.html`](../bingo.html) **`#mc-announcement`** is `aria-live="polite"` without **`aria-atomic="true"`**—full phrase readout vs partial updates depends on AT heuristics.
+5. **Hebrew “B–I–N–G–O” prefix on ball:** **Player** and **spectator** `getLetter()` still inject **Latin** column letters into **`current-number`** (`B-12` style) even when `lang=he` and headers use locale keys—acceptable for bingo convention but a known mixed-language readout for screen readers.
+6. **Print cards locale switching:** [`cards.html`](../cards.html) respects `?lang=` / storage on load but has **no in-page language links** (unlike **join** / **spectator**), so helpers must reload or navigate with query to flip Hebrew after landing in English.
+7. **Mobile chrome:** No **`theme-color`** `<meta>` on primary pages—browser UI tint stays default (cosmetic).
+8. **Product carryover:** **C2** (host vertical density / sticky **DRAW**) remains a **product decision**, not a bug.
+
+### Personas — pulse (pass 4)
+
+| Persona | Lens | Outcome |
+|--------|------|---------|
+| Spectator (SR) | Current-call announcements | **Gap** — `aria-atomic` parity (U1). |
+| Motion-sensitive user | Animation load | **Gap** — no reduced-motion path (U2). |
+| Reader of legal pages | Keyboard / landmarks | **Polish** — skip + `main#main-content` (U3). |
+| Host (SR) | MC callouts | **Polish** — `mc-announcement` atomicity (U4). |
+| Hebrew player/spectator | Spoken current ball | **Known** — Latin letter prefix (U5). |
+| Print helper | Locale without reload | **Polish** — cards lang switcher (U6). |
+| Mobile player | Browser chrome | **Nice-to-have** — `theme-color` (U7). |
+| Maintainer | Translation admin a11y | **Low** — `main` + skip on admin page (U8). |
+
+### Findings backlog (pass 4 — open)
+
+| ID | Severity | Persona | Where | Observation | Impact | Suggested direction |
+|----|----------|---------|--------|-------------|--------|---------------------|
+| U1 | **Minor** | Spectator (SR) | `spectator.html` `#current-number` | `aria-live="polite"` only; host/player use `aria-atomic="true"`. | Inconsistent SR behavior for the focal number. | Add `aria-atomic="true"`; optional Vitest HTML contract. |
+| U2 | **Minor** | Motion-sensitive | `index.html`, `bingo.html`, shared CSS | No `@media (prefers-reduced-motion: reduce)` to trim keyframe / transition noise. | Animations always on. | Disable or shorten hero/letter pop and heavy transitions when reduced motion is set; extend [`mobile-friendly.test.js`](../mobile-friendly.test.js) if a stable hook exists. |
+| U3 | **Polish** | Legal reader | `privacy.html`, `terms.html` | `<main class="legal-doc">` without skip link or `#main-content`. | Slight inconsistency with game pages; long scroll on small screens. | Add `id="main-content"`, mirror skip-link pattern + `a11y.skipToMain` if legal locales already load `i18n` (or static bilingual fallback). |
+| U4 | **Polish** | Host (SR) | `bingo.html` `#mc-announcement` | `aria-live="polite"` without `aria-atomic`. | Partial updates may be announced piecemeal. | Set `aria-atomic="true"` if full replacement strings are always written at once. |
+| U5 | **Polish / by design** | HE player/spectator | `player.html`, `spectator.html` `getLetter` | Current ball text uses Latin `B`–`O` prefix. | SR reads mixed script with Hebrew UI. | Optionally map through `t("player.card.colB")` etc., or document as intentional bingo convention. |
+| U6 | **Polish** | Print helper | `cards.html` | No `data-lang-link` / `setLocalePreference` footer. | Must reload with `?lang=` to switch after open. | Reuse join/spectator footer pattern; re-call `renderCards` + `applyI18n` after locale change. |
+| U7 | **Nice** | Mobile | Primary HTML heads | Missing `meta name="theme-color"`. | Default browser chrome. | Add brand-aligned color on `index`, `bingo`, `join`, `player` (match `--secondary` or `--primary`). |
+| U8 | **Low** | Maintainer | `admin-translations.html` | Page is a flat `header` + `div.panel` stack without `<main>`. | Weaker landmark map for internal tooling. | Wrap content in `<main id="main-content">` and optional skip link. |
+
+### Suggested priority (pass 4)
+
+1. **U1** — one attribute, high parity value.  
+2. **U2** — broad accessibility win; scope CSS carefully.  
+3. **U4** — single attribute if announcements are always full-string updates.  
+4. **U6** — aligns **cards** with other surfaces.  
+5. **U3**, **U5** (if not by design), **U7**, **U8** — as time allows.
+
+### Verification (pass 4)
+
+- `npm test` after any code changes.  
+- Manual: VoiceOver / NVDA on **spectator** when a new ball is called (U1).  
+- Manual: macOS “Reduce motion” + reload **index** / **bingo** (U2).  
+- Manual: **`cards.html`** without `?lang=` then switch Hebrew via new control (U6).
+
+---
+
+## Third pass — 2025-03-21 (archive)
+
+**Remediation:** **T1–T7** and **T2** are implemented on `fix/ux-review-followups` (player SSE status + resync, skip links, join QR **Esc**, booted focus, player `aria-atomic`, ranking JSDoc, print column/FREE i18n). The executive summary and table below are **retained as audit history**; treat IDs **T1–T7**, **T2** as closed unless reopened.
 
 **Method:** Source review after second-pass fixes merged on `fix/ux-review-followups` (`player.html`, `spectator.html`, `join.html`, `index.html`, landmarks, etc.). Vitest still guards layout/i18n contracts ([`playerUxSecondPass.test.js`](../playerUxSecondPass.test.js), [`mobile-friendly.test.js`](../mobile-friendly.test.js)). **Device + SR smoke tests** remain recommended.
 
-**Git:** Working tree was clean at review time; this section is committed as documentation only.
+**Git:** Earlier revision committed as documentation only.
 
 ### Executive summary (pass 3)
 
