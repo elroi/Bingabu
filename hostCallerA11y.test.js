@@ -19,6 +19,14 @@ describe("host caller board (bingo.html) accessibility", () => {
     expect(tag).toMatch(/aria-atomic="true"/);
   });
 
+  it("exposes #mc-announcement as an atomic polite live region (U4)", () => {
+    const m = bingoHtml.match(/id="mc-announcement"[^>]*>/);
+    expect(m, "mc-announcement element").toBeTruthy();
+    const tag = m[0];
+    expect(tag).toMatch(/aria-live="polite"/);
+    expect(tag).toMatch(/aria-atomic="true"/);
+  });
+
   it("uses a named dialog for the play guide overlay (non-modal coachmarks)", () => {
     const m = bingoHtml.match(/id="play-wizard-overlay"[^>]*>/);
     expect(m).toBeTruthy();

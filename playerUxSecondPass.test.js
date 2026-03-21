@@ -59,6 +59,9 @@ describe("second-pass UX: HTML contracts", () => {
     expect(html).toMatch(/id="spec-stream-status"/);
     expect(html).toMatch(/spectator\.history\.aria/);
     expect(html).toMatch(/setStreamReconnecting/);
+    expect(html).toMatch(
+      /id="current-number"[^>]*aria-live="polite"[^>]*aria-atomic="true"/
+    );
   });
 
   it("join.html QR overlay is a labelled dialog inside main", () => {
