@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { loadLocalEnvIfNeeded } from "./_lib/loadLocalEnv.js";
 import {
   SUPPORTED_LOCALES,
   loadStaticLocale,
@@ -10,33 +11,77 @@ import {
   redisConfigured,
 } from "./_lib/localeStore.js";
 
-function verifyAdminToken(req) {
-  const secret = process.env.BINGABU_ADMIN_LOCALES_TOKEN;
-  if (!secret || typeof secret !== "string") return false;
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) return false;
-  const token = authHeader.slice(7);
+loadLocalEnvIfNeeded();
+
+function headerString(req, name) {
+  const v = req.headers[name];
+  if (v == null) return "";
+  return Array.isArray(v) ? String(v[0] ?? "") : String(v);
+}
+
+/**
+ * Prefer Authorization Bearer; also accept X-Bingabu-Admin-Token (same secret over HTTPS).
+ * Used as a fallback where proxies mishandle Authorization in dev; harmless in production.
+ */
+function getAdminTokenFromRequest(req) {
+  const authz = headerString(req, "authorization");
+  if (authz.toLowerCase().startsWith("bearer ")) {
+    const t = authz.slice(7).trim();
+    if (t) return t;
+  }
+  const alt = headerString(req, "x-bingabu-admin-token").trim();
+  if (alt) return alt;
+  return "";
+}
+
+/** @returns {{ ok: true } | { ok: false, hint: "no_secret" | "no_bearer" | "mismatch" }} */
+function checkAdminAuth(req) {
+  const raw = process.env.BINGABU_ADMIN_LOCALES_TOKEN;
+  const secret = typeof raw === "string" ? raw.trim() : "";
+  if (!secret) return { ok: false, hint: "no_secret" };
+  const token = getAdminTokenFromRequest(req);
+  if (!token) return { ok: false, hint: "no_bearer" };
   const a = Buffer.from(token, "utf8");
   const b = Buffer.from(secret, "utf8");
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) return { ok: false, hint: "mismatch" };
   try {
-    return crypto.timingSafeEqual(a, b);
+    if (!crypto.timingSafeEqual(a, b)) return { ok: false, hint: "mismatch" };
   } catch (_) {
-    return false;
+    return { ok: false, hint: "mismatch" };
   }
+  return { ok: true };
 }
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, PUT, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Bingabu-Admin-Token"
+  );
 
   if (req.method === "OPTIONS") {
     return res.status(204).end();
   }
 
-  if (!verifyAdminToken(req)) {
-    return res.status(401).json({ error: "Unauthorized" });
+  const auth = checkAdminAuth(req);
+  if (!auth.ok) {
+    const body = { error: "Unauthorized" };
+    const isCloud =
+      process.env.VERCEL_ENV === "production" ||
+      process.env.VERCEL_ENV === "preview";
+    if (auth.hint === "no_secret") {
+      body.code = "ADMIN_TOKEN_UNSET";
+    }
+    if (!isCloud) {
+      body.authHint = auth.hint;
+      const hasAuthz = !!headerString(req, "authorization");
+      const hasX = !!headerString(req, "x-bingabu-admin-token");
+      console.warn(
+        `[bingabu] admin-locales 401 authHint=${auth.hint} hasAuthorization=${hasAuthz} hasXAdminToken=${hasX}`
+      );
+    }
+    return res.status(401).json(body);
   }
 
   if (req.method === "GET") {

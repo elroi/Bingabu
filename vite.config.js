@@ -23,10 +23,17 @@ const vercelWebAnalyticsSnippet = `
     </script>
     <script defer src="/_vercel/insights/script.js"></script>`;
 
+function shouldInjectVercelWebAnalytics() {
+  // `vercel dev` sets VERCEL=1 but VERCEL_ENV=development — still no snippet (script only exists on deployed URLs).
+  const env = process.env.VERCEL_ENV;
+  return env === "production" || env === "preview";
+}
+
 function injectVercelWebAnalytics() {
   return {
     name: "inject-vercel-web-analytics",
     transformIndexHtml(html) {
+      if (!shouldInjectVercelWebAnalytics()) return html;
       return html.replace("</body>", `${vercelWebAnalyticsSnippet}\n  </body>`);
     },
   };

@@ -1,18 +1,22 @@
 /**
- * Static locale JSON on disk + optional Redis overrides (Upstash).
+ * Static locale JSON + optional Redis overrides (Upstash).
  * Public site reads merged strings via GET /api/locales/[locale].
+ *
+ * Static strings are bundled via import (not readFileSync): Vercel serverless
+ * packages do not include ./locales unless every path is traced; imports are reliable.
  */
 
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
 import { mergeMessages } from "../../i18n.js";
 import { getKeyPrefix } from "./keyPrefix.js";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const LOCALES_DIR = join(__dirname, "..", "..", "locales");
+import enJson from "../../locales/en.json" assert { type: "json" };
+import heJson from "../../locales/he.json" assert { type: "json" };
 
 export const SUPPORTED_LOCALES = ["en", "he"];
+
+const BUNDLED_STATIC = {
+  en: enJson,
+  he: heJson,
+};
 
 const OVERRIDE_KEY = (locale) => `${getKeyPrefix()}i18n:overrides:${locale}`;
 
@@ -40,12 +44,8 @@ async function getRedis() {
 
 export function loadStaticLocale(locale) {
   if (!SUPPORTED_LOCALES.includes(locale)) return {};
-  try {
-    const raw = readFileSync(join(LOCALES_DIR, `${locale}.json`), "utf8");
-    return JSON.parse(raw);
-  } catch (_) {
-    return {};
-  }
+  const table = BUNDLED_STATIC[locale];
+  return table && typeof table === "object" ? { ...table } : {};
 }
 
 export async function getOverrides(locale) {

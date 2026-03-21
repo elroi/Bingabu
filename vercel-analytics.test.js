@@ -6,10 +6,12 @@ import { fileURLToPath } from "url";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 describe("Vercel Web Analytics (build injection)", () => {
-  it("vite config injects Vercel insights script into every HTML build output", () => {
+  it("vite config injects insights only when VERCEL_ENV is production or preview", () => {
     const src = readFileSync(join(__dirname, "vite.config.js"), "utf8");
     expect(src).toContain("inject-vercel-web-analytics");
     expect(src).toContain("/_vercel/insights/script.js");
     expect(src).toContain("window.vaq");
+    expect(src).toContain("VERCEL_ENV");
+    expect(src).toContain("shouldInjectVercelWebAnalytics");
   });
 });

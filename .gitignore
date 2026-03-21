@@ -29,3 +29,8 @@ coverage/
 
 # Local dev room store (api/_lib/store.js)
 .bingabu-rooms.json
+
+# Local secrets (vercel dev, e.g. BINGABU_ADMIN_LOCALES_TOKEN)
+.env
+.env.local
+.env*.local

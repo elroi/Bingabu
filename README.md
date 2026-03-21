@@ -24,7 +24,12 @@ A web app for running 75-ball Bingo: caller/organizer view with participant card
 
 **Rejoin:** Players should use the same browser/device and link to reclaim a slot if they refresh or lose connection.
 
-**Production (Vercel):** Room data is not shared across serverless instances unless you add Redis. See **[docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)** section **1b. Make joining work on Vercel (add Upstash Redis)**. The app uses `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` when set.
+**Production (Vercel):** Room data is not shared across serverless instances unless you add Redis. See **[docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)** section **1b. Make joining work on Vercel (add Upstash Redis)**. The code accepts **either** pair (they are equivalent):
+
+- **`UPSTASH_REDIS_REST_URL`** and **`UPSTASH_REDIS_REST_TOKEN`**, or  
+- **`KV_REST_API_URL`** and **`KV_REST_API_TOKEN`** (what **Vercel KV** / the Upstash integration usually injects).
+
+You only need **one** URL + **one** write-capable token. Vars like `REDIS_URL` or `KV_URL` are not used by this app’s REST client.
 
 **Preview vs production:** On Vercel Preview, Redis keys are prefixed (`bingabu:preview:*`) so preview deploys do not clash with production data. See **[docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md)**.
 
@@ -39,7 +44,7 @@ A web app for running 75-ball Bingo: caller/organizer view with participant card
 
 ## Translation admin (optional)
 
-- Open **`/admin-translations.html`** (same origin as the app). Use a long random **Bearer** token set in Vercel as **`BINGABU_ADMIN_LOCALES_TOKEN`** (Environment Variables → Production). Saving edits requires the same **Upstash Redis** vars as rooms: overrides are stored per locale under `bingabu:i18n:overrides:*`. The public site loads copy from **`GET /api/locales/{en|he}`**, which merges Redis overrides on top of the committed JSON in `locales/`. Repo JSON remains the source of truth for new keys; use git for bulk or structural changes.
+- Open **`/admin-translations.html`** (same origin as the app). Set **`BINGABU_ADMIN_LOCALES_TOKEN`** in the Vercel project for **Production** (and Preview if you use it there), then **redeploy**—Preview-only vars do not apply to the production domain. Use the same long random value as the Bearer token (and optional `X-Bingabu-Admin-Token` header) the UI sends. **Locally**, put the same variable in **`.env.local`** in the repo root and run **`npm run dev:api`**—see **[docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md)** (section *Translation admin*). **Saving** requires Redis with the **same URL + token pair as rooms** (`KV_REST_API_URL` + `KV_REST_API_TOKEN` or `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`—see above). Without that, the editor can still load defaults but **Save** returns an error. Overrides are stored per locale under `bingabu:i18n:overrides:*`. The public site loads copy from **`GET /api/locales/{en|he}`**, which merges Redis overrides on top of the committed JSON in `locales/`. Repo JSON remains the source of truth for new keys; use git for bulk or structural changes.
 
 ## Legal
 
