@@ -1,100 +1,83 @@
-# Bingabu UX/UI review
+# Bingabu UX/UI review — second pass
 
-**Date:** 2025-03-21  
-**Method:** Code-assisted review (HTML/CSS/inline JS), locale checks, and existing Vitest coverage ([`mobile-friendly.test.js`](../mobile-friendly.test.js), [`join-spectator.test.js`](../join-spectator.test.js), [`legal-pages-i18n.test.js`](../legal-pages-i18n.test.js), etc.). **Manual device passes** (real phone/tablet) are still recommended to validate motion, keyboard on mobile, and RTL truncation in situ—this document flags where that matters most.
+**Date:** 2025-03-21 (fresh audit; supersedes the first-pass document)  
+**Method:** Source review of [`bingo.html`](../bingo.html), [`join.html`](../join.html), [`player.html`](../player.html), [`spectator.html`](../spectator.html), [`cards.html`](../cards.html), [`index.html`](../index.html), [`privacy.html`](../privacy.html) / [`terms.html`](../terms.html), plus [`i18n.js`](../i18n.js) behavior. Automated checks remain in Vitest ([`mobile-friendly.test.js`](../mobile-friendly.test.js), [`hostCallerA11y.test.js`](../hostCallerA11y.test.js), etc.); **device and screen-reader smoke tests** are still recommended to validate keyboard paths and RTL overflow.
 
-**Finding template (for future issues):** persona · page/step · severity · observation · user impact · suggested direction.
+**Finding template:** persona · surface · severity · observation · impact · suggested direction.
+
+---
+
+## Prior remediation (first cycle)
+
+The following were addressed on branch `fix/ux-review-followups` (host `#current-number` live region, localized player reconnect string, play-guide dialog semantics + focus return, opt-in play wizard, setup/play guide wrapper ids, Fredoka on legal headings, [`docs/RESTRUCTURE_NEW_GAME.md`](RESTRUCTURE_NEW_GAME.md) clarification). This pass assumes that work is merged or pending merge and **does not re-list those items**.
 
 ---
 
 ## Executive summary
 
-1. **Host and join flows are structurally strong:** setup vs play phases on [`bingo.html`](../bingo.html), step strip and first-visit banner scoped to setup, and join/spectator error lines use `role="status"` and `aria-live="polite"`—aligned with the intent of [`docs/RESTRUCTURE_NEW_GAME.md`](RESTRUCTURE_NEW_GAME.md).
-2. **Player-facing calling UX is mostly accessible:** [`player.html`](../player.html) exposes the current ball with `aria-live="polite"`; BINGO uses `aria-live="assertive"`—good patterns for remote play.
-3. **Gaps to fix first:** the host’s **current number** (`#current-number` on `bingo.html`) has **no live region**, unlike the player view; **“Reconnecting…”** on [`player.html`](../player.html) is **hardcoded English** and bypasses i18n.
-4. **Polish / consistency:** typography differs between landing ([`index.html`](../index.html)) and legal pages ([`privacy.html`](../privacy.html), [`terms.html`](../terms.html)); the **play wizard** overlay uses `role="region"` rather than `role="dialog"`/`aria-modal`, which may allow focus to drift behind the overlay for keyboard users.
-5. **Automated guardrails are valuable:** viewport, safe-area, breakpoints, touch targets, and print legibility are already enforced in tests—extend that pattern for any fix (e.g. `aria-live` on host current number, new locale keys).
+1. **Dynamic player UI still mixes English into localized surfaces:** BINGO line descriptions (`Row 1`, `Col B`, `Diagonal`), the default slot title `Player N`, the grid `aria-label`, the center **FREE** label, and column headers **B–I–N–G–O** in the built card HTML are not driven by `locales/*.json`, so Hebrew players can get a bilingual, inconsistent announcement when a line completes.
+2. **Manual daub is effectively pointer-only:** Card cells are clickable `div`s with no `tabindex`, roving tabindex, or key handlers—keyboard and many assistive-tech users cannot mark numbers in manual mode ([`player.html`](../player.html) render path).
+3. **Several overlays are “almost” dialogs:** The QR scanner wrapper uses `aria-modal="true"` without `role="dialog"` ([`join.html`](../join.html)). The home onboarding overlay on [`index.html`](../index.html) remains `role="region"` with auto-open and no Tab trap or focus restoration pattern (weaker than the updated host play guide).
+4. **Landmarks are uneven:** [`index.html`](../index.html) and legal pages use `<main>`; **bingo, join, player, spectator, and cards** do not—screen reader users get fewer “skip to content” hooks on the busiest flows.
+5. **Silent degradation on spectator:** SSE reconnect loops ([`spectator.html`](../spectator.html)) mirror [`player.html`](../player.html) but **do not surface** a reconnecting or connection-lost message, so the UI can look frozen while the stream retries.
+6. **Small copy / trust gaps:** [`spectator.html`](../spectator.html) hardcodes `aria-label="Called numbers"` on the history container. [`player.html`](../player.html) host-handoff error is a single paragraph with **no** link back to join or host—users can feel stuck.
 
 ---
 
-## Personas and user stories (review outcomes)
+## Personas — quick pulse (pass 2)
 
-| Persona | User story | Outcome |
-|--------|------------|---------|
-| **Host / caller** | As a host, I want a clear path from players → cards → optional room → calling so I am not overwhelmed. | **Pass** — `getHostPhase` / `applyPhase` separate setup and play; step nav and first-visit banner hidden outside setup (`bingo.html` ~3113–3127). |
-| **Host / caller** | As a host, I want to call numbers quickly without hunting controls. | **Pass with note** — DRAW/previous controls have titles/shortcuts; consider validating under stress on a small phone (manual). |
-| **Remote player** | As a player, I want the latest call to be obvious and announced accessibly. | **Pass** — `#current-number` has `aria-live="polite"` (`player.html`). |
-| **Remote player** | As a player, I want to understand connection problems in my language. | **Fail (minor)** — polling fallback sets literal `"Reconnecting…"` (`player.html` ~626); not in `locales/*.json`. |
-| **Spectator** | As a spectator, I want current call and history without claiming a slot. | **Pass** — [`spectator.html`](../spectator.html) mirrors player hierarchy; `#current-number` has `aria-live="polite"`; room-gone flows set `err` with `role="status"`. |
-| **Casual visitor** | As a visitor, I want to choose host vs join confidently. | **Pass** — [`index.html`](../index.html) CTAs are clear; touch targets meet 44px in tests. |
-| **In-person helper** | As someone printing cards, I want readable grids. | **Pass** — [`cards.html`](../cards.html) print styles and on-screen `clamp` font sizes covered by [`mobile-friendly.test.js`](../mobile-friendly.test.js). |
+| Persona | Focus this pass | Outcome |
+|--------|------------------|---------|
+| Remote player (HE) | Bingo announcement + card chrome strings | **Gap** — English fragments in bingo lines and grid labeling. |
+| Remote player (manual daub) | Keyboard / AT | **Gap** — no keyboard path to toggle cells. |
+| Spectator | Feedback during outages | **Gap** — no visible reconnect state. |
+| Host | Cognitive load | **Note** — `bingo.html` remains dense (board + MC + remote + settings + cards); acceptable for power hosts, tough for first-timers without optional play guide. |
+| Casual visitor | Home onboarding | **Note** — auto wizard still fires once; `role="region"` + no trap (same class of issue as old play overlay). |
 
 ---
 
-## Findings backlog (prioritized)
+## Findings backlog (new / not remediated in first cycle)
 
-| ID | Severity | Persona | Where | Observation | Impact | Suggested direction | Test hook (when fixing) |
-|----|----------|---------|--------|-------------|--------|---------------------|-------------------------|
-| H1 | **Major** | Host (a11y) | `bingo.html` play controls | `#current-number` is a plain `div` with no `aria-live` / `aria-atomic`. | Screen reader users may not hear newly drawn balls while focusing elsewhere. | Add `aria-live="polite"` and optionally `aria-atomic="true"` on the host current number (match `player.html`). | New assertion in a small HTML test file (pattern: [`mobile-friendly.test.js`](../mobile-friendly.test.js)) or extend [`hostBoard.test.js`](../hostBoard.test.js) if it reads `bingo.html`. |
-| P1 | **Major** | Player (i18n) | `player.html` ~626 | Status text `"Reconnecting…"` is not translated. | Hebrew (or other) players see English during outages. | Add `player.status.reconnecting` (or similar) to `locales/en.json` + `he.json` and use `t()`. | [`i18n.test.js`](../i18n.test.js) patterns; grep ensures key exists. |
-| A1 | **Minor** | Host (keyboard) | `bingo.html` play wizard | `#play-wizard-overlay` is `role="region"`, not a modal dialog. | Focus may move to page behind the overlay while the tour is open. | Consider `role="dialog"` `aria-modal="true"` and focus trap, or document as intentional lightweight tip. | Optional Playwright/a11y audit later; not covered by current Vitest. |
-| V1 | **Minor** | All (brand) | `index.html` vs `privacy.html` / `terms.html` | Legal pages use Quicksand-only styling; landing uses Fredoka hero + richer chrome. | Slight “different product” feel when moving from app to legal. | Optional: shared heading font or link styling tokens—low priority. | Visual/manual; optional [`legal-pages-i18n.test.js`](../legal-pages-i18n.test.js) only if markup keys change. |
-| M1 | **Polish** | Maintainer | `bingo.html` | Two elements share class `host-wizard-show-again-wrap`; `querySelector` only binds `applyPhase` to the **first** (setup). | Easy to break if someone expects one variable to control both. | Use distinct classes or `querySelectorAll` with explicit IDs for setup vs play “Show guide”. | None today; add test if behavior is refactored. |
-| D1 | **Polish** | Reader | [`docs/RESTRUCTURE_NEW_GAME.md`](RESTRUCTURE_NEW_GAME.md) | Section “Is this optimal?” still lists old pain points while a later subsection says simplifications are “implemented”. | Contributors may follow stale guidance. | Edit doc to mark historical vs current state (single source of truth). | N/A |
-| C1 | **Polish** | Host | First-run play wizard | Auto-opens on first entry to play if `bingabu-play-wizard-done` unset (`applyPhase` ~3128–3134). | Some hosts may find spotlight tour redundant; **Skip** exists. | Optional: defer wizard until “Show guide” or second visit—product call. | N/A |
-
----
-
-## Journey notes (code review)
-
-### A. Host (`bingo.html`)
-
-- **Setup → play:** `host-start-game-btn` runs `initGame`, sets onboarding done, `setHostPhase("play")`, `applyPhase()` (~3145–3152).
-- **New game:** Confirms if `drawnSequence.length > 0`, clears storage, `setHostPhase("setup")`, `initGame()`, `applyPhase()` (~3155–3165).
-- **RESTRUCTURE checklist:** Step strip and first-visit banner are tied to `phase === "setup"`; play wizard steps explain **calling UI** (current number, history, draw, board, cards)—not duplicate setup copy (`PLAY_WIZARD_STEPS` ~3739–3744). This matches the “implemented” direction in the doc better than the older “repeats setup” concern.
-- **Remote play:** Room code, QR, password fields, joined list, lock joins—live regions on code and list are present.
-
-### B. Player (`join.html` → `player.html`)
-
-- **Join:** Step model with dedicated error nodes (`code-error`, `password-error`, `pick-error`) and `aria-live="polite"`.
-- **Watch only:** `btn-watch-only` precedes slot pick UI—clear secondary path.
-- **Player card:** Grid uses tested 44px min height on `.card-cell`; status line separate from current number.
-
-### C. Spectator (`spectator.html`)
-
-- Errors and missing room handled with `role="status"` or fallback link to `join.html`; SSE reconnect uses shared `nextReconnectDelayMs` ([`streamReconnect.test.js`](../streamReconnect.test.js)).
-
-### D. Cards (`cards.html`)
-
-- Screen + `@media print` expectations documented via tests; actions row uses `align-items: center` per mobile-friendly test.
-
-### E. Trust pages
-
-- **i18n:** All `data-i18n` keys on privacy/terms are validated in [`legal-pages-i18n.test.js`](../legal-pages-i18n.test.js).
-- **UX:** Readable single-column layout and safe-area padding; language/`dir` boot script matches other pages.
+| ID | Severity | Persona | Where | Observation | Impact | Suggested direction |
+|----|----------|---------|--------|-------------|--------|---------------------|
+| I1 | **Major** | Player (i18n) | `player.html` (`getBingoLines` / `getBingoLinesManual`) | Line strings are English literals (`Row`, `Col`, `Diagonal`). | Screen readers and sighted Hebrew users see mixed language in the BINGO announcement. | Add locale keys (e.g. `player.bingo.row`, `player.bingo.col`, `player.bingo.diag1`, …) and interpolate; add Vitest that keys exist in `en`/`he`. |
+| I2 | **Major** | Player (i18n + a11y) | `player.html` card `innerHTML` | `aria-label="Your bingo card"`, cell text `FREE`, headers `B–I–N–G–O`, fallback `` `Player ${slotIndex + 1}` `` are not translated. | Misaligned with rest of UI; `Player N` may appear in titles. | Use `t()` for label, free space, header letters (or document B–I–N–G–O as invariant symbols), and slot fallback (reuse `join.slot.playerN` or new key). |
+| K1 | **Major** | Player (a11y) | `player.html` | No `tabindex` / keyboard handling on `.card-cell` for daub. | Manual mode is unusable without pointer; fails “keyboard equivalent” expectations. | Roving tabindex on grid, Enter/Space to toggle, `aria-pressed` or state on cells; tests for markup contract. |
+| S1 | **Minor** | Spectator (a11y + i18n) | `spectator.html` | `#history-wrap` has hardcoded English `aria-label="Called numbers"`. | Hebrew locale still exposes English in the accessibility tree. | `data-i18n` + key, or set `aria-label` in `initI18n` after `t()`. |
+| S2 | **Minor** | Spectator (status) | `spectator.html` SSE | `EventSource` `onerror` only schedules reconnect; no `#err` or status line update. | During flaky networks the screen may not update with no explanation. | Mirror player polling UX: optional `spectator.status.reconnecting` + show in `#err` or a dedicated status element (i18n). |
+| M1 | **Minor** | Join (a11y) | `join.html` `#qr-scanner-wrap` | `aria-modal="true"` without `role="dialog"` (and no labelledby). | AT may not treat the scanner as a modal. | Add `role="dialog"`, `aria-labelledby` or `aria-label` via i18n, focus trap + return focus to “Scan QR” on close. |
+| M2 | **Minor** | Visitor | `index.html` home wizard | Overlay is `role="region"`, auto-opens, no Tab cycle or stored focus restore on close. | Keyboard users can tab “behind” the dimmer; focus may be lost on dismiss. | Align with play guide pattern: `role="dialog"`, `aria-modal="false"` (or true + trap if only modal content is interactive), focus return. |
+| L1 | **Minor** | All | `bingo.html`, `join.html`, `player.html`, `spectator.html`, `cards.html` | No `<main>` (or `role="main"`) wrapping primary content. | Weaker document outline for SR and skip links. | Wrap primary column in `<main>`; ensure one per page; optional skip link to `#main-content`. |
+| E1 | **Minor** | Player | `player.html` host-handoff error | `innerHTML` is only `t("player.error.hostSession")` with no actions. | User must guess to go back to host tab or join. | Add links: “Open join” / “Back to host” or repeat short instruction with anchor to `join.html`. |
+| C1 | **Polish** | Join | `join.html` | Continue/claim buttons disable during fetch but there is no loading text. | Unclear whether tap registered on slow networks. | Optional `aria-busy` + visually hidden “Loading…” or spinner pattern. |
+| C2 | **Polish** | Host | `bingo.html` | Large vertical stack: history, controls, board, leaderboard, cards, settings. | On small phones, deep scroll between DRAW and a specific participant card during a dispute. | Consider sticky DRAW bar or collapsible sections (product decision). |
+| C3 | **Polish** | Player | History row | History balls are plain `div`s with no list semantics. | SR may not convey “list of recent calls” structure. | Optional `role="list"` / `role="listitem"` or visually hidden summary. |
 
 ---
 
-## Heuristics snapshot
+## Heuristic notes (second pass)
 
-| Heuristic | Notes |
-|-----------|--------|
-| Visibility of system status | Strong on join (errors), player (status), spectator (`#err`). Host MC announcement uses `aria-live="polite"`. Gap: host current number (H1). |
-| Error recovery | Join and spectator surface network/404/password errors; player booted flow exists. |
-| Consistency | Shared palette/CSS variables across game pages; legal pages lighter. |
-| Time-critical / bingo-specific | DRAW/previous shortcuts documented in `title` attributes; manual timing test still useful on phones. |
+| Topic | Note |
+|--------|------|
+| **Consistency** | `setLocalePreference` correctly preserves URL query params when switching language (`i18n.js`) — good for `?join=CODE` flows. |
+| **Error prevention** | Join flow uses `role="status"` errors consistently; spectator reuses `join.error.network` on fetch failure — consistent but generic. |
+| **Recognition vs recall** | Short links and QR reduce recall; “rejoin same device” still depends on README knowledge — consider one inline hint on `player.leave` or join success. |
+| **Fair play** | No new issues found; authority remains host calls + server daub rules. |
 
 ---
 
-## Recommended next steps
+## Suggested priority order
 
-1. **Ship H1 + P1** — highest value for inclusive play across host and player roles.
-2. **Manual pass:** `?lang=he` on `bingo.html`, `join.html`, `player.html` for RTL overflow on remote-play panels and long player names.
-3. **Optional:** A1 focus trap if you standardize on modal patterns elsewhere.
-4. **Docs:** Resolve D1 so future UX work does not re-debate completed restructure items.
+1. **I1 + I2** — highest user-visible i18n quality for the core game moment (BINGO).  
+2. **K1** — unlocks manual mode for keyboard/AT users.  
+3. **S2, E1, S1** — clearer failure and handoff states.  
+4. **M1, M2, L1** — structural a11y polish.  
+5. **C1–C3** — UX refinement when core gaps are closed.
 
 ---
 
 ## Verification
 
-- `npm test` — **178 passed** (2025-03-21).
+- `npm test` — run before release (repo standard).  
+- Manual: `?lang=he` on player + spectator; manual daub on desktop with Tab (expect current failure until K1).  
+- Manual: airplane mode mid-game on spectator to observe silent retry (S2).
