@@ -80,15 +80,15 @@ describe("Manual daub mode: player", () => {
 });
 
 describe("Manual daub mode: API daubs endpoint", () => {
-  it("api/rooms/[roomId]/daubs.js exists", () => {
-    const path = join(__dirname, "api", "rooms", "[roomId]", "daubs.js");
+  it("api/rooms/[roomId]/[action].js consolidates daubs with other room actions", () => {
+    const path = join(__dirname, "api", "rooms", "[roomId]", "[action].js");
     expect(existsSync(path)).toBe(true);
   });
 
-  it("daubs route exports default handler", () => {
-    const path = join(__dirname, "api", "rooms", "[roomId]", "daubs.js");
+  it("roomActionHandlers exports handleDaubs", () => {
+    const path = join(__dirname, "api", "lib", "roomActionHandlers.js");
     const content = readFileSync(path, "utf-8");
-    expect(content).toMatch(/export\s+default\s+async\s+function\s+handler|export\s+default\s+function\s+handler/);
+    expect(content).toMatch(/export\s+async\s+function\s+handleDaubs/);
   });
 });
 

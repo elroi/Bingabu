@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import * as store from "./api/lib/store.js";
-import claimHandler from "./api/rooms/[roomId]/claim.js";
+import { handleClaim } from "./api/lib/roomActionHandlers.js";
 
 function mockRes() {
   const res = {
@@ -69,7 +69,7 @@ describe("claim when joinLocked", () => {
       body: { slotIndex: 0, deviceId: "new-device" },
     };
     const res = mockRes();
-    await claimHandler(req, res);
+    await handleClaim(req, res, roomId);
     expect(res.statusCode).toBe(403);
     expect(res.body.error).toMatch(/closed/i);
   });
@@ -82,7 +82,7 @@ describe("claim when joinLocked", () => {
       body: { slotIndex: 0, deviceId: hostId },
     };
     const res = mockRes();
-    await claimHandler(req, res);
+    await handleClaim(req, res, roomId);
     expect(res.statusCode).toBe(200);
   });
 });

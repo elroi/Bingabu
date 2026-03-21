@@ -9,8 +9,8 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { fileURLToPath } from "url";
 import * as store from "./api/lib/store.js";
-import claimHandler from "./api/rooms/[roomId]/claim.js";
-import daubsHandler from "./api/rooms/[roomId]/daubs.js";
+import { handleClaim, handleDaubs } from "./api/lib/roomActionHandlers.js";
+import roomActionRouter from "./api/rooms/[roomId]/[action].js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -80,7 +80,7 @@ describe("Host join as player: API claim", () => {
       body: { slotIndex: 0, deviceId: hostId },
     };
     const res = mockRes();
-    await claimHandler(req, res);
+    await handleClaim(req, res, roomId);
     expect(res.statusCode).toBe(200);
     expect(res.body.claims["0"]).toBe(hostId);
   });
@@ -93,7 +93,7 @@ describe("Host join as player: API claim", () => {
       body: { slotIndex: 0, deviceId: hostId },
     };
     const res = mockRes();
-    await claimHandler(req, res);
+    await handleClaim(req, res, roomId);
     expect(res.statusCode).toBe(403);
     expect(res.body.error).toMatch(/host|Host|invalid/i);
   });
@@ -114,7 +114,7 @@ describe("Host join as player: API claim", () => {
       body: { slotIndex: 0, deviceId: hostId },
     };
     const res = mockRes();
-    await claimHandler(req, res);
+    await handleClaim(req, res, roomId);
     expect(res.statusCode).toBe(409);
   });
 
@@ -134,7 +134,7 @@ describe("Host join as player: API claim", () => {
       body: { slotIndex: 0, deviceId: hostId },
     };
     const res = mockRes();
-    await claimHandler(req, res);
+    await handleClaim(req, res, roomId);
     expect(res.statusCode).toBe(200);
   });
 
@@ -150,7 +150,7 @@ describe("Host join as player: API claim", () => {
       },
       end() {},
     };
-    await claimHandler(req, res);
+    await roomActionRouter(req, res);
     expect(allowHeaders).toMatch(/X-Host-Id/i);
   });
 });
@@ -182,7 +182,7 @@ describe("Host join as player: API daubs", () => {
       body: { slotIndex: 0, deviceId: hostId, daubs: ["0,0", "1,1"] },
     };
     const res = mockRes();
-    await daubsHandler(req, res);
+    await handleDaubs(req, res, roomId);
     expect(res.statusCode).toBe(200);
     const room = await store.get(roomId);
     expect(room.state.participantDaubs["0"]).toEqual(["0,0", "1,1"]);
@@ -196,7 +196,7 @@ describe("Host join as player: API daubs", () => {
       body: { slotIndex: 0, deviceId: hostId, daubs: ["0,0"] }, // 0,0 is 1 — in drawnSequence
     };
     const res = mockRes();
-    await daubsHandler(req, res);
+    await handleDaubs(req, res, roomId);
     expect(res.statusCode).toBe(403);
   });
 
@@ -212,7 +212,7 @@ describe("Host join as player: API daubs", () => {
       },
       end() {},
     };
-    await daubsHandler(req, res);
+    await roomActionRouter(req, res);
     expect(allowHeaders).toMatch(/X-Host-Id/i);
   });
 });

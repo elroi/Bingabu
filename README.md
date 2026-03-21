@@ -12,6 +12,8 @@ A web app for running 75-ball Bingo: caller/organizer view with participant card
 - **`npm run build`** — Vite outputs hashed assets to **`dist/`** and copies `locales/*.json` into `dist/locales/`. Vercel uses `dist` as the static output directory (`vercel.json`).
 - **CI:** GitHub Actions runs `npm test` and `npm run build` on pushes and PRs (see `.github/workflows/ci.yml`).
 
+**Vercel Hobby:** Deployments are limited to **12 serverless functions**. Room sub-routes (`join`, `claim`, `daubs`, `boot`, `leave`, `report`, `stream`) are implemented as a **single function** at [`api/rooms/[roomId]/[action].js`](api/rooms/[roomId]/[action].js) (shared logic in [`api/lib/roomActionHandlers.js`](api/lib/roomActionHandlers.js)). Public URLs are unchanged (`/api/rooms/:id/claim`, etc.). Upgrade to Pro if you need more separate functions.
+
 ## Remote play (multi-device)
 
 1. **Host:** Open the app, set participants and start a new game, then click **Play with friends** → **Create room**. Optionally protect the room with a password. Share the **room code**, **join page URL** (`/join`), **full link**, or **QR code** (and password if set) with players.

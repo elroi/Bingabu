@@ -3,11 +3,5 @@
   "rewrites": [
     { "source": "/j/:code", "destination": "/join.html?join=:code" },
     { "source": "/api/health", "destination": "/api/lobby?health=1" }
-  ],
-  "functions": {
-    "api/**/*.js": {
-      "memory": 128,
-      "maxDuration": 10
-    }
-  }
+  ]
 }
