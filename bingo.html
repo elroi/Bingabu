@@ -2877,6 +2877,12 @@
         });
       }
 
+      /** LTR isolate for Latin/numbers inside Hebrew UI (Unicode LRI…PDI). */
+      function hostPanelLtrSeg(s) {
+        if (getLocale() !== "he") return String(s);
+        return "\u2066" + String(s) + "\u2069";
+      }
+
       function updateHostKeyMappingPanel() {
         const panel = document.getElementById("host-key-mapping-panel");
         const canonicalEl = document.getElementById("host-key-mapping-canonical");
@@ -2890,9 +2896,14 @@
         ensureDisplayKeySetBySlotLength();
         const { canonical, rows } = getMappingRowsForBall(
           { displayKeySetId, displayKeySetBySlot, numParticipants, participantNames },
-          lastNum
+          lastNum,
+          {
+            defaultNameForSlot: (i) => t("bingo.participant.placeholder", { n: i + 1 }),
+          }
         );
-        canonicalEl.textContent = t("bingo.hostKeyMapping.canonical", { text: canonical });
+        canonicalEl.textContent = t("bingo.hostKeyMapping.canonical", {
+          text: hostPanelLtrSeg(canonical),
+        });
         listEl.innerHTML = "";
         rows.forEach((r) => {
           const li = document.createElement("li");
@@ -2900,10 +2911,13 @@
             r.speech !== r.label
               ? t("bingo.hostKeyMapping.playerLineSpeech", {
                   name: r.name,
-                  label: r.label,
-                  speech: r.speech,
+                  label: hostPanelLtrSeg(r.label),
+                  speech: hostPanelLtrSeg(r.speech),
                 })
-              : t("bingo.hostKeyMapping.playerLine", { name: r.name, label: r.label });
+              : t("bingo.hostKeyMapping.playerLine", {
+                  name: r.name,
+                  label: hostPanelLtrSeg(r.label),
+                });
           listEl.appendChild(li);
         });
         panel.classList.remove("hidden");

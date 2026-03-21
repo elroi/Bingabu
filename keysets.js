@@ -138,19 +138,25 @@ export function getEffectiveKeySetIdForSlot(state, slotIndex) {
  * Host mapping: labels for one ball for every participant column.
  * @param {{ displayKeySetId?: string, displayKeySetBySlot?: string[], numParticipants?: number, participantNames?: string[] }} state
  * @param {number} ballId
+ * @param {{ defaultNameForSlot?: (slotIndex: number) => string }} [opts] If set, used when a participant name is empty (i18n).
  * @returns {{ canonical: string, rows: { name: string, label: string, speech: string }[] }}
  */
-export function getMappingRowsForBall(state, ballId) {
+export function getMappingRowsForBall(state, ballId, opts) {
   const np = typeof state.numParticipants === "number" ? state.numParticipants : 0;
   const names = Array.isArray(state.participantNames) ? state.participantNames : [];
   const bySlot = normalizeDisplayKeySetBySlot(state.displayKeySetId, state.displayKeySetBySlot, np);
   const letter =
     ballId <= 15 ? "B" : ballId <= 30 ? "I" : ballId <= 45 ? "N" : ballId <= 60 ? "G" : "O";
   const canonical = `${letter}-${ballId}`;
+  const fallbackName =
+    opts && typeof opts.defaultNameForSlot === "function"
+      ? opts.defaultNameForSlot
+      : (i) => `Player ${i + 1}`;
   const rows = [];
   for (let i = 0; i < np; i++) {
     const d = resolveDisplay(ballId, bySlot[i]);
-    const name = (names[i] && String(names[i]).trim()) || `Player ${i + 1}`;
+    const raw = names[i] && String(names[i]).trim();
+    const name = raw || fallbackName(i);
     rows.push({ name, label: d.text, speech: d.speech });
   }
   return { canonical, rows };

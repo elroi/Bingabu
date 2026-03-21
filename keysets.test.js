@@ -87,4 +87,18 @@ describe("per-slot key sets", () => {
     expect(rows[0].label).toBe("1");
     expect(rows[1].label).toBe("cat");
   });
+
+  it("getMappingRowsForBall uses defaultNameForSlot when names empty", () => {
+    const state = {
+      displayKeySetId: NUMBERS_KEY_SET_ID,
+      displayKeySetBySlot: [],
+      numParticipants: 2,
+      participantNames: ["", "  "],
+    };
+    const { rows } = getMappingRowsForBall(state, 5, {
+      defaultNameForSlot: (i) => `P${i + 1}`,
+    });
+    expect(rows[0].name).toBe("P1");
+    expect(rows[1].name).toBe("P2");
+  });
 });
