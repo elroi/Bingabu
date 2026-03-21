@@ -1205,13 +1205,7 @@
       html[dir="rtl"] .participant-cards-section.cards-collapsed .section-chevron {
         transform: rotate(90deg);
       }
-      /* RTL: primary draw at reading-start (right); DOM stays prev then draw for LTR */
-      html[dir="rtl"] .main-btns #draw-btn {
-        order: -1;
-      }
-      html[dir="rtl"] .shortcuts {
-        direction: ltr;
-      }
+      /* RTL: row flex follows document direction — prev then draw mirrors English (draw left, prev right). */
       .participant-cards-section.cards-collapsed .participant-cards-grid {
         display: none;
       }

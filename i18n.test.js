@@ -223,11 +223,8 @@ describe("i18n HTML wiring", () => {
     expect(bingo).toMatch(
       /html\[dir="rtl"\][\s\S]*?section-chevron[\s\S]*?rotate\(90deg\)/
     );
-    expect(bingo).toMatch(
+    expect(bingo).not.toMatch(
       /html\[dir="rtl"\][\s\S]*?\.main-btns[\s\S]*?#draw-btn[\s\S]*?order:\s*-1/
-    );
-    expect(bingo).toMatch(
-      /html\[dir="rtl"\][\s\S]*?\.shortcuts[\s\S]*?direction:\s*ltr/
     );
     expect(bingo).toMatch(
       /id="draw-btn"[^>]*data-i18n="bingo\.controls\.draw"[^>]*data-i18n-title="bingo\.controls\.drawTitle"/
