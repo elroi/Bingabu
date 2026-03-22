@@ -1941,6 +1941,7 @@
         normalizeDisplayKeySetBySlot,
         getEffectiveKeySetIdForSlot,
         getMappingRowsForBall,
+        allParticipantsSameDisplayForBall,
       } from "./keysets.js";
       import { syncCallerBoardMarks } from "./hostBoard.js";
 
@@ -2960,13 +2961,19 @@
           return;
         }
         ensureDisplayKeySetBySlotLength();
-        const { canonical, rows } = getMappingRowsForBall(
-          { displayKeySetId, displayKeySetBySlot, numParticipants, participantNames },
-          lastNum,
-          {
-            defaultNameForSlot: (i) => t("bingo.participant.placeholder", { n: i + 1 }),
-          }
-        );
+        const mappingState = {
+          displayKeySetId,
+          displayKeySetBySlot,
+          numParticipants,
+          participantNames,
+        };
+        if (allParticipantsSameDisplayForBall(mappingState, lastNum)) {
+          panel.classList.add("hidden");
+          return;
+        }
+        const { canonical, rows } = getMappingRowsForBall(mappingState, lastNum, {
+          defaultNameForSlot: (i) => t("bingo.participant.placeholder", { n: i + 1 }),
+        });
         canonicalEl.textContent = t("bingo.hostKeyMapping.canonical", {
           text: hostPanelLtrSeg(canonical),
         });

@@ -8,6 +8,7 @@ import {
   normalizeDisplayKeySetBySlot,
   getEffectiveKeySetIdForSlot,
   getMappingRowsForBall,
+  allParticipantsSameDisplayForBall,
   validateKeySetEntries,
 } from "./keysets.js";
 import enWordsBeginner from "./keysets/en-words-beginner.json";
@@ -100,5 +101,32 @@ describe("per-slot key sets", () => {
     });
     expect(rows[0].name).toBe("P1");
     expect(rows[1].name).toBe("P2");
+  });
+
+  it("allParticipantsSameDisplayForBall is true when every slot shows the same text", () => {
+    const state = {
+      displayKeySetId: NUMBERS_KEY_SET_ID,
+      displayKeySetBySlot: [NUMBERS_KEY_SET_ID, NUMBERS_KEY_SET_ID],
+      numParticipants: 2,
+    };
+    expect(allParticipantsSameDisplayForBall(state, 32)).toBe(true);
+  });
+
+  it("allParticipantsSameDisplayForBall is false when labels differ", () => {
+    const state = {
+      displayKeySetId: NUMBERS_KEY_SET_ID,
+      displayKeySetBySlot: [NUMBERS_KEY_SET_ID, EN_WORDS_BEGINNER_ID],
+      numParticipants: 2,
+    };
+    expect(allParticipantsSameDisplayForBall(state, 1)).toBe(false);
+  });
+
+  it("allParticipantsSameDisplayForBall is true for a single participant", () => {
+    const state = {
+      displayKeySetId: NUMBERS_KEY_SET_ID,
+      displayKeySetBySlot: [EN_WORDS_BEGINNER_ID],
+      numParticipants: 1,
+    };
+    expect(allParticipantsSameDisplayForBall(state, 1)).toBe(true);
   });
 });

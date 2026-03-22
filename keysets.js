@@ -161,3 +161,22 @@ export function getMappingRowsForBall(state, ballId, opts) {
   }
   return { canonical, rows };
 }
+
+/**
+ * True when every participant sees the same display text for this ball (nothing for the host panel to compare).
+ * Single participant always true; zero participants treated as true (caller usually skips UI first).
+ * @param {{ displayKeySetId?: string, displayKeySetBySlot?: string[], numParticipants?: number }} state
+ * @param {number} ballId
+ */
+export function allParticipantsSameDisplayForBall(state, ballId) {
+  const np = typeof state.numParticipants === "number" ? state.numParticipants : 0;
+  if (np <= 1) return true;
+  const bySlot = normalizeDisplayKeySetBySlot(state.displayKeySetId, state.displayKeySetBySlot, np);
+  let firstText = null;
+  for (let i = 0; i < np; i++) {
+    const d = resolveDisplay(ballId, bySlot[i]);
+    if (firstText === null) firstText = d.text;
+    else if (d.text !== firstText) return false;
+  }
+  return true;
+}
