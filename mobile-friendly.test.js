@@ -44,6 +44,16 @@ describe("Mobile-friendly: touch targets (min 44px)", () => {
     expect(html).toMatch(/min-height:\s*44px/);
   });
 
+  it("join.html slot-list join button is compact and centered in the row", () => {
+    const html = readPage("join");
+    const block = html.match(/\.slot-list li button\s*\{([^}]*)\}/s);
+    expect(block).toBeTruthy();
+    const styles = block[1];
+    expect(styles).toMatch(/align-self:\s*center/);
+    expect(styles).toMatch(/padding:\s*8px\s+14px/);
+    expect(styles).toMatch(/font-size:\s*0\.875rem/);
+  });
+
   it("player.html card cells have min-height 44px", () => {
     const html = readPage("player");
     expect(html).toMatch(/\.card-cell[\s\S]*?min-height:\s*44px/);
