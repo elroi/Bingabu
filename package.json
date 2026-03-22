@@ -8,7 +8,12 @@
     "dev:api": "vercel dev",
     "build": "vite build && mkdir -p dist/locales && cp locales/*.json dist/locales/",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:reuse": "E2E_SKIP_WEBSERVER=1 playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "prepare:e2e": "playwright install chromium",
+    "dev:e2e": "npx vercel dev --listen 127.0.0.1:3000 --local-config vercel.e2e.json"
   },
   "dependencies": {
     "@sentry/node": "^10.45.0",
@@ -17,6 +22,7 @@
     "dotenv": "^17.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "jsdom": "^24.1.3",
     "serve": "^14.2.4",
     "vercel": "^39.0.0",
