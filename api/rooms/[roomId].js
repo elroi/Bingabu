@@ -1,5 +1,6 @@
 import * as store from "../_lib/store.js";
 import { verify } from "../_lib/jwt.js";
+import { mergeParticipantDaubsForPatch } from "../_lib/daubFilter.js";
 
 function getAuth(req) {
   const authHeader = req.headers.authorization;
@@ -91,7 +92,12 @@ export default async function handler(req, res) {
       if (!Array.isArray(cards) || cards.length !== np) {
         return res.status(400).json({ error: "Invalid state" });
       }
-      room.state = state;
+      const prevPD = room.state && room.state.participantDaubs;
+      const nextState = {
+        ...state,
+        participantDaubs: mergeParticipantDaubsForPatch(prevPD, state, room),
+      };
+      room.state = nextState;
       updated = true;
     }
 
