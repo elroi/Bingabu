@@ -99,6 +99,9 @@
   "player.booted.title": "You were removed from the game",
   "player.booted.body": "The host removed you from the room.",
   "player.booted.rejoin": "Rejoin",
+  "player.standings.regionAria": "Score standings",
+  "player.standings.leader": "{name} is in the lead ({pts})",
+  "player.standings.youRank": "You: {rank}",
 
   "bingo.pageTitle": "Bingabu",
   "bingo.banner.firstVisit.aria": "First-time host tip",

@@ -99,6 +99,9 @@
   "player.booted.title": "הוסרתם מהמשחק",
   "player.booted.body": "המנחה הסיר אתכם מהחדר.",
   "player.booted.rejoin": "הצטרפות מחדש",
+  "player.standings.regionAria": "מצב הניקוד",
+  "player.standings.leader": "{name} במקום הראשון ({pts})",
+  "player.standings.youRank": "אתה: {rank}",
 
   "bingo.pageTitle": "Bingabu",
   "bingo.banner.firstVisit.aria": "טיפ למנחה בפעם הראשונה",

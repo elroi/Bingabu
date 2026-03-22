@@ -191,6 +191,32 @@
       .history-ball.history-ball-emoji {
         font-size: 1.1rem;
       }
+      .player-standings {
+        width: 100%;
+        max-width: 360px;
+        margin: 0 auto 16px auto;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        border: 2px solid #eee;
+        text-align: center;
+        box-sizing: border-box;
+      }
+      .player-standings-leader {
+        font-family: "Fredoka One", cursive;
+        font-size: clamp(0.95rem, 4vw, 1.1rem);
+        color: var(--primary);
+        margin: 0;
+        line-height: 1.35;
+      }
+      .player-standings-you {
+        font-family: "Quicksand", sans-serif;
+        font-size: 0.88rem;
+        color: #636e72;
+        margin: 8px 0 0 0;
+        font-weight: 700;
+      }
       .card-bingo {
         font-family: "Fredoka One", cursive;
         color: var(--primary);
@@ -302,6 +328,18 @@
         <div id="current-number" class="current-number" aria-live="polite" aria-atomic="true">--</div>
       </div>
       <div id="history-wrap" class="history-wrap"></div>
+      <div
+        id="player-standings"
+        class="player-standings hidden"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        data-i18n="player.standings.regionAria"
+        data-i18n-attr="aria-label"
+      >
+        <p class="player-standings-leader" id="player-standings-leader"></p>
+        <p class="player-standings-you hidden" id="player-standings-you"></p>
+      </div>
       <div id="card-wrap"></div>
       <p id="bingo-msg" class="card-bingo hidden" aria-live="assertive" aria-atomic="true"></p>
       <p id="status" class="status" aria-live="polite"></p>
@@ -315,7 +353,9 @@
     </main>
 
     <script type="module">
-      import { initI18n, t } from "./i18n.js";
+      import { initI18n, t, getLocale } from "./i18n.js";
+      import { getOrdinal } from "./ranking.js";
+      import { rankParticipantsForStandings } from "./bingoScoring.js";
       import { nextReconnectDelayMs, SSE_RECONNECT_INITIAL_MS } from "./streamReconnect.js";
       import {
         EN_WORDS_BEGINNER_ID,
@@ -494,10 +534,17 @@
           return "O";
         }
 
+        function standingsPlaceLabel(rank) {
+          return getLocale() === "he" ? t("bingo.leaderboard.placeHe", { n: rank }) : getOrdinal(rank);
+        }
+
         function render(state) {
           const wrap = document.getElementById("card-wrap");
           const currentEl = document.getElementById("current-number");
           const historyWrap = document.getElementById("history-wrap");
+          const standingsWrap = document.getElementById("player-standings");
+          const standingsLeaderEl = document.getElementById("player-standings-leader");
+          const standingsYouEl = document.getElementById("player-standings-you");
           const bingoEl = document.getElementById("bingo-msg");
           const statusEl = document.getElementById("status");
           const titleEl = document.getElementById("player-title");
@@ -544,6 +591,43 @@
             if (myKeySet === ICONS_KIDS_V1_ID) ball.classList.add("history-ball-emoji");
             historyWrap.appendChild(ball);
           });
+
+          const ranked = rankParticipantsForStandings({
+            participantCards: state.participantCards,
+            participantNames: names,
+            drawnSequence,
+            defaultName: (i) => t("join.slot.playerN", { n: i + 1 }),
+          });
+          const anyStandingsPoints = ranked.some((p) => p.points > 0);
+          if (standingsWrap && standingsLeaderEl && standingsYouEl) {
+            if (!anyStandingsPoints) {
+              standingsWrap.classList.add("hidden");
+              standingsYouEl.classList.add("hidden");
+            } else {
+              standingsWrap.classList.remove("hidden");
+              const leader = ranked[0];
+              const ptsText = t("bingo.leaderboard.pts", { n: leader.points });
+              standingsLeaderEl.textContent = t("player.standings.leader", {
+                name: leader.name,
+                pts: ptsText,
+              });
+              const np =
+                typeof state.numParticipants === "number"
+                  ? state.numParticipants
+                  : state.participantCards.length;
+              if (np > 1) {
+                const me = ranked.find((p) => p.index === slotIndex);
+                if (me) {
+                  standingsYouEl.textContent = t("player.standings.youRank", {
+                    rank: standingsPlaceLabel(me.rank),
+                  });
+                  standingsYouEl.classList.remove("hidden");
+                }
+              } else {
+                standingsYouEl.classList.add("hidden");
+              }
+            }
+          }
 
           const cardAria = escAttr(t("player.card.aria"));
           const freeLabel = t("player.card.free");

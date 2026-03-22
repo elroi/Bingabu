@@ -33,6 +33,9 @@ describe("second-pass UX: locales", () => {
     "spectator.history.aria",
     "spectator.status.reconnecting",
     "join.qr.dialogTitle",
+    "player.standings.regionAria",
+    "player.standings.leader",
+    "player.standings.youRank",
   ];
 
   it.each(keys)("%s exists in en and he", (k) => {
@@ -51,6 +54,16 @@ describe("second-pass UX: HTML contracts", () => {
     expect(html).toMatch(/player\.bingo\.row/);
     expect(html).toMatch(/aria-pressed=/);
     expect(html).toMatch(/toggleDaubFromCell/);
+  });
+
+  it("player.html exposes score standings (leader + rank) wired to bingoScoring", () => {
+    const html = readFileSync(join(repoRoot, "player.html"), "utf-8");
+    expect(html).toMatch(/id="player-standings"/);
+    expect(html).toMatch(/data-i18n="player\.standings\.regionAria"/);
+    expect(html).toMatch(/rankParticipantsForStandings/);
+    expect(html).toMatch(
+      /id="player-standings"[^>]*aria-live="polite"[^>]*aria-atomic="true"/
+    );
   });
 
   it("spectator.html has main, stream status, and i18n history aria", () => {

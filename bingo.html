@@ -1909,7 +1909,8 @@
 
     <script type="module">
       import { initI18n, t, getLocale } from "./i18n.js";
-      import { getOrdinal, getRankedPlayers, getRankingPhrase } from "./ranking.js";
+      import { getOrdinal, getRankingPhrase } from "./ranking.js";
+      import { countBingoLines, rankParticipantsForStandings } from "./bingoScoring.js";
       import {
         NUMBERS_KEY_SET_ID,
         EN_WORDS_BEGINNER_ID,
@@ -2047,7 +2048,6 @@
         "host-setup-wizard-show-again-wrap"
       );
 
-      const POINTS_PER_LINE = 10;
       // MC voice: defaults and optional random variation (advanced panel can override)
       const MC_RATE_BASE = 0.93;
       const MC_RATE_SPREAD = 0.14;
@@ -2740,22 +2740,14 @@
         return lines;
       }
 
-      function getFirstBingoDrawIndex(card, drawnSequence) {
-        for (let n = 1; n <= drawnSequence.length; n++) {
-          const set = new Set(drawnSequence.slice(0, n));
-          if (getBingoLines(card, set).length >= 1) return n;
-        }
-        return Infinity;
-      }
-
       function getPlayersWhoScoredOnLatestDraw() {
         if (drawnSequence.length < 2 || participantCards.length === 0) return [];
         const drawnSetBefore = new Set(drawnSequence.slice(0, -1));
         const drawnSetAfter = new Set(drawnSequence);
         const names = [];
         for (let i = 0; i < participantCards.length; i++) {
-          const linesBefore = getBingoLines(participantCards[i], drawnSetBefore).length;
-          const linesAfter = getBingoLines(participantCards[i], drawnSetAfter).length;
+          const linesBefore = countBingoLines(participantCards[i], drawnSetBefore);
+          const linesAfter = countBingoLines(participantCards[i], drawnSetAfter);
           if (linesAfter > linesBefore) {
             const name =
               (participantNames[i] && participantNames[i].trim()) || t("bingo.playerN", { n: i + 1 });
@@ -2777,17 +2769,14 @@
       }
 
       function getRankedPlayersForDraw(drawnSet, drawnSequence) {
+        void drawnSet;
         if (participantCards.length === 0) return [];
-        const players = participantCards.map((card, index) => {
-          const lines = getBingoLines(card, drawnSet);
-          const points = lines.length * POINTS_PER_LINE;
-          const firstBingoAt = getFirstBingoDrawIndex(card, drawnSequence);
-          const name =
-            (participantNames[index] && participantNames[index].trim()) ||
-            t("bingo.playerN", { n: index + 1 });
-          return { index, name, points, firstBingoAt };
+        return rankParticipantsForStandings({
+          participantCards,
+          participantNames,
+          drawnSequence,
+          defaultName: (index) => t("bingo.playerN", { n: index + 1 }),
         });
-        return getRankedPlayers(players);
       }
 
       function buildLeaderboard() {
