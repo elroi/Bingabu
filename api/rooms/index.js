@@ -3,6 +3,7 @@ import * as store from "../_lib/store.js";
 import { generateSalt, hashPassword } from "../_lib/password.js";
 import { getClientIp } from "../_lib/clientIp.js";
 import { rateLimitCreateRoom, retryAfterSeconds } from "../_lib/rateLimit.js";
+import { isValidGameState } from "../_lib/roomState.js";
 
 const ROOM_ID_LENGTH = 6;
 const ROOM_ID_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous 0/O, 1/I
@@ -17,25 +18,7 @@ function generateRoomId() {
 }
 
 function isStateValid(state) {
-  if (!state || typeof state !== "object") return false;
-  if (!Array.isArray(state.drawnSequence)) return false;
-  const seq = state.drawnSequence;
-  if (seq.some((n) => typeof n !== "number" || n < 1 || n > 75)) return false;
-  if (new Set(seq).size !== seq.length) return false;
-  const np = state.numParticipants;
-  if (typeof np !== "number" || np < 0 || np > 12) return false;
-  const cards = state.participantCards;
-  if (!Array.isArray(cards) || cards.length !== np) return false;
-  if (
-    !cards.every(
-      (card) =>
-        Array.isArray(card) &&
-        card.length === 5 &&
-        card.every((row) => Array.isArray(row) && row.length === 5)
-    )
-  )
-    return false;
-  return true;
+  return isValidGameState(state);
 }
 
 export default async function handler(req, res) {

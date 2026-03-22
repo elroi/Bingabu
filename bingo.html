@@ -1355,7 +1355,7 @@
 
       .participant-card {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(5, 1fr); /* overridden inline per card size */
         gap: 2px;
         font-size: 0.7rem;
       }
@@ -1700,6 +1700,20 @@
           <input type="number" id="num-participants" min="0" max="12" value="0" title="" />
         </div>
         <div class="participant-setting participant-setting-above-fold">
+          <label for="card-size" data-i18n="bingo.setup.cardSizeLabel">Card size</label>
+          <select
+            id="card-size"
+            data-testid="card-size-select"
+            data-i18n="bingo.setup.cardSizeAria"
+            data-i18n-attr="aria-label"
+            aria-label="Rows and columns on each player card"
+          >
+            <option value="3">3×3</option>
+            <option value="4">4×4</option>
+            <option value="5" selected>5×5</option>
+          </select>
+        </div>
+        <div class="participant-setting participant-setting-above-fold">
           <label for="display-key-set" data-i18n="bingo.displayKeySet.label">Board style (caller board & default)</label>
           <select
             id="display-key-set"
@@ -1929,7 +1943,8 @@
     <script type="module">
       import { initI18n, t, getLocale } from "./i18n.js";
       import { getOrdinal, getRankingPhrase } from "./ranking.js";
-      import { countBingoLines, rankParticipantsForStandings } from "./bingoScoring.js";
+      import { countBingoLines, rankParticipantsForStandings, getBingoLinesEn } from "./bingoScoring.js";
+      import { generateOneCard } from "./cardGenerator.js";
       import {
         NUMBERS_KEY_SET_ID,
         EN_WORDS_BEGINNER_ID,
@@ -2018,6 +2033,7 @@
       const historyList = document.getElementById("history-list");
       const historyContainer = document.querySelector(".history-container");
       const numParticipantsInput = document.getElementById("num-participants");
+      const cardSizeSelect = document.getElementById("card-size");
       const displayKeySetSelect = document.getElementById("display-key-set");
       const participantNamesEl = document.getElementById("participant-names");
       const participantNamesWrap = document.getElementById("participant-names-wrap");
@@ -2085,6 +2101,30 @@
       let participantNames = [];
       let participantQuirks = []; // { excludeStr: string, preferStr: string } per player
       let participantCards = [];
+      /** Square grid edge length: 3, 4, or 5 */
+      let cardSize = 5;
+
+      function readCardSizeFromSelect() {
+        if (!cardSizeSelect) return 5;
+        const v = parseInt(cardSizeSelect.value, 10);
+        return v === 3 || v === 4 || v === 5 ? v : 5;
+      }
+
+      function getSquareCardSizeFromCard(card) {
+        if (!Array.isArray(card) || card.length === 0) return null;
+        const n = card.length;
+        if (n !== 3 && n !== 4 && n !== 5) return null;
+        if (!card.every((row) => Array.isArray(row) && row.length === n)) return null;
+        return n;
+      }
+
+      function participantCardsValidSquare(cards) {
+        if (!Array.isArray(cards) || cards.length === 0) return true;
+        const s0 = getSquareCardSizeFromCard(cards[0]);
+        if (s0 == null) return false;
+        return cards.every((c) => getSquareCardSizeFromCard(c) === s0);
+      }
+
       let displayKeySetId = NUMBERS_KEY_SET_ID;
       /** @type {string[]} */
       let displayKeySetBySlot = [];
@@ -2140,6 +2180,8 @@
           participantNames: participantNames.slice(0, numParticipants),
           participantQuirks: participantQuirks.slice(0, numParticipants),
           participantCards,
+          cardRows: cardSize,
+          cardCols: cardSize,
           displayKeySetId: normalizeKeySetId(displayKeySetId),
           displayKeySetBySlot: displayKeySetBySlot.slice(0, numParticipants),
           hideCards,
@@ -2203,16 +2245,13 @@
           const np = data.numParticipants;
           const cards = data.participantCards;
           if (typeof np === "number" && np >= 0 && np <= 12 && Array.isArray(cards) && cards.length === np) {
-            const valid = cards.every(
-              (card) =>
-                Array.isArray(card) &&
-                card.length === 5 &&
-                card.every((row) => Array.isArray(row) && row.length === 5)
-            );
+            const valid = participantCardsValidSquare(cards);
             if (valid) {
               numParticipants = np;
               participantCards = cards;
               numParticipantsInput.value = String(np);
+              cardSize = getSquareCardSizeFromCard(cards[0]) ?? 5;
+              if (cardSizeSelect) cardSizeSelect.value = String(cardSize);
               if (Array.isArray(data.participantNames)) {
                 participantNames = data.participantNames.slice(0, np).map((s) => (typeof s === "string" ? s : ""));
                 while (participantNames.length < np) participantNames.push("");
@@ -2282,7 +2321,7 @@
             while (participantNames.length < 1) participantNames.push("");
             participantQuirks = participantQuirks.slice(0, 1);
             while (participantQuirks.length < 1) participantQuirks.push({ excludeStr: "", preferStr: "" });
-            participantCards = [generateOneCard(parseQuirk(participantQuirks[0]))];
+            participantCards = [generateOneCard(parseQuirk(participantQuirks[0]), cardSize, cardSize)];
           }
           return true;
         } catch (_) {
@@ -2321,35 +2360,6 @@
           exclude: parseQuirkNumbers(quirk.excludeStr),
           prefer: parseQuirkNumbers(quirk.preferStr),
         };
-      }
-
-      function generateOneCard(quirk) {
-        const { exclude = [], prefer = [] } = quirk || {};
-        const excludeSet = new Set(exclude);
-        const card = [];
-        for (let col = 0; col < 5; col++) {
-          const start = col * 15 + 1;
-          const count = col === 2 ? 4 : 5;
-          let pool = Array.from({ length: 15 }, (_, i) => start + i).filter((n) => !excludeSet.has(n));
-          const preferredInCol = prefer.filter((n) => n >= start && n < start + 15);
-          const chosen = [];
-          const preferredShuffled = shuffle(preferredInCol).slice(0, count);
-          for (const n of preferredShuffled) {
-            if (pool.includes(n)) {
-              chosen.push(n);
-              pool = pool.filter((x) => x !== n);
-            }
-          }
-          const need = count - chosen.length;
-          const rest = shuffle(pool).slice(0, need);
-          const nums = shuffle([...chosen, ...rest]);
-          let idx = 0;
-          for (let row = 0; row < 5; row++) {
-            if (!card[row]) card[row] = [];
-            card[row][col] = row === 2 && col === 2 ? "FREE" : nums[idx++];
-          }
-        }
-        return card;
       }
 
       function ensureParticipantNamesLength() {
@@ -2504,6 +2514,7 @@
       }
 
       function initGame() {
+        cardSize = readCardSizeFromSelect();
         numParticipants = Math.min(12, Math.max(0, parseInt(numParticipantsInput.value, 10) || 0));
         numParticipantsInput.value = String(numParticipants);
         availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
@@ -2520,7 +2531,7 @@
         }
         if (mcAnnouncementEl) mcAnnouncementEl.textContent = "";
         for (let i = 0; i < numParticipants; i++) {
-          participantCards.push(generateOneCard(parseQuirk(participantQuirks[i])));
+          participantCards.push(generateOneCard(parseQuirk(participantQuirks[i]), cardSize, cardSize));
         }
         participantDaubs = {};
         gameInstanceId += 1;
@@ -2749,27 +2760,6 @@
         return ["col-b", "col-i", "col-n", "col-g", "col-o"][col];
       }
 
-      function isLineComplete(lineCells, drawnSet) {
-        return lineCells.every((cell) => cell === "FREE" || drawnSet.has(cell));
-      }
-
-      function getBingoLines(card, drawnSet) {
-        const lines = [];
-        for (let row = 0; row < 5; row++) {
-          const cells = [card[row][0], card[row][1], card[row][2], card[row][3], card[row][4]];
-          if (isLineComplete(cells, drawnSet)) lines.push(`Row ${row + 1}`);
-        }
-        for (let col = 0; col < 5; col++) {
-          const cells = [card[0][col], card[1][col], card[2][col], card[3][col], card[4][col]];
-          if (isLineComplete(cells, drawnSet)) lines.push(`Col ${["B", "I", "N", "G", "O"][col]}`);
-        }
-        const diag1 = [card[0][0], card[1][1], card[2][2], card[3][3], card[4][4]];
-        if (isLineComplete(diag1, drawnSet)) lines.push("Diagonal \\");
-        const diag2 = [card[0][4], card[1][3], card[2][2], card[3][1], card[4][0]];
-        if (isLineComplete(diag2, drawnSet)) lines.push("Diagonal /");
-        return lines;
-      }
-
       function getPlayersWhoScoredOnLatestDraw() {
         if (drawnSequence.length < 2 || participantCards.length === 0) return [];
         const drawnSetBefore = new Set(drawnSequence.slice(0, -1));
@@ -2882,14 +2872,18 @@
           const grid = document.createElement("div");
           grid.className = "participant-card";
           grid.setAttribute("dir", "ltr");
-          for (let c = 0; c < 5; c++) {
+          grid.setAttribute("data-testid", "host-participant-card-grid");
+          const nRows = card.length;
+          const nCols = card[0].length;
+          grid.style.gridTemplateColumns = `repeat(${nCols}, 1fr)`;
+          for (let c = 0; c < nCols; c++) {
             const h = document.createElement("div");
             h.className = `card-header-cell ${["b", "i", "n", "g", "o"][c]}`;
             h.textContent = ["B", "I", "N", "G", "O"][c];
             grid.appendChild(h);
           }
-          for (let row = 0; row < 5; row++) {
-            for (let col = 0; col < 5; col++) {
+          for (let row = 0; row < nRows; row++) {
+            for (let col = 0; col < nCols; col++) {
               const val = card[row][col];
               const cell = document.createElement("div");
               cell.className = "card-cell " + getColumnClass(col);
@@ -2931,7 +2925,7 @@
           progress.className = "participant-card-progress";
           progress.textContent = t("bingo.card.progress", { marked: markedCount });
           wrap.appendChild(progress);
-          const bingoLines = getBingoLines(card, drawnSet);
+          const bingoLines = getBingoLinesEn(card, drawnSet);
           if (bingoLines.length > 0) {
             wrap.classList.add("has-bingo");
             const bingoEl = document.createElement("div");
@@ -3056,6 +3050,10 @@
         const isMidGame = drawnSequence.length > 0;
         numParticipantsInput.disabled = isMidGame;
         numParticipantsInput.title = isMidGame ? t("bingo.setup.participantsMidGameTitle") : "";
+        if (cardSizeSelect) {
+          cardSizeSelect.disabled = isMidGame;
+          cardSizeSelect.title = isMidGame ? t("bingo.setup.cardSizeMidGameTitle") : "";
+        }
         // Name inputs stay editable during the game so players can correct or change names
         if (participantNamesWrap) {
           participantNamesWrap.querySelectorAll("input").forEach((inp) => {
@@ -4018,6 +4016,7 @@
 
       function syncParticipantsFromInput() {
         if (drawnSequence.length > 0) return;
+        cardSize = readCardSizeFromSelect();
         const n = Math.min(12, Math.max(0, parseInt(numParticipantsInput.value, 10) || 0));
         numParticipantsInput.value = String(n);
         numParticipants = n;
@@ -4030,7 +4029,7 @@
         while (participantQuirks.length < n) participantQuirks.push({ excludeStr: "", preferStr: "" });
         ensureDisplayKeySetBySlotLength();
         for (let i = 0; i < numParticipants; i++) {
-          participantCards.push(generateOneCard(parseQuirk(participantQuirks[i])));
+          participantCards.push(generateOneCard(parseQuirk(participantQuirks[i]), cardSize, cardSize));
         }
         participantDaubs = {};
         gameInstanceId += 1;
@@ -4042,6 +4041,25 @@
       }
       numParticipantsInput.addEventListener("input", syncParticipantsFromInput);
       numParticipantsInput.addEventListener("change", syncParticipantsFromInput);
+
+      function syncCardSizeFromInput() {
+        if (drawnSequence.length > 0) return;
+        cardSize = readCardSizeFromSelect();
+        const n = Math.min(12, Math.max(0, parseInt(numParticipantsInput.value, 10) || 0));
+        numParticipants = n;
+        participantCards = [];
+        for (let i = 0; i < numParticipants; i++) {
+          participantCards.push(generateOneCard(parseQuirk(participantQuirks[i]), cardSize, cardSize));
+        }
+        participantDaubs = {};
+        gameInstanceId += 1;
+        saveState();
+        renderParticipantCards(null);
+        if (typeof updateHostSteps === "function") updateHostSteps();
+      }
+      if (cardSizeSelect) {
+        cardSizeSelect.addEventListener("change", syncCardSizeFromInput);
+      }
 
       hideCardsCheckbox.addEventListener("change", () => {
         hideCards = hideCardsCheckbox.checked;

@@ -355,7 +355,7 @@
     <script type="module">
       import { initI18n, t, getLocale } from "./i18n.js";
       import { getOrdinal } from "./ranking.js";
-      import { rankParticipantsForStandings } from "./bingoScoring.js";
+      import { rankParticipantsForStandings, getBingoLinesEn, getBingoLinesManualEn } from "./bingoScoring.js";
       import { nextReconnectDelayMs, SSE_RECONNECT_INITIAL_MS } from "./streamReconnect.js";
       import {
         EN_WORDS_BEGINNER_ID,
@@ -489,52 +489,19 @@
         function getColumnClass(col) {
           return ["col-b", "col-i", "col-n", "col-g", "col-o"][col];
         }
-        function isLineComplete(lineCells, drawnSet) {
-          return lineCells.every((c) => c === "FREE" || drawnSet.has(c));
-        }
-        function isLineCompleteManual(card, linePositions, drawnSet, localDaubs) {
-          return linePositions.every(([r, c]) => {
-            const val = card[r][c];
-            if (val === "FREE") return true;
-            return drawnSet.has(val) && localDaubs.has(`${r},${c}`);
-          });
+        function formatPlayerBingoLineFromEn(line) {
+          if (line.startsWith("Row ")) return t("player.bingo.row", { n: line.slice(4) });
+          if (line.startsWith("Col ")) return t("player.bingo.col", { letter: line.slice(4) });
+          if (line === "Diagonal \\") return t("player.bingo.diagMain");
+          if (line === "Diagonal /") return t("player.bingo.diagAnti");
+          return line;
         }
         function getBingoLines(card, drawnSet) {
-          const lines = [];
-          const letters = ["B", "I", "N", "G", "O"];
-          for (let row = 0; row < 5; row++) {
-            const cells = [card[row][0], card[row][1], card[row][2], card[row][3], card[row][4]];
-            if (isLineComplete(cells, drawnSet)) lines.push(t("player.bingo.row", { n: row + 1 }));
-          }
-          for (let col = 0; col < 5; col++) {
-            const cells = [card[0][col], card[1][col], card[2][col], card[3][col], card[4][col]];
-            if (isLineComplete(cells, drawnSet))
-              lines.push(t("player.bingo.col", { letter: letters[col] }));
-          }
-          const d1 = [card[0][0], card[1][1], card[2][2], card[3][3], card[4][4]];
-          if (isLineComplete(d1, drawnSet)) lines.push(t("player.bingo.diagMain"));
-          const d2 = [card[0][4], card[1][3], card[2][2], card[3][1], card[4][0]];
-          if (isLineComplete(d2, drawnSet)) lines.push(t("player.bingo.diagAnti"));
-          return lines;
+          return getBingoLinesEn(card, drawnSet).map(formatPlayerBingoLineFromEn);
         }
         function getBingoLinesManual(card, drawnSet, localDaubs) {
-          const lines = [];
-          const letters = ["B", "I", "N", "G", "O"];
-          for (let row = 0; row < 5; row++) {
-            const positions = [[row, 0], [row, 1], [row, 2], [row, 3], [row, 4]];
-            if (isLineCompleteManual(card, positions, drawnSet, localDaubs))
-              lines.push(t("player.bingo.row", { n: row + 1 }));
-          }
-          for (let col = 0; col < 5; col++) {
-            const positions = [[0, col], [1, col], [2, col], [3, col], [4, col]];
-            if (isLineCompleteManual(card, positions, drawnSet, localDaubs))
-              lines.push(t("player.bingo.col", { letter: letters[col] }));
-          }
-          if (isLineCompleteManual(card, [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4]], drawnSet, localDaubs))
-            lines.push(t("player.bingo.diagMain"));
-          if (isLineCompleteManual(card, [[0, 4], [1, 3], [2, 2], [3, 1], [4, 0]], drawnSet, localDaubs))
-            lines.push(t("player.bingo.diagAnti"));
-          return lines;
+          const set = localDaubs instanceof Set ? localDaubs : new Set(localDaubs);
+          return getBingoLinesManualEn(card, drawnSet, set).map(formatPlayerBingoLineFromEn);
         }
 
         function getLetter(num) {
@@ -684,18 +651,20 @@
 
           const cardAria = escAttr(t("player.card.aria"));
           const freeLabel = t("player.card.free");
-          let grid = `<div class="participant-card" id="player-card" role="grid" aria-label="${cardAria}">`;
+          const nR = card.length;
+          const nC = card[0].length;
+          let grid = `<div class="participant-card" id="player-card" data-testid="player-card-grid" role="grid" aria-label="${cardAria}" style="grid-template-columns: repeat(${nC}, 1fr)">`;
           grid += '<div class="card-row" role="row">';
-          for (let c = 0; c < 5; c++) {
+          for (let c = 0; c < nC; c++) {
             const hk = COL_HEADER_KEYS[c];
             const letter = t(hk);
             grid += `<div role="columnheader" class="card-header-cell ${["b", "i", "n", "g", "o"][c]}">${letter}</div>`;
           }
           grid += "</div>";
           let firstPlayableSet = false;
-          for (let row = 0; row < 5; row++) {
+          for (let row = 0; row < nR; row++) {
             grid += '<div class="card-row" role="row">';
-            for (let col = 0; col < 5; col++) {
+            for (let col = 0; col < nC; col++) {
               const val = card[row][col];
               const colClass = getColumnClass(col);
               const isFree = val === "FREE";
@@ -823,13 +792,15 @@
           }
 
           let markedCount = 0;
+          const nr = card.length;
+          const nc = card[0].length;
           if (manualDaubOnly) {
-            for (let r = 0; r < 5; r++)
-              for (let c = 0; c < 5; c++)
+            for (let r = 0; r < nr; r++)
+              for (let c = 0; c < nc; c++)
                 if (card[r][c] === "FREE" || (localDaubs.has(`${r},${c}`) && drawnSet.has(card[r][c]))) markedCount++;
           } else {
-            for (let r = 0; r < 5; r++)
-              for (let c = 0; c < 5; c++)
+            for (let r = 0; r < nr; r++)
+              for (let c = 0; c < nc; c++)
                 if (card[r][c] === "FREE" || drawnSet.has(card[r][c])) markedCount++;
           }
           if (statusEl) statusEl.textContent = t("player.statusMarked", { count: markedCount });

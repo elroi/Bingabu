@@ -230,7 +230,7 @@
 
       .participant-card {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(5, 1fr); /* inline style overrides per saved card */
         gap: 3px;
         font-size: 1rem;
       }
@@ -441,6 +441,13 @@
         return ["col-b", "col-i", "col-n", "col-g", "col-o"][col];
       }
 
+      function cardIsValidSquare(card) {
+        if (!Array.isArray(card) || card.length === 0 || !Array.isArray(card[0])) return false;
+        const n = card.length;
+        if (n !== 3 && n !== 4 && n !== 5) return false;
+        return card.every((row) => Array.isArray(row) && row.length === n);
+      }
+
       function getState() {
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
@@ -448,13 +455,10 @@
           const data = JSON.parse(raw);
           const cards = data.participantCards;
           if (!Array.isArray(cards) || cards.length === 0) return null;
-          const valid = cards.every(
-            (card) =>
-              Array.isArray(card) &&
-              card.length === 5 &&
-              card.every((row) => Array.isArray(row) && row.length === 5)
-          );
-          return valid ? data : null;
+          const valid = cards.every((card) => cardIsValidSquare(card));
+          const n0 = cards[0].length;
+          if (!valid || !cards.every((c) => c.length === n0)) return null;
+          return data;
         } catch (_) {
           return null;
         }
@@ -495,15 +499,18 @@
 
           const grid = document.createElement("div");
           grid.className = "participant-card";
+          const nRows = card.length;
+          const nCols = card[0].length;
+          grid.style.gridTemplateColumns = `repeat(${nCols}, 1fr)`;
           const ks = getEffectiveKeySetIdForSlot(slotKs, index);
-          for (let c = 0; c < 5; c++) {
+          for (let c = 0; c < nCols; c++) {
             const h = document.createElement("div");
             h.className = `card-header-cell ${["b", "i", "n", "g", "o"][c]}`;
             h.textContent = t(PRINT_COLUMN_KEYS[c]);
             grid.appendChild(h);
           }
-          for (let row = 0; row < 5; row++) {
-            for (let col = 0; col < 5; col++) {
+          for (let row = 0; row < nRows; row++) {
+            for (let col = 0; col < nCols; col++) {
               const val = card[row][col];
               const cell = document.createElement("div");
               cell.className = "card-cell " + getColumnClass(col);

@@ -1,5 +1,6 @@
 import * as store from "../_lib/store.js";
 import { verify } from "../_lib/jwt.js";
+import { isValidGameState } from "../_lib/roomState.js";
 
 function getAuth(req) {
   const authHeader = req.headers.authorization;
@@ -80,15 +81,7 @@ export default async function handler(req, res) {
     let updated = false;
 
     if (state != null) {
-      if (!Array.isArray(state.drawnSequence)) {
-        return res.status(400).json({ error: "Invalid state" });
-      }
-      const np = state.numParticipants;
-      if (typeof np !== "number" || np < 0 || np > 12) {
-        return res.status(400).json({ error: "Invalid state" });
-      }
-      const cards = state.participantCards;
-      if (!Array.isArray(cards) || cards.length !== np) {
+      if (!isValidGameState(state)) {
         return res.status(400).json({ error: "Invalid state" });
       }
       room.state = state;

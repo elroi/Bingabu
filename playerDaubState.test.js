@@ -17,6 +17,13 @@ const otherCard = [
   [5, 20, 35, 50, 65],
 ];
 
+const card4x4 = [
+  [1, 16, 31, 46],
+  [2, 17, 32, 47],
+  [3, 18, 33, 48],
+  [4, 19, 34, 49],
+];
+
 describe("playerDaubState", () => {
   it("normalizeGameInstanceId accepts non-negative finite numbers only", () => {
     expect(normalizeGameInstanceId(0)).toBe(0);
@@ -79,6 +86,18 @@ describe("playerDaubState", () => {
       storedCardFingerprint: cardFingerprint(sampleCard),
     });
     expect([...daubs]).toEqual(["0,0"]);
+  });
+
+  it("accepts daubs on 4×4 cards", () => {
+    const fp0 = cardFingerprint(card4x4);
+    const { daubs } = syncPlayerDaubs({
+      card: card4x4,
+      slotIndex: 0,
+      participantDaubs: { "0": ["3,3", "4,4"] },
+      localDaubsBefore: new Set(),
+      storedCardFingerprint: fp0,
+    });
+    expect([...daubs].sort()).toEqual(["3,3"].sort());
   });
 
   it("when game instance bumps, ignores stale local daubs if server omits slot", () => {

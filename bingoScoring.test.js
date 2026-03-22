@@ -4,6 +4,8 @@ import {
   countBingoLines,
   getFirstBingoDrawIndex,
   rankParticipantsForStandings,
+  getBingoLinesEn,
+  getBingoLinesManualEn,
 } from "./bingoScoring.js";
 
 /** Minimal 5×5 card: row 0 is 1–5, row 1 is 6–10, center FREE, other cells unique. */
@@ -24,6 +26,25 @@ function cardSecondRowBingo() {
     [31, 32, "FREE", 34, 35],
     [46, 47, 48, 49, 50],
     [61, 62, 63, 64, 65],
+  ];
+}
+
+/** 3×3, FREE center; top row B–I–N sample values. */
+function card3x3TopRowBingo() {
+  return [
+    [1, 16, 31],
+    [2, "FREE", 33],
+    [3, 18, 35],
+  ];
+}
+
+/** 4×4, no FREE; first row completes with four draws. */
+function card4x4TopRowBingo() {
+  return [
+    [1, 16, 31, 46],
+    [2, 17, 32, 47],
+    [3, 18, 33, 48],
+    [4, 19, 34, 49],
   ];
 }
 
@@ -66,6 +87,35 @@ describe("bingoScoring", () => {
     expect(ranked[0].name).toBe("Slot1");
     expect(ranked[0].points).toBe(10);
     expect(ranked[0].rank).toBe(1);
+  });
+
+  it("countBingoLines works for 3×3 (top row)", () => {
+    const card = card3x3TopRowBingo();
+    expect(countBingoLines(card, new Set([1, 16, 31]))).toBe(1);
+  });
+
+  it("countBingoLines works for 4×4 (top row, no FREE)", () => {
+    const card = card4x4TopRowBingo();
+    expect(countBingoLines(card, new Set([1, 16, 31, 46]))).toBe(1);
+  });
+
+  it("countBingoLines counts main diagonal on 3×3 when square", () => {
+    const card = card3x3TopRowBingo();
+    expect(countBingoLines(card, new Set([1, "FREE", 35]))).toBe(1);
+  });
+
+  it("getBingoLinesEn returns Col B for first column on small grid", () => {
+    const card = card3x3TopRowBingo();
+    const lines = getBingoLinesEn(card, new Set([1, 2, 3]));
+    expect(lines.some((l) => l === "Col B")).toBe(true);
+  });
+
+  it("getBingoLinesManualEn needs local daubs on drawn numbers", () => {
+    const card = card3x3TopRowBingo();
+    const drawn = new Set([1, 16, 31]);
+    expect(getBingoLinesManualEn(card, drawn, new Set())).toEqual([]);
+    const lines = getBingoLinesManualEn(card, drawn, new Set(["0,0", "0,1", "0,2"]));
+    expect(lines.some((l) => l.startsWith("Row "))).toBe(true);
   });
 
   it("rankParticipantsForStandings breaks ties by earlier first bingo", () => {

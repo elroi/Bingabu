@@ -23,4 +23,15 @@ describe("filterAllowedDaubs", () => {
     const state = { drawnSequence: [], participantCards: [card] };
     expect(filterAllowedDaubs(state, 99, ["2,2"])).toEqual([]);
   });
+
+  it("supports 4×4 cards", () => {
+    const small = [
+      [1, 16, 31, 46],
+      [2, 17, 32, 47],
+      [3, 18, 33, 48],
+      [4, 19, 34, 49],
+    ];
+    const state = { drawnSequence: [1], participantCards: [small] };
+    expect(filterAllowedDaubs(state, 0, ["0,0", "3,3", "9,9"])).toEqual(["0,0"]);
+  });
 });

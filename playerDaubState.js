@@ -22,14 +22,17 @@ export function normalizeGameInstanceId(raw) {
 
 function filterDaubsToCard(daubsSet, card) {
   const out = new Set();
-  if (!card || !Array.isArray(card)) return out;
+  if (!card || !Array.isArray(card) || card.length === 0) return out;
+  const rows = card.length;
+  const cols = Array.isArray(card[0]) ? card[0].length : 0;
+  if (!Number.isInteger(cols) || cols < 1) return out;
   for (const key of daubsSet) {
     if (typeof key !== "string") continue;
     const parts = key.split(",");
     if (parts.length !== 2) continue;
     const r = Number(parts[0]);
     const c = Number(parts[1]);
-    if (!Number.isInteger(r) || !Number.isInteger(c) || r < 0 || r > 4 || c < 0 || c > 4) continue;
+    if (!Number.isInteger(r) || !Number.isInteger(c) || r < 0 || r >= rows || c < 0 || c >= cols) continue;
     if (!card[r] || !Array.isArray(card[r]) || card[r][c] === undefined) continue;
     out.add(`${r},${c}`);
   }

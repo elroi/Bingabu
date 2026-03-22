@@ -7,24 +7,54 @@ import { getRankedPlayers } from "./ranking.js";
 
 export const POINTS_PER_LINE = 10;
 
+const LETTERS = ["B", "I", "N", "G", "O"];
+
+/** @param {unknown[][]} card */
+function getCardSize(card) {
+  if (!Array.isArray(card) || card.length === 0) return null;
+  const rows = card.length;
+  const cols = card[0]?.length;
+  if (!Number.isInteger(cols) || cols < 1) return null;
+  for (let r = 0; r < rows; r++) {
+    const row = card[r];
+    if (!Array.isArray(row) || row.length !== cols) return null;
+  }
+  return { rows, cols };
+}
+
 function isLineComplete(lineCells, drawnSet) {
   return lineCells.every((cell) => cell === "FREE" || drawnSet.has(cell));
 }
 
+/**
+ * @param {unknown[][]} card
+ * @param {Set<number>} drawnSet
+ */
 export function countBingoLines(card, drawnSet) {
+  const size = getCardSize(card);
+  if (!size) return 0;
+  const { rows, cols } = size;
   let n = 0;
-  for (let row = 0; row < 5; row++) {
-    const cells = [card[row][0], card[row][1], card[row][2], card[row][3], card[row][4]];
+  for (let row = 0; row < rows; row++) {
+    const cells = [];
+    for (let c = 0; c < cols; c++) cells.push(card[row][c]);
     if (isLineComplete(cells, drawnSet)) n++;
   }
-  for (let col = 0; col < 5; col++) {
-    const cells = [card[0][col], card[1][col], card[2][col], card[3][col], card[4][col]];
+  for (let col = 0; col < cols; col++) {
+    const cells = [];
+    for (let r = 0; r < rows; r++) cells.push(card[r][col]);
     if (isLineComplete(cells, drawnSet)) n++;
   }
-  const diag1 = [card[0][0], card[1][1], card[2][2], card[3][3], card[4][4]];
-  if (isLineComplete(diag1, drawnSet)) n++;
-  const diag2 = [card[0][4], card[1][3], card[2][2], card[3][1], card[4][0]];
-  if (isLineComplete(diag2, drawnSet)) n++;
+  if (rows === cols) {
+    const diag1 = [];
+    const diag2 = [];
+    for (let i = 0; i < rows; i++) {
+      diag1.push(card[i][i]);
+      diag2.push(card[i][cols - 1 - i]);
+    }
+    if (isLineComplete(diag1, drawnSet)) n++;
+    if (isLineComplete(diag2, drawnSet)) n++;
+  }
   return n;
 }
 
@@ -35,6 +65,86 @@ export function getFirstBingoDrawIndex(card, drawnSequence) {
     if (countBingoLines(card, set) >= 1) return i;
   }
   return Infinity;
+}
+
+/**
+ * Host-oriented English line labels (fed into i18n via formatBingoLineLabel).
+ * @param {unknown[][]} card
+ * @param {Set<number>} drawnSet
+ * @returns {string[]}
+ */
+export function getBingoLinesEn(card, drawnSet) {
+  const size = getCardSize(card);
+  if (!size) return [];
+  const { rows, cols } = size;
+  const lines = [];
+  for (let row = 0; row < rows; row++) {
+    const cells = [];
+    for (let c = 0; c < cols; c++) cells.push(card[row][c]);
+    if (isLineComplete(cells, drawnSet)) lines.push(`Row ${row + 1}`);
+  }
+  for (let col = 0; col < cols; col++) {
+    const cells = [];
+    for (let r = 0; r < rows; r++) cells.push(card[r][col]);
+    const letter = LETTERS[col] ?? String(col);
+    if (isLineComplete(cells, drawnSet)) lines.push(`Col ${letter}`);
+  }
+  if (rows === cols) {
+    const diag1 = [];
+    const diag2 = [];
+    for (let i = 0; i < rows; i++) {
+      diag1.push(card[i][i]);
+      diag2.push(card[i][cols - 1 - i]);
+    }
+    if (isLineComplete(diag1, drawnSet)) lines.push("Diagonal \\");
+    if (isLineComplete(diag2, drawnSet)) lines.push("Diagonal /");
+  }
+  return lines;
+}
+
+function isManualCellComplete(card, r, c, drawnSet, localDaubs) {
+  const val = card[r][c];
+  if (val === "FREE") return true;
+  return drawnSet.has(val) && localDaubs.has(`${r},${c}`);
+}
+
+/**
+ * Player manual-daub mode: cell counts as marked only if drawn and locally daubed.
+ * @param {unknown[][]} card
+ * @param {Set<number>} drawnSet
+ * @param {Set<string>} localDaubs — keys "row,col"
+ * @returns {string[]} same shape as getBingoLinesEn for mapping to player.* i18n
+ */
+export function getBingoLinesManualEn(card, drawnSet, localDaubs) {
+  const size = getCardSize(card);
+  if (!size) return [];
+  const { rows, cols } = size;
+  const lines = [];
+  const complete = (positions) =>
+    positions.every(([r, c]) => isManualCellComplete(card, r, c, drawnSet, localDaubs));
+
+  for (let row = 0; row < rows; row++) {
+    const positions = [];
+    for (let c = 0; c < cols; c++) positions.push([row, c]);
+    if (complete(positions)) lines.push(`Row ${row + 1}`);
+  }
+  for (let col = 0; col < cols; col++) {
+    const positions = [];
+    for (let r = 0; r < rows; r++) positions.push([r, col]);
+    const letter = LETTERS[col] ?? String(col);
+    if (complete(positions)) lines.push(`Col ${letter}`);
+  }
+  if (rows === cols) {
+    const d1 = [];
+    const d2 = [];
+    for (let i = 0; i < rows; i++) {
+      d1.push([i, i]);
+      d2.push([i, cols - 1 - i]);
+    }
+    if (complete(d1)) lines.push("Diagonal \\");
+    if (complete(d2)) lines.push("Diagonal /");
+  }
+  return lines;
 }
 
 /**
