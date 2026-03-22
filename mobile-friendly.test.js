@@ -44,6 +44,16 @@ describe("Mobile-friendly: touch targets (min 44px)", () => {
     expect(html).toMatch(/min-height:\s*44px/);
   });
 
+  it("join.html slot rows use flex gap and label min-width so CTA does not overlap text", () => {
+    const html = readPage("join");
+    expect(html).toMatch(
+      /\.slot-list li\s*\{[\s\S]*?display:\s*flex[\s\S]*?gap:\s*\d+px/s
+    );
+    expect(html).toMatch(
+      /\.slot-list li\s*>\s*span\s*\{[\s\S]*?min-width:\s*0/s
+    );
+  });
+
   it("player.html card cells have min-height 44px", () => {
     const html = readPage("player");
     expect(html).toMatch(/\.card-cell[\s\S]*?min-height:\s*44px/);

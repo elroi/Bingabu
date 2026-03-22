@@ -124,6 +124,8 @@
         border: none;
         padding: 0;
         margin: 0;
+        min-width: 0;
+        width: 100%;
       }
       .slot-legend {
         font-weight: 700;
@@ -269,11 +271,18 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 12px;
         padding: 12px 16px;
         margin-bottom: 8px;
         border-radius: 12px;
         border: 2px solid var(--secondary);
         background: white;
+        box-sizing: border-box;
+      }
+      .slot-list li > span {
+        flex: 1 1 auto;
+        min-width: 0;
+        line-height: 1.35;
       }
       .slot-list li.taken {
         border-color: #b2bec3;
@@ -283,6 +292,10 @@
       .slot-list li button {
         flex-shrink: 0;
         min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 100%;
       }
       .slot-list li.taken button {
         display: none;
