@@ -364,6 +364,7 @@
         getEffectiveKeySetIdForSlot,
       } from "./keysets.js";
       import { syncPlayerDaubs, normalizeGameInstanceId } from "./playerDaubState.js";
+      import { resolveStandingsUiState } from "./playerStandingsLatch.js";
 
       await initI18n();
       document.title = t("player.pageTitle");
@@ -478,6 +479,7 @@
           "player.card.colG",
           "player.card.colO",
         ];
+        let standingsUiPrev = { lastRanked: null, snapGid: null, snapFp: "" };
         function escAttr(s) {
           return String(s)
             .replace(/&/g, "&amp;")
@@ -643,14 +645,20 @@
             drawnSequence,
             defaultName: (i) => t("join.slot.playerN", { n: i + 1 }),
           });
-          const anyStandingsPoints = ranked.some((p) => p.points > 0);
+          const { rankedForUi, show: showStandings, prev: nextStandingsUiPrev } =
+            resolveStandingsUiState(standingsUiPrev, {
+              ranked,
+              gameInstanceId: state.gameInstanceId,
+              cardFingerprint: synced.cardFingerprint,
+            });
+          standingsUiPrev = nextStandingsUiPrev;
           if (standingsWrap && standingsLeaderEl && standingsYouEl) {
-            if (!anyStandingsPoints) {
+            if (!showStandings) {
               standingsWrap.classList.add("hidden");
               standingsYouEl.classList.add("hidden");
             } else {
               standingsWrap.classList.remove("hidden");
-              const leader = ranked[0];
+              const leader = rankedForUi[0];
               const ptsText = t("bingo.leaderboard.pts", { n: leader.points });
               standingsLeaderEl.textContent = t("player.standings.leader", {
                 name: leader.name,
@@ -661,7 +669,7 @@
                   ? state.numParticipants
                   : state.participantCards.length;
               if (np > 1) {
-                const me = ranked.find((p) => p.index === slotIndex);
+                const me = rankedForUi.find((p) => p.index === slotIndex);
                 if (me) {
                   standingsYouEl.textContent = t("player.standings.youRank", {
                     rank: standingsPlaceLabel(me.rank),

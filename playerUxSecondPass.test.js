@@ -61,6 +61,7 @@ describe("second-pass UX: HTML contracts", () => {
     expect(html).toMatch(/id="player-standings"/);
     expect(html).toMatch(/data-i18n="player\.standings\.regionAria"/);
     expect(html).toMatch(/rankParticipantsForStandings/);
+    expect(html).toMatch(/resolveStandingsUiState/);
     expect(html).toMatch(
       /id="player-standings"[^>]*aria-live="polite"[^>]*aria-atomic="true"/
     );
