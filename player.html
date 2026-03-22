@@ -854,6 +854,10 @@
         }
 
         function showBooted() {
+          const rejoinA = document.querySelector("#booted-wrap a[href]");
+          if (rejoinA && roomId) {
+            rejoinA.setAttribute("href", `join.html?room=${encodeURIComponent(roomId)}`);
+          }
           document.getElementById("game-wrap").classList.add("hidden");
           document.getElementById("booted-wrap").classList.remove("hidden");
           const bw = document.getElementById("booted-wrap");
@@ -897,6 +901,9 @@
               return;
             }
             if (deviceId && myClaim !== deviceId) {
+              try {
+                sessionStorage.removeItem(JOIN_STORAGE.slotIndex);
+              } catch (_) {}
               showBooted();
               return;
             }
