@@ -534,6 +534,20 @@
         color: white;
       }
 
+      .host-play-remote-players-wrap {
+        width: 100%;
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        text-align: left;
+      }
+      .host-play-remote-players-hint {
+        font-size: 0.85rem;
+        color: var(--primary);
+        margin: 0 0 8px 0;
+        line-height: 1.35;
+      }
+
       .setup-players-section {
         margin-top: 12px;
         border: 1px dashed rgba(0,0,0,0.1);
@@ -1810,6 +1824,11 @@
         <button type="button" id="new-game-btn" class="host-new-game-in-play" data-i18n="bingo.newGame">New game</button>
         <button type="button" id="push-to-players-btn" class="push-to-players-btn hidden" data-i18n="bingo.remote.pushToPlayersTitle" data-i18n-attr="title" title="Show players an indicator on numbers they should have marked."><span data-i18n="bingo.pushToPlayers">Push to players</span></button>
         <button type="button" id="host-join-as-player-btn" class="host-join-as-player-btn push-to-players-btn hidden" data-i18n="bingo.remote.hostJoinTitlePlay" data-i18n-attr="title" title="Open your player card in a new tab (same device). You stay on this page to call numbers."><span data-i18n="bingo.joinAsPlayer">Join as player</span></button>
+        <div id="host-play-remote-players-wrap" class="host-play-remote-players-wrap hidden" data-i18n-attr="aria-label" data-i18n="bingo.remote.playPhasePlayersAria" aria-label="Online players">
+          <p class="host-play-remote-players-hint" data-i18n="bingo.remote.playPhasePlayersHint"></p>
+          <p class="remote-play-joined-label" data-i18n="bingo.remote.joinedLabel">Players joined</p>
+          <ul id="host-play-joined-list" class="remote-play-joined-list" aria-live="polite"></ul>
+        </div>
         <div class="controls-actions">
           <a href="cards.html" target="_blank" rel="noopener" class="print-cards-link" data-i18n="bingo.printCards">Print these cards</a>
         </div>
@@ -2038,6 +2057,8 @@
       const remotePlayPasswordFields = document.getElementById("remote-play-password-fields");
       const remotePlayPasswordReminder = document.getElementById("remote-play-password-reminder");
       const remotePlayJoinedList = document.getElementById("remote-play-joined-list");
+      const hostPlayRemotePlayersWrap = document.getElementById("host-play-remote-players-wrap");
+      const hostPlayJoinedList = document.getElementById("host-play-joined-list");
       const hostSetupView = document.getElementById("host-setup-view");
       const hostPlayView = document.getElementById("host-play-view");
       const hostStartGameBtn = document.getElementById("host-start-game-btn");
@@ -2070,6 +2091,8 @@
       let manualDaubOnly = false;
       let manualDaubAutoHint = true;
       let participantDaubs = {};
+      /** Monotonic id bumped on each new game / card regen; players use it to drop stale local daubs. */
+      let gameInstanceId = 0;
       let indicatorPulseAt = 0;
       let mcEnabled = true;
       let mcSimple = false;
@@ -2122,6 +2145,7 @@
           manualDaubOnly,
           manualDaubAutoHint,
           participantDaubs: { ...participantDaubs },
+          gameInstanceId,
           indicatorPulseAt,
           mcEnabled,
           mcSimple,
@@ -2218,6 +2242,9 @@
           }
           if (data.participantDaubs && typeof data.participantDaubs === "object") {
             participantDaubs = { ...data.participantDaubs };
+          }
+          if (typeof data.gameInstanceId === "number" && Number.isFinite(data.gameInstanceId) && data.gameInstanceId >= 0) {
+            gameInstanceId = data.gameInstanceId;
           }
           if (typeof data.indicatorPulseAt === "number" && data.indicatorPulseAt > 0) {
             indicatorPulseAt = data.indicatorPulseAt;
@@ -2494,6 +2521,8 @@
         for (let i = 0; i < numParticipants; i++) {
           participantCards.push(generateOneCard(parseQuirk(participantQuirks[i])));
         }
+        participantDaubs = {};
+        gameInstanceId += 1;
         saveState();
         buildBoard();
         if (participantNamesEl) renderParticipantNameInputs();
@@ -3154,6 +3183,10 @@
         }
         if (phase === "setup") updateStartGameButton();
         if (typeof updateHostJoinAsPlayerButton === "function") updateHostJoinAsPlayerButton();
+        if (phase === "play") {
+          if (typeof updateHostPlayRemotePlayersVisibility === "function") updateHostPlayRemotePlayersVisibility();
+          if (typeof refreshJoinedList === "function") refreshJoinedList();
+        }
       }
       function updateStartGameButton() {
         if (!hostStartGameBtn) return;
@@ -3264,6 +3297,7 @@
         if (remotePlayDetailsHeader) remotePlayDetailsHeader.setAttribute("aria-expanded", "false");
         if (typeof updateHostSteps === "function") updateHostSteps();
         if (typeof updateHostJoinAsPlayerButton === "function") updateHostJoinAsPlayerButton();
+        if (typeof updateHostPlayRemotePlayersVisibility === "function") updateHostPlayRemotePlayersVisibility();
       }
       const remotePlayJoinUrlEl = document.getElementById("remote-play-join-url");
       const remotePlayQrWrap = document.getElementById("remote-play-qr-wrap");
@@ -3301,6 +3335,7 @@
             remotePlayQrWrap.setAttribute("aria-hidden", "true");
           }
         }
+        if (typeof updateHostPlayRemotePlayersVisibility === "function") updateHostPlayRemotePlayersVisibility();
       }
 
       async function hostJoinAsPlayer() {
@@ -3384,10 +3419,41 @@
         });
       }
 
+      function updateHostPlayRemotePlayersVisibility() {
+        try {
+          const roomId = sessionStorage.getItem(REMOTE_ROOM_ID_KEY);
+          const hostId = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
+          if (hostPlayRemotePlayersWrap) hostPlayRemotePlayersWrap.classList.toggle("hidden", !(roomId && hostId));
+        } catch (_) {}
+      }
+
+      function renderJoinedListInto(listEl, np, names, claims) {
+        if (!listEl) return;
+        listEl.innerHTML = "";
+        for (let i = 0; i < np; i++) {
+          const li = document.createElement("li");
+          const name = (names[i] && names[i].trim()) || t("bingo.playerN", { n: i + 1 });
+          const claimed = Object.prototype.hasOwnProperty.call(claims, String(i));
+          li.textContent = claimed
+            ? t("bingo.remote.joinedReady", { name })
+            : t("bingo.remote.joinedWaiting", { name });
+          if (claimed) {
+            const bootBtn = document.createElement("button");
+            bootBtn.type = "button";
+            bootBtn.className = "boot-btn";
+            bootBtn.textContent = t("bingo.remote.remove");
+            bootBtn.addEventListener("click", () => bootPlayer(i));
+            li.appendChild(bootBtn);
+          }
+          listEl.appendChild(li);
+        }
+      }
+
       async function refreshJoinedList() {
         const roomId = sessionStorage.getItem(REMOTE_ROOM_ID_KEY);
         const hostId = sessionStorage.getItem(REMOTE_HOST_ID_KEY);
-        if (!roomId || !hostId || !remotePlayJoinedList) return;
+        if (!roomId || !hostId) return;
+        if (!remotePlayJoinedList && !hostPlayJoinedList) return;
         try {
           const res = await fetch(`${getApiBase()}/api/rooms/${roomId}`, {
             headers: { "X-Host-Id": hostId },
@@ -3414,24 +3480,9 @@
             participantDaubs = { ...data.state.participantDaubs };
             updateUI();
           }
-          remotePlayJoinedList.innerHTML = "";
-          for (let i = 0; i < np; i++) {
-            const li = document.createElement("li");
-            const name = (names[i] && names[i].trim()) || t("bingo.playerN", { n: i + 1 });
-            const claimed = Object.prototype.hasOwnProperty.call(claims, String(i));
-            li.textContent = claimed
-              ? t("bingo.remote.joinedReady", { name })
-              : t("bingo.remote.joinedWaiting", { name });
-            if (claimed) {
-              const bootBtn = document.createElement("button");
-              bootBtn.type = "button";
-              bootBtn.className = "boot-btn";
-              bootBtn.textContent = t("bingo.remote.remove");
-              bootBtn.addEventListener("click", () => bootPlayer(i));
-              li.appendChild(bootBtn);
-            }
-            remotePlayJoinedList.appendChild(li);
-          }
+          renderJoinedListInto(remotePlayJoinedList, np, names, claims);
+          renderJoinedListInto(hostPlayJoinedList, np, names, claims);
+          updateHostPlayRemotePlayersVisibility();
         } catch (_) {}
       }
 
@@ -3974,6 +4025,8 @@
         for (let i = 0; i < numParticipants; i++) {
           participantCards.push(generateOneCard(parseQuirk(participantQuirks[i])));
         }
+        participantDaubs = {};
+        gameInstanceId += 1;
         saveState();
         if (participantNamesEl) renderParticipantNameInputs();
         renderParticipantCards(null);

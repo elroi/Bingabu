@@ -363,6 +363,7 @@
         resolveDisplay,
         getEffectiveKeySetIdForSlot,
       } from "./keysets.js";
+      import { syncPlayerDaubs, normalizeGameInstanceId } from "./playerDaubState.js";
 
       await initI18n();
       document.title = t("player.pageTitle");
@@ -409,8 +410,16 @@
       }
 
       const DAUBS_KEY = "bingabu-daubs";
+      const CARD_FP_KEY_PREFIX = "bingabu-card-fp";
+      const GAME_INSTANCE_KEY_PREFIX = "bingabu-game-instance";
       function getDaubsKey() {
         return roomId && slotIndex >= 0 ? `${DAUBS_KEY}-${roomId}-${slotIndex}` : null;
+      }
+      function getCardFpKey() {
+        return roomId && slotIndex >= 0 ? `${CARD_FP_KEY_PREFIX}-${roomId}-${slotIndex}` : null;
+      }
+      function getGameInstanceKey() {
+        return roomId && slotIndex >= 0 ? `${GAME_INSTANCE_KEY_PREFIX}-${roomId}-${slotIndex}` : null;
       }
       function loadLocalDaubs() {
         const key = getDaubsKey();
@@ -550,12 +559,48 @@
           const titleEl = document.getElementById("player-title");
           if (!state || !state.participantCards || !state.participantCards[slotIndex]) return;
 
-          if (state.participantDaubs && Array.isArray(state.participantDaubs[String(slotIndex)])) {
-            localDaubs = new Set(state.participantDaubs[slotIndex]);
-            saveLocalDaubs(localDaubs);
+          const card = state.participantCards[slotIndex];
+          const fpKey = getCardFpKey();
+          let storedFp = "";
+          if (fpKey) {
+            try {
+              storedFp = sessionStorage.getItem(fpKey) || "";
+            } catch (_) {}
+          }
+          const instanceKey = getGameInstanceKey();
+          let storedGameInstanceId = null;
+          if (instanceKey) {
+            try {
+              const raw = sessionStorage.getItem(instanceKey);
+              if (raw != null && raw !== "") {
+                const n = Number(raw);
+                if (Number.isFinite(n)) storedGameInstanceId = n;
+              }
+            } catch (_) {}
+          }
+          const synced = syncPlayerDaubs({
+            card,
+            slotIndex,
+            participantDaubs: state.participantDaubs,
+            localDaubsBefore: localDaubs,
+            storedCardFingerprint: storedFp,
+            gameInstanceId: state.gameInstanceId,
+            storedGameInstanceId,
+          });
+          localDaubs = synced.daubs;
+          saveLocalDaubs(localDaubs);
+          if (fpKey) {
+            try {
+              sessionStorage.setItem(fpKey, synced.cardFingerprint);
+            } catch (_) {}
+          }
+          if (instanceKey) {
+            try {
+              const cid = normalizeGameInstanceId(state.gameInstanceId);
+              if (cid !== null) sessionStorage.setItem(instanceKey, String(cid));
+            } catch (_) {}
           }
 
-          const card = state.participantCards[slotIndex];
           const drawnSequence = state.drawnSequence || [];
           const drawnSet = new Set(drawnSequence);
           const manualDaubOnly = !!state.manualDaubOnly;

@@ -199,10 +199,12 @@ export async function handleClaim(req, res, roomId) {
     return res.status(403).json({ error: "Host authentication required for host player device id" });
   }
 
+  // When joinLocked, block taking another device's seat; empty slots stay claimable
+  // (e.g. after host boot or a player leaves) without turning the lock off.
   if (room.joinLocked && !isHostRequest) {
     room.claims = room.claims || {};
     const existingClaim = room.claims[String(slotIndex)];
-    if (!existingClaim || existingClaim !== deviceId) {
+    if (existingClaim && existingClaim !== deviceId) {
       return res.status(403).json({ error: "Joining is temporarily closed" });
     }
   }

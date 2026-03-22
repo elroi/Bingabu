@@ -190,6 +190,24 @@ describe("Bingo host UX", () => {
     expect(html).toMatch(/id="new-game-btn"/);
   });
 
+  it("bingo.html host play view has mid-game remote player list after draw controls", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/id="host-play-joined-list"/);
+    expect(html).toMatch(/id="host-play-remote-players-wrap"/);
+    expect(html).toMatch(/renderJoinedListInto/);
+    const drawIdx = html.indexOf('id="draw-btn"');
+    const playListIdx = html.indexOf('id="host-play-joined-list"');
+    expect(drawIdx).toBeGreaterThan(-1);
+    expect(playListIdx).toBeGreaterThan(-1);
+    expect(drawIdx).toBeLessThan(playListIdx);
+  });
+
+  it("bingo.html includes gameInstanceId in saved/API state", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/let gameInstanceId = 0/);
+    expect(html).toMatch(/gameInstanceId,\s*\n\s*indicatorPulseAt/);
+  });
+
   it("bingo.html script uses host phase sessionStorage key", () => {
     const html = readPage("bingo");
     expect(html).toMatch(/bingabu-host-phase/);

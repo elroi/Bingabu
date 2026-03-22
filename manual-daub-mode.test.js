@@ -72,10 +72,12 @@ describe("Manual daub mode: player", () => {
     expect(html).toMatch(/getEffectiveKeySetIdForSlot/);
   });
 
-  it("player.html applies state.participantDaubs to localDaubs when present", () => {
+  it("player.html syncs localDaubs from room state via syncPlayerDaubs", () => {
     const html = readPage("player");
-    expect(html).toMatch(/participantDaubs.*slotIndex|state\.participantDaubs/);
-    expect(html).toMatch(/localDaubs.*=.*new Set|localDaubs.*participantDaubs/);
+    expect(html).toMatch(/syncPlayerDaubs/);
+    expect(html).toMatch(/participantDaubs:\s*state\.participantDaubs/);
+    expect(html).toMatch(/gameInstanceId:\s*state\.gameInstanceId/);
+    expect(html).toMatch(/localDaubs\s*=\s*synced\.daubs/);
   });
 
   it("player.html POSTs to daubs API on daub toggle", () => {
