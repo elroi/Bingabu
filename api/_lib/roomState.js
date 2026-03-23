@@ -2,6 +2,8 @@
  * Shared validation for bingo room `state` (create + host PATCH).
  */
 
+import { maxBallIdForSquareCardSize } from "../../cardSizeCalling.js";
+
 export const DEFAULT_CARD_SIZE = 5;
 const ALLOWED_CARD_SIZES = new Set([3, 4, 5]);
 
@@ -54,6 +56,9 @@ export function isValidGameState(state) {
   if (!inferred) return false;
   const { rows, cols } = inferred;
   if (rows !== cols || !ALLOWED_CARD_SIZES.has(rows)) return false;
+
+  const maxBall = maxBallIdForSquareCardSize(rows);
+  if (seq.some((n) => n > maxBall)) return false;
 
   const cr = state.cardRows;
   const cc = state.cardCols;

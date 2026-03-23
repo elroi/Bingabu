@@ -59,6 +59,10 @@
         min-height: 100vh;
         box-sizing: border-box;
       }
+      #main-content {
+        width: 100%;
+        max-width: 360px;
+      }
       #game-wrap {
         display: flex;
         flex-direction: column;
@@ -87,13 +91,17 @@
       }
       .history-wrap {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 6px;
-        justify-content: center;
+        justify-content: flex-start;
         margin-bottom: 20px;
         min-height: 32px;
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
       }
       .history-ball {
+        flex: 0 0 32px;
         width: 32px;
         height: 32px;
         border-radius: 50%;
@@ -365,6 +373,7 @@
       } from "./keysets.js";
       import { syncPlayerDaubs, normalizeGameInstanceId } from "./playerDaubState.js";
       import { resolveStandingsUiState } from "./playerStandingsLatch.js";
+      import { formatCurrentCallForDisplay } from "./cardSizeCalling.js";
 
       await initI18n();
       document.title = t("player.pageTitle");
@@ -373,6 +382,23 @@
 
       function getApiBase() {
         return typeof window !== "undefined" && window.location && window.location.origin ? window.location.origin : "";
+      }
+
+      function bingabuAgentLog(hypothesisId, location, message, data) {
+        // #region agent log
+        fetch("http://127.0.0.1:7619/ingest/60fe76b0-4110-4f75-9eed-1b6d8a7909b5", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "5c5419" },
+          body: JSON.stringify({
+            sessionId: "5c5419",
+            hypothesisId,
+            location,
+            message,
+            data,
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
       }
 
       const params = new URLSearchParams(window.location.search);
@@ -504,14 +530,6 @@
           return getBingoLinesManualEn(card, drawnSet, set).map(formatPlayerBingoLineFromEn);
         }
 
-        function getLetter(num) {
-          if (num <= 15) return "B";
-          if (num <= 30) return "I";
-          if (num <= 45) return "N";
-          if (num <= 60) return "G";
-          return "O";
-        }
-
         function standingsPlaceLabel(rank) {
           return getLocale() === "he" ? t("bingo.leaderboard.placeHe", { n: rank }) : getOrdinal(rank);
         }
@@ -586,9 +604,9 @@
           if (titleEl) titleEl.textContent = t("player.titleWithName", { name });
           if (currentEl) {
             if (lastNum) {
-              const letter = getLetter(lastNum);
               const d = resolveDisplay(lastNum, myKeySet);
-              currentEl.textContent = `${letter}-${d.text}`;
+              const square = card.length;
+              currentEl.textContent = formatCurrentCallForDisplay(lastNum, d.text, square);
             } else {
               currentEl.textContent = "--";
             }
@@ -711,6 +729,16 @@
             function applyCellMarkedUI(cell, daubMarked) {
               const val = Number(cell.getAttribute("data-value"));
               const visMarked = manualDaubOnly ? daubMarked : (lastDrawnSet.has(val) || daubMarked);
+              bingabuAgentLog("H3", "player.html:applyCellMarkedUI", "cellMarkedUi", {
+                rawVal: cell.getAttribute("data-value"),
+                valNum: val,
+                valFinite: Number.isFinite(val),
+                daubMarked,
+                inDrawn: lastDrawnSet.has(val),
+                visMarked,
+                manualDaubOnly,
+                cellClass: cell.className,
+              });
               cell.classList.toggle("marked", visMarked);
               cell.setAttribute("aria-pressed", String(visMarked));
               cell.classList.remove("guidance");
@@ -820,7 +848,23 @@
               method: "POST",
               headers,
               body: JSON.stringify({ slotIndex, deviceId, daubs: [...localDaubs] }),
-            }).catch(() => {});
+            })
+              .then(async (res) => {
+                let body = {};
+                try {
+                  body = await res.json();
+                } catch (_) {}
+                const sk = String(slotIndex);
+                const pd =
+                  body && body.state && body.state.participantDaubs && body.state.participantDaubs[sk];
+                bingabuAgentLog("H4", "player.html:pushDaubs", "daubsPostResponse", {
+                  ok: res.ok,
+                  status: res.status,
+                  postedLen: localDaubs.size,
+                  serverSlotLen: Array.isArray(pd) ? pd.length : pd == null ? -1 : -2,
+                });
+              })
+              .catch(() => {});
           }, 250);
         }
 

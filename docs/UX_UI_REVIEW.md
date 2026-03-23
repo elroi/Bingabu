@@ -6,6 +6,14 @@ This document accumulates **audit passes** over time. The **latest pass** is alw
 
 ---
 
+## Fifth pass — 2025-03-23 (card-size calling — closed)
+
+**Remediation:** Smaller cards (3×3 / 4×4) no longer receive “impossible column” calls: the host draw pool matches the card columns (45 / 60 balls). Player/spectator current call drops the B–I–N–G–O letter prefix on smaller grids; 5×5 unchanged. Host tooltips, play/setup wizard copy, and README updated. Server `isValidGameState` rejects draws outside the pool for the inferred card size.
+
+**Git:** See commit history for the card-size calling change set.
+
+---
+
 ## Fourth pass — 2025-03-21
 
 **Method:** Targeted source sweep on `fix/ux-review-followups` after **T1–T7** and **T2** (print i18n): parity checks for live regions, motion, legal/admin surfaces, locale affordances, and mobile meta. Vitest contracts unchanged for this doc-only pass.

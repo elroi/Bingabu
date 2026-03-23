@@ -172,6 +172,7 @@
       import { initI18n, t, setLocalePreference } from "./i18n.js";
       import { nextReconnectDelayMs, SSE_RECONNECT_INITIAL_MS } from "./streamReconnect.js";
       import { ICONS_KIDS_V1_ID, resolveDisplay, normalizeKeySetId } from "./keysets.js";
+      import { formatCurrentCallForDisplay } from "./cardSizeCalling.js";
 
       await initI18n();
       document.title = t("spectator.pageTitle");
@@ -193,12 +194,15 @@
       let roomId = params.get("room") || sessionStorage.getItem(JOIN_STORAGE.roomId);
       const joinToken = sessionStorage.getItem(JOIN_STORAGE.joinToken);
 
-      function getLetter(num) {
-        if (num <= 15) return "B";
-        if (num <= 30) return "I";
-        if (num <= 45) return "N";
-        if (num <= 60) return "G";
-        return "O";
+      function squareCardSizeFromState(state) {
+        const cr = state && state.cardRows;
+        if (cr === 3 || cr === 4 || cr === 5) return cr;
+        const cards = state && state.participantCards;
+        if (Array.isArray(cards) && cards.length > 0 && Array.isArray(cards[0])) {
+          const n = cards[0].length;
+          if (n === 3 || n === 4 || n === 5) return n;
+        }
+        return 5;
       }
 
       function render(state) {
@@ -207,10 +211,11 @@
         const cur = document.getElementById("current-number");
         const hist = document.getElementById("history-wrap");
         const ks = normalizeKeySetId(state && state.displayKeySetId);
+        const square = squareCardSizeFromState(state);
         if (cur) {
           if (lastNum) {
             const d = resolveDisplay(lastNum, ks);
-            cur.textContent = `${getLetter(lastNum)}-${d.text}`;
+            cur.textContent = formatCurrentCallForDisplay(lastNum, d.text, square);
           } else {
             cur.textContent = "--";
           }
