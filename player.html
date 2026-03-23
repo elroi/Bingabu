@@ -373,6 +373,7 @@
       } from "./keysets.js";
       import { syncPlayerDaubs, normalizeGameInstanceId } from "./playerDaubState.js";
       import { resolveStandingsUiState } from "./playerStandingsLatch.js";
+      import { formatCurrentCallForDisplay } from "./cardSizeCalling.js";
 
       await initI18n();
       document.title = t("player.pageTitle");
@@ -529,14 +530,6 @@
           return getBingoLinesManualEn(card, drawnSet, set).map(formatPlayerBingoLineFromEn);
         }
 
-        function getLetter(num) {
-          if (num <= 15) return "B";
-          if (num <= 30) return "I";
-          if (num <= 45) return "N";
-          if (num <= 60) return "G";
-          return "O";
-        }
-
         function standingsPlaceLabel(rank) {
           return getLocale() === "he" ? t("bingo.leaderboard.placeHe", { n: rank }) : getOrdinal(rank);
         }
@@ -611,9 +604,9 @@
           if (titleEl) titleEl.textContent = t("player.titleWithName", { name });
           if (currentEl) {
             if (lastNum) {
-              const letter = getLetter(lastNum);
               const d = resolveDisplay(lastNum, myKeySet);
-              currentEl.textContent = `${letter}-${d.text}`;
+              const square = card.length;
+              currentEl.textContent = formatCurrentCallForDisplay(lastNum, d.text, square);
             } else {
               currentEl.textContent = "--";
             }

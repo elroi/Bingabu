@@ -1712,6 +1712,7 @@
             data-testid="card-size-select"
             data-i18n="bingo.setup.cardSizeAria"
             data-i18n-attr="aria-label"
+            data-i18n-title="bingo.setup.cardSizeHint"
             aria-label="Rows and columns on each player card"
           >
             <option value="3">3×3</option>
@@ -1951,6 +1952,13 @@
       import { getOrdinal, getRankingPhrase } from "./ranking.js";
       import { countBingoLines, rankParticipantsForStandings, getBingoLinesEn } from "./bingoScoring.js";
       import { generateOneCard } from "./cardGenerator.js";
+      import {
+        maxBallIdForSquareCardSize,
+        fullDrawPoolForSquareCardSize,
+        availableNumbersAfterDraws,
+        coercedDrawnSequenceForCardSize,
+        formatCurrentCallForDisplay,
+      } from "./cardSizeCalling.js";
       import {
         NUMBERS_KEY_SET_ID,
         EN_WORDS_BEGINNER_ID,
@@ -2246,10 +2254,19 @@
           if (!Array.isArray(saved) || saved.some((n) => typeof n !== "number" || n < 1 || n > 75)) return false;
           const set = new Set(saved);
           if (set.size !== saved.length) return false;
-          drawnSequence = saved;
-          availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1).filter((n) => !set.has(n));
           const np = data.numParticipants;
           const cards = data.participantCards;
+          let resolvedCardSize = 5;
+          if (typeof data.cardRows === "number" && (data.cardRows === 3 || data.cardRows === 4 || data.cardRows === 5)) {
+            resolvedCardSize = data.cardRows;
+          }
+          if (typeof np === "number" && np >= 0 && np <= 12 && Array.isArray(cards) && cards.length === np && participantCardsValidSquare(cards)) {
+            resolvedCardSize = getSquareCardSizeFromCard(cards[0]) ?? resolvedCardSize;
+          }
+          cardSize = resolvedCardSize;
+          if (cardSizeSelect) cardSizeSelect.value = String(cardSize);
+          drawnSequence = coercedDrawnSequenceForCardSize(saved, cardSize);
+          availableNumbers = availableNumbersAfterDraws(cardSize, drawnSequence);
           if (typeof np === "number" && np >= 0 && np <= 12 && Array.isArray(cards) && cards.length === np) {
             const valid = participantCardsValidSquare(cards);
             if (valid) {
@@ -2258,6 +2275,8 @@
               numParticipantsInput.value = String(np);
               cardSize = getSquareCardSizeFromCard(cards[0]) ?? 5;
               if (cardSizeSelect) cardSizeSelect.value = String(cardSize);
+              drawnSequence = coercedDrawnSequenceForCardSize(saved, cardSize);
+              availableNumbers = availableNumbersAfterDraws(cardSize, drawnSequence);
               if (Array.isArray(data.participantNames)) {
                 participantNames = data.participantNames.slice(0, np).map((s) => (typeof s === "string" ? s : ""));
                 while (participantNames.length < np) participantNames.push("");
@@ -2523,7 +2542,7 @@
         cardSize = readCardSizeFromSelect();
         numParticipants = Math.min(12, Math.max(0, parseInt(numParticipantsInput.value, 10) || 0));
         numParticipantsInput.value = String(numParticipants);
-        availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
+        availableNumbers = fullDrawPoolForSquareCardSize(cardSize);
         drawnSequence = [];
         participantCards = [];
         participantNames = participantNames.slice(0, numParticipants);
@@ -2741,18 +2760,34 @@
         (l, n) => ({ display: l + " " + n + "! You know the drill!", intro: undefined }),
       ];
 
+      function compactMcDisplay(s) {
+        return String(s)
+          .replace(/\s{2,}/g, " ")
+          .replace(/ \!/g, "!")
+          .trim();
+      }
+
       function getMcPhraseParts(letter, ballId, drawIndex) {
         const { text: callLabel, speech: speechCore } = resolveDisplay(ballId, displayKeySetId);
-        const numberPart = letter + " " + speechCore + "!";
-        if (mcSimple) return { display: letter + " " + callLabel, intro: undefined, number: numberPart };
+        const fullBoard = cardSize >= 5;
+        const numberPart = fullBoard ? letter + " " + speechCore + "!" : speechCore + "!";
+        if (mcSimple)
+          return {
+            display: formatCurrentCallForDisplay(ballId, callLabel, cardSize),
+            intro: undefined,
+            number: numberPart,
+          };
         if (getLocale() === "he") {
           const i = drawIndex % 4;
-          const display = t(`bingo.mc.announceVariant${i}`, { letter, n: callLabel });
+          const display = fullBoard
+            ? t(`bingo.mc.announceVariant${i}`, { letter, n: callLabel })
+            : t("bingo.mc.announceSmall", { n: callLabel });
           return { display, intro: undefined, number: numberPart };
         }
-        const phrase = MC_PHRASES[drawIndex % MC_PHRASES.length](letter, callLabel);
+        const phraseFn = MC_PHRASES[drawIndex % MC_PHRASES.length];
+        const phrase = fullBoard ? phraseFn(letter, callLabel) : phraseFn("", callLabel);
         return {
-          display: phrase.display,
+          display: fullBoard ? phrase.display : compactMcDisplay(phrase.display),
           intro: phrase.intro,
           number: numberPart,
         };
@@ -3003,7 +3038,7 @@
         if (lastNum) {
           const letter = getLetter(lastNum);
           const d = resolveDisplay(lastNum, displayKeySetId);
-          display.innerText = `${letter}-${d.text}`;
+          display.innerText = formatCurrentCallForDisplay(lastNum, d.text, cardSize);
           if (mcAnnouncementEl) {
             const phrase = getMcPhrase(letter, lastNum, drawnSequence.length - 1);
             const pointsPhrase = getPointsAnnouncementPhrase(getPlayersWhoScoredOnLatestDraw());
@@ -3038,7 +3073,8 @@
         if (pushToPlayersBtn) pushToPlayersBtn.classList.toggle("hidden", !manualDaubOnly);
 
         prevBtn.setAttribute("title", t("bingo.controls.prevTitle"));
-        if (drawnSequence.length === 75) {
+        const maxCalls = maxBallIdForSquareCardSize(cardSize);
+        if (drawnSequence.length === maxCalls) {
           drawBtn.textContent = t("bingo.controls.finish");
           drawBtn.style.backgroundColor = "#636e72";
           drawBtn.setAttribute("title", t("bingo.controls.finish"));
@@ -3058,7 +3094,7 @@
         numParticipantsInput.title = isMidGame ? t("bingo.setup.participantsMidGameTitle") : "";
         if (cardSizeSelect) {
           cardSizeSelect.disabled = isMidGame;
-          cardSizeSelect.title = isMidGame ? t("bingo.setup.cardSizeMidGameTitle") : "";
+          cardSizeSelect.title = isMidGame ? t("bingo.setup.cardSizeMidGameTitle") : t("bingo.setup.cardSizeHint");
         }
         // Name inputs stay editable during the game so players can correct or change names
         if (participantNamesWrap) {
@@ -4039,6 +4075,9 @@
         }
         participantDaubs = {};
         gameInstanceId += 1;
+        if (drawnSequence.length === 0) {
+          availableNumbers = fullDrawPoolForSquareCardSize(cardSize);
+        }
         saveState();
         if (participantNamesEl) renderParticipantNameInputs();
         renderParticipantCards(null);
@@ -4059,6 +4098,9 @@
         }
         participantDaubs = {};
         gameInstanceId += 1;
+        if (drawnSequence.length === 0) {
+          availableNumbers = fullDrawPoolForSquareCardSize(cardSize);
+        }
         saveState();
         renderParticipantCards(null);
         if (typeof updateHostSteps === "function") updateHostSteps();

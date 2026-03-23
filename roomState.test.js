@@ -38,6 +38,39 @@ describe("roomState", () => {
     ).toBe(true);
   });
 
+  it("rejects draws above max for 4×4 (no O column)", () => {
+    const card = [
+      [1, 16, 31, 46],
+      [2, 17, 32, 47],
+      [3, 18, 33, 48],
+      [4, 19, 34, 49],
+    ];
+    expect(
+      isValidGameState({
+        drawnSequence: [61],
+        numParticipants: 1,
+        cardRows: 4,
+        cardCols: 4,
+        participantCards: [card],
+      })
+    ).toBe(false);
+  });
+
+  it("accepts draws within max for 3×3", () => {
+    const card = [
+      [1, 16, 31],
+      [2, "FREE", 33],
+      [3, 18, 35],
+    ];
+    expect(
+      isValidGameState({
+        drawnSequence: [45],
+        numParticipants: 1,
+        participantCards: [card],
+      })
+    ).toBe(true);
+  });
+
   it("rejects wrong number in column range", () => {
     const bad = JSON.parse(JSON.stringify(base5));
     bad.participantCards[0][0][0] = 16;

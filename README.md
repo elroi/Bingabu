@@ -27,6 +27,8 @@ A web app for running 75-ball Bingo: caller/organizer view with participant card
 
 **Fair play:** Only numbers the host draws are authoritative. The server only accepts daubs on the free space or on numbers already in the call sequence.
 
+**Card size:** 3×3 and 4×4 games only call numbers that can appear on that grid (up to 45 or 60). Classic 5×5 uses the full 1–75 board.
+
 **Rejoin:** Players should use the same browser/device and link to reclaim a slot if they refresh or lose connection.
 
 **Production (Vercel):** Room data is not shared across serverless instances unless you add Redis. See **[docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)** section **1b. Make joining work on Vercel (add Upstash Redis)**. The code accepts **either** pair (they are equivalent):
