@@ -59,6 +59,21 @@ describe("Mobile-friendly: touch targets (min 44px)", () => {
     expect(html).toMatch(/\.card-cell[\s\S]*?min-height:\s*44px/);
   });
 
+  it("player.html keeps drawn numbers in a single horizontal row", () => {
+    // As a player on mobile, I want draw history to scroll horizontally
+    // so the card below stays stable while numbers are added.
+    const html = readPage("player");
+    expect(html).toMatch(/\.history-wrap[\s\S]*?flex-wrap:\s*nowrap/);
+    expect(html).toMatch(/\.history-wrap[\s\S]*?overflow-x:\s*auto/);
+    expect(html).toMatch(/\.history-ball[\s\S]*?flex:\s*0\s+0\s+32px/);
+  });
+
+  it("player.html keeps main content width stable while history grows", () => {
+    const html = readPage("player");
+    expect(html).toMatch(/#main-content[\s\S]*?width:\s*100%/);
+    expect(html).toMatch(/#main-content[\s\S]*?max-width:\s*360px/);
+  });
+
   it("bingo.html draw/prev buttons have min-height 44px", () => {
     const html = readPage("bingo");
     expect(html).toMatch(/#draw-btn[\s\S]*?min-height:\s*44px/);
@@ -98,6 +113,19 @@ describe("Mobile-friendly: bingo host responsive current number", () => {
     const hasClamp = /#current-number\s*\{[\s\S]*?font-size:\s*clamp\(/.test(html);
     const hasMinHeight = /#current-number\s*\{[\s\S]*?min-height:\s*(70|80)px/.test(html);
     expect(hasClamp || hasMinHeight).toBe(true);
+  });
+
+  it("bingo.html keeps draw history as a single scrollable row", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/\.history-container[\s\S]*?overflow-x:\s*auto/);
+    expect(html).toMatch(/#history-list[\s\S]*?flex-wrap:\s*nowrap/);
+    expect(html).toMatch(/\.history-ball[\s\S]*?flex:\s*0\s+0\s+35px/);
+  });
+
+  it("bingo.html keeps main content width stable while history grows", () => {
+    const html = readPage("bingo");
+    expect(html).toMatch(/#main-content[\s\S]*?width:\s*100%/);
+    expect(html).toMatch(/#main-content[\s\S]*?max-width:\s*900px/);
   });
 });
 
