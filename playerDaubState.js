@@ -48,6 +48,7 @@ function filterDaubsToCard(daubsSet, card) {
  * @param {string} opts.storedCardFingerprint
  * @param {unknown} [opts.gameInstanceId]
  * @param {unknown} [opts.storedGameInstanceId]
+ * @param {boolean} [opts.manualDaubMergeLocal] - manual-daub games: reconcile GET vs local when one side is stale (reconnect / read lag)
  * @returns {{ daubs: Set<string>, cardFingerprint: string }}
  */
 export function syncPlayerDaubs(opts) {
@@ -59,7 +60,9 @@ export function syncPlayerDaubs(opts) {
     storedCardFingerprint,
     gameInstanceId: rawGameId,
     storedGameInstanceId: rawStoredId,
+    manualDaubMergeLocal: rawManualMerge,
   } = opts;
+  const manualDaubMergeLocal = !!rawManualMerge;
   const fp = cardFingerprint(card);
   const gameInstanceId = normalizeGameInstanceId(rawGameId);
   const storedGameInstanceId = normalizeGameInstanceId(rawStoredId);
@@ -85,7 +88,18 @@ export function syncPlayerDaubs(opts) {
   }
 
   if (serverArr !== null) {
-    return { daubs: filterDaubsToCard(new Set(serverArr), card), cardFingerprint: fp };
+    let daubs = filterDaubsToCard(new Set(serverArr), card);
+    if (manualDaubMergeLocal) {
+      const localOnCard = filterDaubsToCard(localDaubsBefore, card);
+      const serverSubsetOfLocal = [...daubs].every((k) => localOnCard.has(k));
+      const localSubsetOfServer = [...localOnCard].every((k) => daubs.has(k));
+      if (serverSubsetOfLocal) {
+        daubs = localOnCard;
+      } else if (localSubsetOfServer && localOnCard.size < daubs.size) {
+        daubs = localOnCard;
+      }
+    }
+    return { daubs, cardFingerprint: fp };
   }
 
   if (gameInstanceId === null) {

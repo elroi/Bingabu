@@ -1,5 +1,6 @@
 /**
- * Keep only daub keys that match FREE or a number already in drawnSequence (75-ball rules).
+ * Keep only daub keys on the player's card: in auto mode, FREE or a number already drawn;
+ * in manual-daub-only mode, any cell (players may mark before the ball is called).
  * @param {object} state - room.state
  * @param {number} slotIndex
  * @param {string[]} daubs - "row,col" keys from client
@@ -8,6 +9,7 @@
 export function filterAllowedDaubs(state, slotIndex, daubs) {
   const seq = (state && state.drawnSequence) || [];
   const drawnSet = new Set(seq);
+  const manualOnly = !!(state && state.manualDaubOnly);
   const cards = (state && state.participantCards) || [];
   const card = cards[slotIndex];
   if (!card || !Array.isArray(card) || card.length === 0) {
@@ -28,7 +30,9 @@ export function filterAllowedDaubs(state, slotIndex, daubs) {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const val = card[r][c];
-      if (val === "FREE" || (typeof val === "number" && drawnSet.has(val))) {
+      if (val === "FREE") {
+        allowed.add(`${r},${c}`);
+      } else if (typeof val === "number" && (manualOnly || drawnSet.has(val))) {
         allowed.add(`${r},${c}`);
       }
     }

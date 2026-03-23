@@ -34,4 +34,14 @@ describe("filterAllowedDaubs", () => {
     const state = { drawnSequence: [1], participantCards: [small] };
     expect(filterAllowedDaubs(state, 0, ["0,0", "3,3", "9,9"])).toEqual(["0,0"]);
   });
+
+  it("manualDaubOnly allows daubs on any card number even if not yet drawn", () => {
+    const state = {
+      manualDaubOnly: true,
+      drawnSequence: [1],
+      participantCards: [card],
+    };
+    const out = filterAllowedDaubs(state, 0, ["0,0", "0,1", "2,2", "9,9"]);
+    expect(out.sort()).toEqual(["0,0", "0,1", "2,2"].sort());
+  });
 });

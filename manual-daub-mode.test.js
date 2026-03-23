@@ -77,12 +77,19 @@ describe("Manual daub mode: player", () => {
     expect(html).toMatch(/syncPlayerDaubs/);
     expect(html).toMatch(/participantDaubs:\s*state\.participantDaubs/);
     expect(html).toMatch(/gameInstanceId:\s*state\.gameInstanceId/);
+    expect(html).toMatch(/manualDaubMergeLocal:\s*!!state\.manualDaubOnly/);
     expect(html).toMatch(/localDaubs\s*=\s*synced\.daubs/);
   });
 
   it("player.html POSTs to daubs API on daub toggle", () => {
     const html = readPage("player");
     expect(html).toMatch(/api\/rooms\/.*\/daubs|daubs.*fetch|fetch.*daubs/);
+  });
+
+  it("player.html flushes debounced daubs before room GET to avoid stale sync on reconnect", () => {
+    const html = readPage("player");
+    expect(html).toMatch(/createDaubPushScheduler/);
+    expect(html).toMatch(/daubScheduler\.flush/);
   });
 });
 

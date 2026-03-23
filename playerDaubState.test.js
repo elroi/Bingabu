@@ -141,4 +141,64 @@ describe("playerDaubState", () => {
     });
     expect(daubs.size).toBe(0);
   });
+
+  it("manualDaubMergeLocal keeps local extras when server list is a strict subset (stale GET)", () => {
+    const fp0 = cardFingerprint(sampleCard);
+    const { daubs } = syncPlayerDaubs({
+      card: sampleCard,
+      slotIndex: 0,
+      participantDaubs: { "0": ["0,0", "1,1"] },
+      localDaubsBefore: new Set(["0,0", "1,1", "2,2"]),
+      storedCardFingerprint: fp0,
+      gameInstanceId: 1,
+      storedGameInstanceId: 1,
+      manualDaubMergeLocal: true,
+    });
+    expect([...daubs].sort()).toEqual(["0,0", "1,1", "2,2"].sort());
+  });
+
+  it("manualDaubMergeLocal keeps local when server is empty but local has daubs", () => {
+    const fp0 = cardFingerprint(sampleCard);
+    const { daubs } = syncPlayerDaubs({
+      card: sampleCard,
+      slotIndex: 0,
+      participantDaubs: { "0": [] },
+      localDaubsBefore: new Set(["0,0"]),
+      storedCardFingerprint: fp0,
+      gameInstanceId: 1,
+      storedGameInstanceId: 1,
+      manualDaubMergeLocal: true,
+    });
+    expect([...daubs]).toEqual(["0,0"]);
+  });
+
+  it("manualDaubMergeLocal prefers leaner local when local is subset of server (undo + fat stale GET)", () => {
+    const fp0 = cardFingerprint(sampleCard);
+    const { daubs } = syncPlayerDaubs({
+      card: sampleCard,
+      slotIndex: 0,
+      participantDaubs: { "0": ["0,0", "1,1", "2,2"] },
+      localDaubsBefore: new Set(["0,0", "1,1"]),
+      storedCardFingerprint: fp0,
+      gameInstanceId: 1,
+      storedGameInstanceId: 1,
+      manualDaubMergeLocal: true,
+    });
+    expect([...daubs].sort()).toEqual(["0,0", "1,1"].sort());
+  });
+
+  it("manualDaubMergeLocal false keeps server-only when server and local disagree", () => {
+    const fp0 = cardFingerprint(sampleCard);
+    const { daubs } = syncPlayerDaubs({
+      card: sampleCard,
+      slotIndex: 0,
+      participantDaubs: { "0": ["0,0", "2,2"] },
+      localDaubsBefore: new Set(["1,1"]),
+      storedCardFingerprint: fp0,
+      gameInstanceId: 1,
+      storedGameInstanceId: 1,
+      manualDaubMergeLocal: false,
+    });
+    expect([...daubs].sort()).toEqual(["0,0", "2,2"].sort());
+  });
 });

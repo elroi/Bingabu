@@ -372,6 +372,7 @@
         getEffectiveKeySetIdForSlot,
       } from "./keysets.js";
       import { syncPlayerDaubs, normalizeGameInstanceId } from "./playerDaubState.js";
+      import { createDaubPushScheduler } from "./playerDaubPush.js";
       import { resolveStandingsUiState } from "./playerStandingsLatch.js";
       import { formatCurrentCallForDisplay } from "./cardSizeCalling.js";
 
@@ -382,23 +383,6 @@
 
       function getApiBase() {
         return typeof window !== "undefined" && window.location && window.location.origin ? window.location.origin : "";
-      }
-
-      function bingabuAgentLog(hypothesisId, location, message, data) {
-        // #region agent log
-        fetch("http://127.0.0.1:7619/ingest/60fe76b0-4110-4f75-9eed-1b6d8a7909b5", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "5c5419" },
-          body: JSON.stringify({
-            sessionId: "5c5419",
-            hypothesisId,
-            location,
-            message,
-            data,
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
       }
 
       const params = new URLSearchParams(window.location.search);
@@ -573,6 +557,7 @@
             storedCardFingerprint: storedFp,
             gameInstanceId: state.gameInstanceId,
             storedGameInstanceId,
+            manualDaubMergeLocal: !!state.manualDaubOnly,
           });
           localDaubs = synced.daubs;
           saveLocalDaubs(localDaubs);
@@ -729,16 +714,6 @@
             function applyCellMarkedUI(cell, daubMarked) {
               const val = Number(cell.getAttribute("data-value"));
               const visMarked = manualDaubOnly ? daubMarked : (lastDrawnSet.has(val) || daubMarked);
-              bingabuAgentLog("H3", "player.html:applyCellMarkedUI", "cellMarkedUi", {
-                rawVal: cell.getAttribute("data-value"),
-                valNum: val,
-                valFinite: Number.isFinite(val),
-                daubMarked,
-                inDrawn: lastDrawnSet.has(val),
-                visMarked,
-                manualDaubOnly,
-                cellClass: cell.className,
-              });
               cell.classList.toggle("marked", visMarked);
               cell.setAttribute("aria-pressed", String(visMarked));
               cell.classList.remove("guidance");
@@ -834,38 +809,24 @@
           if (statusEl) statusEl.textContent = t("player.statusMarked", { count: markedCount });
         }
 
-        let daubsPushTimer = null;
-        function pushDaubsToServer() {
-          if (daubsPushTimer) clearTimeout(daubsPushTimer);
-          daubsPushTimer = setTimeout(() => {
-            daubsPushTimer = null;
+        const daubScheduler = createDaubPushScheduler({
+          delayMs: 250,
+          requestPost: async () => {
             const headers = { "Content-Type": "application/json" };
             if (joinToken) headers["Authorization"] = "Bearer " + joinToken;
             if (hostPlayer && hostPlayerHostId) {
               headers["X-Host-Id"] = hostPlayerHostId;
             }
-            fetch(`${getApiBase()}/api/rooms/${roomId}/daubs`, {
+            await fetch(`${getApiBase()}/api/rooms/${roomId}/daubs`, {
               method: "POST",
               headers,
               body: JSON.stringify({ slotIndex, deviceId, daubs: [...localDaubs] }),
-            })
-              .then(async (res) => {
-                let body = {};
-                try {
-                  body = await res.json();
-                } catch (_) {}
-                const sk = String(slotIndex);
-                const pd =
-                  body && body.state && body.state.participantDaubs && body.state.participantDaubs[sk];
-                bingabuAgentLog("H4", "player.html:pushDaubs", "daubsPostResponse", {
-                  ok: res.ok,
-                  status: res.status,
-                  postedLen: localDaubs.size,
-                  serverSlotLen: Array.isArray(pd) ? pd.length : pd == null ? -1 : -2,
-                });
-              })
-              .catch(() => {});
-          }, 250);
+            }).catch(() => {});
+          },
+        });
+
+        function pushDaubsToServer() {
+          daubScheduler.schedule();
         }
 
         function showBooted() {
@@ -902,6 +863,7 @@
           }
           const statusEl = document.getElementById("status");
           try {
+            await daubScheduler.flush();
             const res = await fetch(`${getApiBase()}/api/rooms/${roomId}`, { headers });
             const data = await res.json().catch(() => ({}));
             failCount = 0;
